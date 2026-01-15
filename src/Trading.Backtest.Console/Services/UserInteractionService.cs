@@ -9,12 +9,17 @@ public class UserInteractionService
     /// <summary>
     /// 让用户选择策略
     /// </summary>
-    public string SelectStrategy(List<string> availableStrategies)
+    /// <param name="availableStrategies">可用策略列表</param>
+    /// <param name="defaultStrategy">默认策略名称（可选）</param>
+    public string SelectStrategy(List<string> availableStrategies, string? defaultStrategy = null)
     {
+        var actualDefault = defaultStrategy ?? availableStrategies[0];
+        
         System.Console.WriteLine("可用的策略：");
         for (int i = 0; i < availableStrategies.Count; i++)
         {
-            System.Console.WriteLine($"{i + 1}. {availableStrategies[i]}");
+            var marker = availableStrategies[i] == actualDefault ? " [默认]" : "";
+            System.Console.WriteLine($"{i + 1}. {availableStrategies[i]}{marker}");
         }
 
         System.Console.Write($"\n请选择策略 (1-{availableStrategies.Count})，或直接回车使用默认: ");
@@ -22,8 +27,8 @@ public class UserInteractionService
 
         if (string.IsNullOrWhiteSpace(input))
         {
-            System.Console.WriteLine($"使用默认策略: {availableStrategies[0]}\n");
-            return availableStrategies[0];
+            System.Console.WriteLine($"使用默认策略: {actualDefault}\n");
+            return actualDefault;
         }
 
         if (int.TryParse(input, out int index) && index >= 1 && index <= availableStrategies.Count)
@@ -33,8 +38,8 @@ public class UserInteractionService
             return selected;
         }
 
-        System.Console.WriteLine($"无效的选择，使用默认策略: {availableStrategies[0]}\n");
-        return availableStrategies[0];
+        System.Console.WriteLine($"无效的选择，使用默认策略: {actualDefault}\n");
+        return actualDefault;
     }
 
     /// <summary>

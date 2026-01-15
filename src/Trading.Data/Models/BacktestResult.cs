@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Trading.Data.Infrastructure;
+
 namespace Trading.Data.Models;
 
 /// <summary>
@@ -6,8 +9,9 @@ namespace Trading.Data.Models;
 public class BacktestResult
 {
     /// <summary>
-    /// 结果ID
+    /// 结果ID (Cosmos DB要求小写)
     /// </summary>
+    [JsonPropertyName("id")]
     public string Id { get; set; } = Guid.NewGuid().ToString();
     
     /// <summary>
@@ -84,6 +88,7 @@ public class PerformanceMetrics
     /// <summary>
     /// 胜率 (%)
     /// </summary>
+    [JsonIgnore]
     public decimal WinRate => TotalTrades > 0 ? (decimal)WinningTrades / TotalTrades * 100 : 0;
     
     /// <summary>
@@ -99,6 +104,7 @@ public class PerformanceMetrics
     /// <summary>
     /// 平均持仓时间
     /// </summary>
+    [JsonConverter(typeof(TimeSpanConverter))]
     public TimeSpan AverageHoldingTime { get; set; }
     
     /// <summary>
@@ -107,9 +113,29 @@ public class PerformanceMetrics
     public int MaxConsecutiveWins { get; set; }
     
     /// <summary>
+    /// 最大连续盈利开始时间
+    /// </summary>
+    public DateTime? MaxConsecutiveWinsStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大连续盈利结束时间
+    /// </summary>
+    public DateTime? MaxConsecutiveWinsEndTime { get; set; }
+    
+    /// <summary>
     /// 最大连续亏损单数
     /// </summary>
     public int MaxConsecutiveLosses { get; set; }
+    
+    /// <summary>
+    /// 最大连续亏损开始时间
+    /// </summary>
+    public DateTime? MaxConsecutiveLossesStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大连续亏损结束时间
+    /// </summary>
+    public DateTime? MaxConsecutiveLossesEndTime { get; set; }
     
     /// <summary>
     /// 最大回撤
@@ -117,9 +143,14 @@ public class PerformanceMetrics
     public decimal MaxDrawdown { get; set; }
     
     /// <summary>
-    /// 最大回撤时间
+    /// 最大回撤开始时间
     /// </summary>
-    public DateTime? MaxDrawdownTime { get; set; }
+    public DateTime? MaxDrawdownStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大回撤结束时间
+    /// </summary>
+    public DateTime? MaxDrawdownEndTime { get; set; }
     
     /// <summary>
     /// 平均每月开仓单数
@@ -165,6 +196,7 @@ public class PeriodMetrics
     /// <summary>
     /// 胜率 (%)
     /// </summary>
+    [JsonIgnore]
     public decimal WinRate => TradeCount > 0 ? (decimal)WinningTrades / TradeCount * 100 : 0;
     
     /// <summary>
@@ -180,6 +212,7 @@ public class PeriodMetrics
     /// <summary>
     /// 平均持仓时间
     /// </summary>
+    [JsonConverter(typeof(TimeSpanConverter))]
     public TimeSpan AverageHoldingTime { get; set; }
     
     /// <summary>

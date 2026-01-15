@@ -1,0 +1,117 @@
+/* 首页样式 */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+}
+
+header {
+    text-align: center;
+    color: white;
+    margin-bottom: 50px;
+}
+
+h1 {
+    font-size: 48px;
+    margin-bottom: 15px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.subtitle {
+    font-size: 18px;
+    opacity: 0.9;
+}
+
+.strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.strategy-card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+}
+
+.strategy-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+
+.strategy-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.strategy-card.disabled:hover {
+    transform: none;
+}
+
+.strategy-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.strategy-card h2 {
+    font-size: 28px;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.strategy-card p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.strategy-card .btn {
+    width: 100%;
+}
+
+.strategy-card .btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+.badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge.coming-soon {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge.planned {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+footer {
+    text-align: center;
+    color: white;
+    opacity: 0.8;
+    margin-top: 30px;
+}

@@ -16,16 +16,19 @@ public class IndicatorCalculator
         if (candles.Count == 0) return;
         
         // 计算ATR
-        CalculateATR(candles, config.AtrPeriod);
+        if (config.AtrPeriod > 0)
+        {
+            CalculateATR(candles, config.AtrPeriod);
+        }
         
         // 计算所有EMA
-        foreach (var period in config.EmaList)
+        foreach (var period in config.EmaList.Where(p => p > 0))
         {
             CalculateEMA(candles, period);
         }
         
         // 确保基准EMA也被计算
-        if (!config.EmaList.Contains(config.BaseEma))
+        if (config.BaseEma > 0 && !config.EmaList.Contains(config.BaseEma))
         {
             CalculateEMA(candles, config.BaseEma);
         }
@@ -36,7 +39,7 @@ public class IndicatorCalculator
     /// </summary>
     private void CalculateATR(List<Candle> candles, int period)
     {
-        if (candles.Count < period) return;
+        if (candles.Count < period || period <= 0) return;
         
         // 转换为Skender Quote格式
         var quotes = candles.Select(c => new Quote
@@ -64,7 +67,7 @@ public class IndicatorCalculator
     /// </summary>
     private void CalculateEMA(List<Candle> candles, int period)
     {
-        if (candles.Count < period) return;
+        if (candles.Count < period || period <= 0) return;
         
         // 转换为Skender Quote格式
         var quotes = candles.Select(c => new Quote

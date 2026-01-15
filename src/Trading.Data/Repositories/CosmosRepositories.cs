@@ -3,6 +3,7 @@ using System.Text.Json;
 using Trading.Data.Interfaces;
 using Trading.Data.Models;
 using Trading.Data.Infrastructure;
+using System;
 
 namespace Trading.Data.Repositories;
 
@@ -21,14 +22,31 @@ public class CosmosBacktestRepository : IBacktestRepository
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
+            WriteIndented = true,
+            Converters =
+            {
+                new DecimalJsonConverter(8),
+                new NullableDecimalJsonConverter(8)
+            }
         };
     }
 
     public async Task<string> SaveBacktestResultAsync(BacktestResult result)
     {
-        var response = await _container.UpsertItemAsync(result, new PartitionKey(result.Config.Symbol));
-        return response.Resource.Id;
+        try
+        {
+            var response = await _container.UpsertItemAsync(result, new PartitionKey(result.Config.Symbol));
+            Console.WriteLine($"\n✓ 成功保存到Cosmos DB (ID: {response.Resource.Id})");
+            return response.Resource.Id;
+        }
+        catch (CosmosException ex)
+        {
+            Console.WriteLine($"\n✗ Cosmos DB保存失败: {ex.Message}");
+            Console.WriteLine($"   StatusCode: {ex.StatusCode}, SubStatusCode: {ex.SubStatusCode}");
+            if (ex.ResponseBody != null)
+                Console.WriteLine($"   Response: {ex.ResponseBody}");
+            throw;
+        }
     }
 
     public async Task<BacktestResult?> GetBacktestResultAsync(string id)

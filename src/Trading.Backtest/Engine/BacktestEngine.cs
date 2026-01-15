@@ -2,6 +2,7 @@ using System.Globalization;
 using Trading.Core.Indicators;
 using Trading.Core.Strategies;
 using Trading.Data.Models;
+using Trading.Data.Configuration;
 
 namespace Trading.Backtest.Engine;
 
@@ -22,7 +23,7 @@ public class BacktestEngine
     /// <summary>
     /// 执行回测
     /// </summary>
-    public BacktestResult RunBacktest(List<Candle> candles, StrategyConfig config)
+    public BacktestResult RunBacktest(List<Candle> candles, StrategyConfig config, AccountSettings accountSettings)
     {
         // 计算技术指标
         _indicatorCalculator.CalculateIndicators(candles, config);
@@ -48,7 +49,7 @@ public class BacktestEngine
                 var closeReason = CheckClosePosition(current, openTrade);
                 if (closeReason.HasValue)
                 {
-                    ClosePosition(openTrade, current, closeReason.Value);
+                    ClosePosition(openTrade, current, closeReason.Value, config, accountSettings);
                     result.Trades.Add(openTrade);
                     openTrade = null;
                 }
@@ -73,12 +74,12 @@ public class BacktestEngine
         // 如果还有未平仓的交易，在最后一根K线收盘价平仓
         if (openTrade != null)
         {
-            ClosePosition(openTrade, candles.Last(), Data.Models.CloseReason.Manual);
+            ClosePosition(openTrade, candles.Last(), TradeCloseReason.Manual, config, accountSettings);
             result.Trades.Add(openTrade);
         }
         
         // 计算统计指标
-        CalculateMetrics(result);
+        CalculateMetrics(result, accountSettings);
         
         return result;
     }
@@ -105,23 +106,23 @@ public class BacktestEngine
     /// <summary>
     /// 检查是否需要平仓
     /// </summary>
-    private Data.Models.CloseReason? CheckClosePosition(Candle candle, Trade trade)
+    private TradeCloseReason? CheckClosePosition(Candle candle, Trade trade)
     {
         if (trade.Direction == TradeDirection.Long)
         {
             // 做多：低点触及止损或高点触及止盈
             if (candle.Low <= trade.StopLoss)
-                return Data.Models.CloseReason.StopLoss;
+                return TradeCloseReason.StopLoss;
             if (candle.High >= trade.TakeProfit)
-                return Data.Models.CloseReason.TakeProfit;
+                return TradeCloseReason.TakeProfit;
         }
         else
         {
             // 做空：高点触及止损或低点触及止盈
             if (candle.High >= trade.StopLoss)
-                return Data.Models.CloseReason.StopLoss;
+                return TradeCloseReason.StopLoss;
             if (candle.Low <= trade.TakeProfit)
-                return Data.Models.CloseReason.TakeProfit;
+                return TradeCloseReason.TakeProfit;
         }
         
         return null;
@@ -130,7 +131,7 @@ public class BacktestEngine
     /// <summary>
     /// 平仓
     /// </summary>
-    private void ClosePosition(Trade trade, Candle candle, Data.Models.CloseReason closeReason)
+    private void ClosePosition(Trade trade, Candle candle, TradeCloseReason closeReason, StrategyConfig config, AccountSettings accountSettings)
     {
         trade.CloseTime = candle.DateTime;
         trade.CloseReason = closeReason;
@@ -138,17 +139,36 @@ public class BacktestEngine
         // 根据平仓原因确定平仓价格
         trade.ClosePrice = closeReason switch
         {
-            Data.Models.CloseReason.StopLoss => trade.StopLoss,
-            Data.Models.CloseReason.TakeProfit => trade.TakeProfit,
-            Data.Models.CloseReason.Manual => candle.Close,
+            TradeCloseReason.StopLoss => trade.StopLoss,
+            TradeCloseReason.TakeProfit => trade.TakeProfit,
+            TradeCloseReason.Manual => candle.Close,
             _ => candle.Close
         };
+        
+        // 计算点数差
+        decimal priceDiff = trade.Direction == TradeDirection.Long
+            ? (trade.ClosePrice!.Value - trade.OpenPrice)
+            : (trade.OpenPrice - trade.ClosePrice!.Value);
+        
+        // 计算USD盈亏 = 点数差 × 合约大小 × 手数
+        // 手数根据风险计算: (InitialCapital × MaxLossPerTradePercent%) / (StopLossPips × ContractSize)
+        decimal stopLossPips = trade.Direction == TradeDirection.Long 
+            ? (trade.OpenPrice - trade.StopLoss) 
+            : (trade.StopLoss - trade.OpenPrice);
+        
+        decimal riskAmount = (decimal)accountSettings.InitialCapital * (decimal)accountSettings.MaxLossPerTradePercent / 100m;
+        decimal lotSize = stopLossPips > 0 ? riskAmount / (stopLossPips * config.ContractSize) : 0.01m;
+        
+        trade.ProfitLoss = Math.Round(priceDiff * config.ContractSize * lotSize, 8);
+        
+        // 计算收益率 (相对于初始资金的百分比)
+        trade.ReturnRate = Math.Round((trade.ProfitLoss ?? 0) / (decimal)accountSettings.InitialCapital * 100m, 8);
     }
 
     /// <summary>
     /// 计算统计指标
     /// </summary>
-    private void CalculateMetrics(BacktestResult result)
+    private void CalculateMetrics(BacktestResult result, AccountSettings accountSettings)
     {
         var trades = result.Trades;
         if (trades.Count == 0) return;
@@ -163,14 +183,20 @@ public class BacktestEngine
         overall.AverageHoldingTime = TimeSpan.FromTicks((long)trades.Average(t => t.HoldingDuration?.Ticks ?? 0));
         
         // 计算最大连续盈亏
-        CalculateConsecutiveWinsLosses(trades, out var maxWins, out var maxLosses);
+        CalculateConsecutiveWinsLosses(trades, out var maxWins, out var maxWinsStart, out var maxWinsEnd, 
+            out var maxLosses, out var maxLossesStart, out var maxLossesEnd);
         overall.MaxConsecutiveWins = maxWins;
+        overall.MaxConsecutiveWinsStartTime = maxWinsStart;
+        overall.MaxConsecutiveWinsEndTime = maxWinsEnd;
         overall.MaxConsecutiveLosses = maxLosses;
+        overall.MaxConsecutiveLossesStartTime = maxLossesStart;
+        overall.MaxConsecutiveLossesEndTime = maxLossesEnd;
         
         // 计算最大回撤
-        CalculateMaxDrawdown(trades, out var maxDrawdown, out var maxDrawdownTime);
+        CalculateMaxDrawdown(trades, out var maxDrawdown, out var maxDrawdownStart, out var maxDrawdownEnd);
         overall.MaxDrawdown = maxDrawdown;
-        overall.MaxDrawdownTime = maxDrawdownTime;
+        overall.MaxDrawdownStartTime = maxDrawdownStart;
+        overall.MaxDrawdownEndTime = maxDrawdownEnd;
         
         // 计算盈亏比
         var totalWin = trades.Where(t => t.IsWinning == true).Sum(t => t.ProfitLoss ?? 0);
@@ -187,32 +213,63 @@ public class BacktestEngine
         result.YearlyMetrics = CalculatePeriodMetrics(trades, PeriodType.Year);
         
         // 收益曲线
-        result.EquityCurve = CalculateEquityCurve(trades);
+        result.EquityCurve = CalculateEquityCurve(trades, accountSettings);
     }
 
     /// <summary>
     /// 计算最大连续盈亏
     /// </summary>
-    private void CalculateConsecutiveWinsLosses(List<Trade> trades, out int maxWins, out int maxLosses)
+    private void CalculateConsecutiveWinsLosses(List<Trade> trades, 
+        out int maxWins, out DateTime? maxWinsStart, out DateTime? maxWinsEnd,
+        out int maxLosses, out DateTime? maxLossesStart, out DateTime? maxLossesEnd)
     {
         maxWins = 0;
+        maxWinsStart = null;
+        maxWinsEnd = null;
         maxLosses = 0;
+        maxLossesStart = null;
+        maxLossesEnd = null;
+        
         int currentWins = 0;
         int currentLosses = 0;
+        DateTime? currentWinsStart = null;
+        DateTime? currentLossesStart = null;
         
         foreach (var trade in trades)
         {
             if (trade.IsWinning == true)
             {
+                if (currentWins == 0)
+                {
+                    currentWinsStart = trade.OpenTime;
+                }
                 currentWins++;
                 currentLosses = 0;
-                maxWins = Math.Max(maxWins, currentWins);
+                currentLossesStart = null;
+                
+                if (currentWins > maxWins)
+                {
+                    maxWins = currentWins;
+                    maxWinsStart = currentWinsStart;
+                    maxWinsEnd = trade.CloseTime;
+                }
             }
             else if (trade.IsWinning == false)
             {
+                if (currentLosses == 0)
+                {
+                    currentLossesStart = trade.OpenTime;
+                }
                 currentLosses++;
                 currentWins = 0;
-                maxLosses = Math.Max(maxLosses, currentLosses);
+                currentWinsStart = null;
+                
+                if (currentLosses > maxLosses)
+                {
+                    maxLosses = currentLosses;
+                    maxLossesStart = currentLossesStart;
+                    maxLossesEnd = trade.CloseTime;
+                }
             }
         }
     }
@@ -220,13 +277,16 @@ public class BacktestEngine
     /// <summary>
     /// 计算最大回撤
     /// </summary>
-    private void CalculateMaxDrawdown(List<Trade> trades, out decimal maxDrawdown, out DateTime? maxDrawdownTime)
+    private void CalculateMaxDrawdown(List<Trade> trades, out decimal maxDrawdown, 
+        out DateTime? maxDrawdownStart, out DateTime? maxDrawdownEnd)
     {
         maxDrawdown = 0;
-        maxDrawdownTime = null;
+        maxDrawdownStart = null;
+        maxDrawdownEnd = null;
         
         decimal peak = 0;
         decimal cumulative = 0;
+        DateTime? peakTime = null;
         
         foreach (var trade in trades)
         {
@@ -235,13 +295,15 @@ public class BacktestEngine
             if (cumulative > peak)
             {
                 peak = cumulative;
+                peakTime = trade.CloseTime;
             }
             
             var drawdown = peak - cumulative;
             if (drawdown > maxDrawdown)
             {
                 maxDrawdown = drawdown;
-                maxDrawdownTime = trade.CloseTime;
+                maxDrawdownStart = peakTime;
+                maxDrawdownEnd = trade.CloseTime;
             }
         }
     }
@@ -259,7 +321,8 @@ public class BacktestEngine
             var periodTrades = group.ToList();
             var winningTrades = periodTrades.Count(t => t.IsWinning == true);
             
-            CalculateConsecutiveWinsLosses(periodTrades, out var maxWins, out var maxLosses);
+            CalculateConsecutiveWinsLosses(periodTrades, out var maxWins, out _, out _, 
+                out var maxLosses, out _, out _);
             
             metrics.Add(new PeriodMetrics
             {
@@ -282,22 +345,20 @@ public class BacktestEngine
     /// <summary>
     /// 计算收益曲线
     /// </summary>
-    private List<EquityPoint> CalculateEquityCurve(List<Trade> trades)
+    private List<EquityPoint> CalculateEquityCurve(List<Trade> trades, AccountSettings accountSettings)
     {
         var curve = new List<EquityPoint>();
-        decimal cumulative = 0;
-        decimal cumulativeRate = 0;
+        decimal cumulativeProfit = 0;
         
         foreach (var trade in trades.OrderBy(t => t.CloseTime))
         {
-            cumulative += trade.ProfitLoss ?? 0;
-            cumulativeRate += trade.ReturnRate ?? 0;
+            cumulativeProfit += trade.ProfitLoss ?? 0;
             
             curve.Add(new EquityPoint
             {
                 Time = trade.CloseTime!.Value,
-                CumulativeProfit = cumulative,
-                CumulativeReturnRate = cumulativeRate,
+                CumulativeProfit = cumulativeProfit,
+                CumulativeReturnRate = cumulativeProfit / (decimal)accountSettings.InitialCapital * 100m,
                 TradeId = trade.Id
             });
         }

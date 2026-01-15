@@ -34,16 +34,18 @@ public class ConfigurationService
             throw new ArgumentException($"找不到策略配置: {strategyName}");
         }
 
-        return new StrategyConfig
-        {
-            StrategyName = strategyName,
-            Symbol = settings.Symbol,
-            AtrPeriod = settings.AtrPeriod,
-            RiskRewardRatio = (decimal)settings.AtrMultiplierTakeProfit,
-            StopLossAtrRatio = (decimal)settings.AtrMultiplierStopLoss,
-            // 使用appsettings中的EMA配置
-            EmaList = new List<int> { settings.EmaFastPeriod, settings.EmaSlowPeriod }
-        };
+        return settings.ToStrategyConfig(
+            strategyName, 
+            _appSettings.Indicators.BaseEma, 
+            _appSettings.Indicators.AtrPeriod);
+    }
+
+    /// <summary>
+    /// 获取账户配置
+    /// </summary>
+    public AccountSettings GetAccountSettings()
+    {
+        return _appSettings.Account;
     }
 
     /// <summary>

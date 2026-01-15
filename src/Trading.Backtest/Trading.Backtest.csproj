@@ -5,4 +5,8 @@
     <ProjectReference Include="..\Trading.Data\Trading.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ScottPlot" Version="5.0.54" />
+  </ItemGroup>
+
 </Project>

@@ -16,10 +16,8 @@ public class CosmosDbContext
         _settings = settings;
         var clientOptions = new CosmosClientOptions
         {
-            SerializerOptions = new CosmosSerializationOptions
-            {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-            },
+            Serializer = new CustomCosmosSerializer(),
+            ConnectionMode = ConnectionMode.Gateway,  // 使用 Gateway 模式以支持更大的文档
             HttpClientFactory = () =>
             {
                 var handler = new HttpClientHandler

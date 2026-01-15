@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pin Bar 策略回测系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/backtest.css">
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+        <h1>📊 Pin Bar 策略回测系统</h1>
+        <div class="nav-links">
+            <a href="index.html">← 返回主页</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <h3>策略列表</h3>
+            <ul class="strategy-list" id="strategyList">
+                <li class="loading">加载中...</li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 策略配置 -->
+            <div class="section">
+                <h2>策略配置</h2>
+                
+                <!-- 基础参数 -->
+                <h3>基础配置</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>交易品种</label>
+                        <input type="text" id="symbol" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>CSV过滤器</label>
+                        <input type="text" id="csvFilter">
+                    </div>
+                    <div class="form-group">
+                        <label>合约大小</label>
+                        <input type="number" id="contractSize" readonly>
+                    </div>
+                </div>
+
+                <!-- Pin Bar 参数 -->
+                <h3>Pin Bar 形态参数</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>最大K线体占比 (%)</label>
+                        <input type="number" id="maxBodyPercentage" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>最小长引线占比 (%)</label>
+                        <input type="number" id="minLongerWickPercentage" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>最大短引线占比 (%)</label>
+                        <input type="number" id="maxShorterWickPercentage" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>最小下引线ATR比率</label>
+                        <input type="number" id="minLowerWickAtrRatio" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>阈值</label>
+                        <input type="number" id="threshold" step="0.1">
+                    </div>
+                </div>
+
+                <!-- EMA 参数 -->
+                <h3>EMA 参数</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>基础EMA</label>
+                        <input type="number" id="baseEma">
+                    </div>
+                    <div class="form-group">
+                        <label>EMA列表 (逗号分隔)</label>
+                        <input type="text" id="emaList" placeholder="20, 60, 80, 100, 200">
+                    </div>
+                    <div class="form-group">
+                        <label>靠近EMA阈值</label>
+                        <input type="number" id="nearEmaThreshold" step="0.1">
+                    </div>
+                </div>
+
+                <!-- 风险管理 -->
+                <h3>风险管理</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>ATR周期</label>
+                        <input type="number" id="atrPeriod">
+                    </div>
+                    <div class="form-group">
+                        <label>止损ATR比率</label>
+                        <input type="number" id="stopLossAtrRatio" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>盈亏比</label>
+                        <input type="number" id="riskRewardRatio" step="0.1">
+                    </div>
+                </div>
+
+                <!-- 交易时段 -->
+                <h3>交易时段</h3>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="noTradingHoursLimit">
+                    <label for="noTradingHoursLimit">无交易时间限制</label>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>开始时间 (UTC)</label>
+                        <input type="number" id="startTradingHour" min="0" max="23">
+                    </div>
+                    <div class="form-group">
+                        <label>结束时间 (UTC)</label>
+                        <input type="number" id="endTradingHour" min="0" max="23">
+                    </div>
+                </div>
+
+                <!-- 高级参数 (可折叠) -->
+                <h3>
+                    <span>高级参数</span>
+                    <button class="btn btn-secondary" style="margin-left: 10px; padding: 6px 12px;" onclick="toggleAdvanced()">
+                        <span id="advancedToggleText">显示</span>
+                    </button>
+                </h3>
+                <div id="advancedParams" style="display: none;">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="requirePinBarDirectionMatch">
+                        <label for="requirePinBarDirectionMatch">要求Pin Bar方向匹配</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 指标设置 -->
+            <div class="section">
+                <h2>
+                    <span>指标设置</span>
+                    <button class="btn btn-secondary" style="margin-left: 10px; padding: 6px 12px;" onclick="toggleIndicators()">
+                        <span id="indicatorsToggleText">显示</span>
+                    </button>
+                </h2>
+                <div id="indicatorsParams" style="display: none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>基础EMA (全局)</label>
+                            <input type="number" id="globalBaseEma">
+                        </div>
+                        <div class="form-group">
+                            <label>ATR周期 (全局)</label>
+                            <input type="number" id="globalAtrPeriod">
+                        </div>
+                        <div class="form-group">
+                            <label>快速EMA周期</label>
+                            <input type="number" id="emaFastPeriod">
+                        </div>
+                        <div class="form-group">
+                            <label>慢速EMA周期</label>
+                            <input type="number" id="emaSlowPeriod">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 账户设置 -->
+            <div class="section">
+                <h2>
+                    <span>账户设置</span>
+                    <button class="btn btn-secondary" style="margin-left: 10px; padding: 6px 12px;" onclick="toggleAccount()">
+                        <span id="accountToggleText">显示</span>
+                    </button>
+                </h2>
+                <div id="accountParams" style="display: none;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>初始资金 (USD)</label>
+                            <input type="number" id="initialCapital">
+                        </div>
+                        <div class="form-group">
+                            <label>杠杆倍数</label>
+                            <input type="number" id="leverage">
+                        </div>
+                        <div class="form-group">
+                            <label>单笔最大亏损 (%)</label>
+                            <input type="number" id="maxLossPerTradePercent" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>每日最大亏损 (%)</label>
+                            <input type="number" id="maxDailyLossPercent" step="0.1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 运行回测按钮 -->
+            <div class="section">
+                <button class="btn btn-success" onclick="runBacktest()">🚀 运行回测</button>
+            </div>
+
+            <!-- 回测结果 -->
+            <div class="results" id="results">
+                <div class="section">
+                    <h2>回测结果</h2>
+                    <div id="errorMessage" class="error-message" style="display:none;"></div>
+                    
+                    <!-- 关键指标 -->
+                    <div class="metrics-grid" id="metricsGrid"></div>
+                    
+                    <!-- 收益曲线 -->
+                    <div class="chart-container">
+                        <h3>收益曲线</h3>
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                    
+                    <!-- 年度收益 -->
+                    <div class="chart-container">
+                        <h3>年度收益</h3>
+                        <canvas id="yearlyChart"></canvas>
+                    </div>
+                    
+                    <!-- 月度收益 -->
+                    <div class="chart-container">
+                        <h3>月度收益</h3>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                    
+                    <!-- 交易记录 -->
+                    <div class="chart-container">
+                        <h3>交易记录</h3>
+                        <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <span>每页显示：</span>
+                                <select id="pageSize" onchange="updateTradesDisplay()">
+                                    <option value="10">10</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                            </div>
+                            <div id="pagination"></div>
+                        </div>
+                        <table class="trades-table">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTrades('openTime')" style="cursor: pointer;">开仓时间 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('direction')" style="cursor: pointer;">方向 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('lots')" style="cursor: pointer;">手数 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('openPrice')" style="cursor: pointer;">开仓价 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('stopLoss')" style="cursor: pointer;">止损位 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('stopLossPips')" style="cursor: pointer;">止损点差 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('takeProfit')" style="cursor: pointer;">止盈位 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('takeProfitPips')" style="cursor: pointer;">止盈点差 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('closeTime')" style="cursor: pointer;">平仓时间 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('closePrice')" style="cursor: pointer;">平仓价 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('closeReason')" style="cursor: pointer;">平仓理由 <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('profitLoss')" style="cursor: pointer;">盈亏 (USD) <span class="sort-indicator"></span></th>
+                                    <th onclick="sortTrades('returnRate')" style="cursor: pointer;">收益率 (%) <span class="sort-indicator"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradesTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/strategy.js"></script>
+    <script src="/js/backtest.js"></script>
+    <script src="/js/charts.js"></script>
+    <script src="/js/trades.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>
