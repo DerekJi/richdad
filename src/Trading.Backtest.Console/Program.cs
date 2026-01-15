@@ -111,6 +111,11 @@ class Application
             // 显示结果
             _printer.Print(result);
 
+            // 运行诊断分析
+            var diagnosticService = new StrategyDiagnosticService(config);
+            var diagnosticResult = diagnosticService.Analyze(_runner.LoadedCandles);
+            diagnosticService.PrintDiagnostic(diagnosticResult);
+
             // 自动保存结果到Cosmos DB
             await _dbService.SaveResultAsync(result);
         }
