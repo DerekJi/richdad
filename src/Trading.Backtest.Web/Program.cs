@@ -1,25 +1,49 @@
-// TradingBacktest Web Application
-// TODO: 实现Web界面用于参数优化和可视化回测结果
+using Microsoft.Extensions.Options;
+using Trading.Backtest.Services;
+using Trading.Data.Configuration;
+using Trading.Data.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
+// 配置AppSettings和CosmosDbSettings
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<AppSettings>>().Value);
+
+builder.Services.Configure<CosmosDbSettings>(builder.Configuration.GetSection("CosmosDb"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<CosmosDbSettings>>().Value);
+
+// 注册数据库服务
+builder.Services.AddSingleton<CosmosDbContext>();
+
+// 注册回测服务
+builder.Services.AddScoped<BacktestRunner>();
+
+// 添加控制器
 builder.Services.AddControllers();
 
+// 配置CORS（允许前端访问）
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
+
+// 启用CORS
+app.UseCors();
+
+// 配置静态文件（服务HTML页面）
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 // Configure the HTTP request pipeline
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
-// Placeholder endpoint
-app.MapGet("/", () => new 
-{ 
-    message = "TradingBacktest Web API",
-    status = "Under Development",
-    version = "1.0.0",
-    description = "Web界面开发中，请使用Console应用进行回测"
-});
 
 app.Run();

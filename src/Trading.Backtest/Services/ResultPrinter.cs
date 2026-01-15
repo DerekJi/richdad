@@ -45,7 +45,7 @@ public class ResultPrinter
         Console.WriteLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
         Console.WriteLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
         Console.WriteLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
-        Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownTime.HasValue ? metrics.MaxDrawdownTime.Value.ToString("yyyy-MM-dd") : "N/A")})");
+        Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
         Console.WriteLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
     }
 

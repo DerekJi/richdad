@@ -122,7 +122,7 @@ public class FileReportService
         sb.AppendLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
         sb.AppendLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
         sb.AppendLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
-        sb.AppendLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownTime.HasValue ? metrics.MaxDrawdownTime.Value.ToString("yyyy-MM-dd") : "N/A")})");
+        sb.AppendLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
         sb.AppendLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
     }
 

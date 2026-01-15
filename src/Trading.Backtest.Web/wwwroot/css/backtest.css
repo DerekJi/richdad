@@ -1,0 +1,249 @@
+/* 回测页面样式 */
+body {
+    background: #f5f5f5;
+}
+
+.top-nav {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.top-nav h1 {
+    font-size: 24px;
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    margin-left: 10px;
+}
+
+.nav-links a:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.container {
+    max-width: 100%; /* 移除最大宽度限制 */
+    margin: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    min-height: calc(100vh - 100px);
+}
+
+.sidebar {
+    width: 250px;
+    border-right: 1px solid #e0e0e0;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.sidebar h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.strategy-list {
+    list-style: none;
+}
+
+.strategy-item {
+    padding: 12px;
+    margin-bottom: 8px;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid #e0e0e0;
+}
+
+.strategy-item:hover {
+    background: #f0f0f0;
+    border-color: #667eea;
+}
+
+.strategy-item.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.main-content {
+    flex: 1;
+    padding: 30px;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+.section h2 {
+    margin-bottom: 20px;
+    color: #333;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.results {
+    display: none;
+    margin-top: 30px;
+}
+
+.results.show {
+    display: block;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #e0e0e0;
+}
+
+.metric-label {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+.metric-date {
+    font-size: 12px;
+    color: #999;
+    margin-top: 8px;
+    font-weight: 400;
+}
+
+.chart-container {
+    margin-bottom: 30px;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    overflow-x: auto; /* 允许水平滚动 */
+}
+
+.chart-container h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.chart-container canvas {
+    max-height: 400px;
+}
+
+.trades-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px; /* 缩小字体 */
+    margin-top: 10px;
+}
+
+.trades-table th,
+.trades-table td {
+    padding: 6px 4px; /* 缩小内边距 */
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap; /* 防止换行 */
+}
+
+.trades-table th {
+    background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
+}
+
+.trades-table th:hover {
+    background: linear-gradient(to right, #5568d3 0%, #653a8c 100%);
+}
+
+.trades-table tbody tr:hover {
+    background: #f7fafc;
+}
+
+.sort-indicator {
+    font-size: 10px;
+    color: #ffd700;
+}
+
+.positive {
+    color: #28a745;
+}
+
+.negative {
+    color: #dc3545;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+}
+
+.loading::after {
+    content: '...';
+    animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '.'; }
+    40% { content: '..'; }
+    60%, 100% { content: '...'; }
+}

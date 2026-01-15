@@ -183,14 +183,20 @@ public class BacktestEngine
         overall.AverageHoldingTime = TimeSpan.FromTicks((long)trades.Average(t => t.HoldingDuration?.Ticks ?? 0));
         
         // 计算最大连续盈亏
-        CalculateConsecutiveWinsLosses(trades, out var maxWins, out var maxLosses);
+        CalculateConsecutiveWinsLosses(trades, out var maxWins, out var maxWinsStart, out var maxWinsEnd, 
+            out var maxLosses, out var maxLossesStart, out var maxLossesEnd);
         overall.MaxConsecutiveWins = maxWins;
+        overall.MaxConsecutiveWinsStartTime = maxWinsStart;
+        overall.MaxConsecutiveWinsEndTime = maxWinsEnd;
         overall.MaxConsecutiveLosses = maxLosses;
+        overall.MaxConsecutiveLossesStartTime = maxLossesStart;
+        overall.MaxConsecutiveLossesEndTime = maxLossesEnd;
         
         // 计算最大回撤
-        CalculateMaxDrawdown(trades, out var maxDrawdown, out var maxDrawdownTime);
+        CalculateMaxDrawdown(trades, out var maxDrawdown, out var maxDrawdownStart, out var maxDrawdownEnd);
         overall.MaxDrawdown = maxDrawdown;
-        overall.MaxDrawdownTime = maxDrawdownTime;
+        overall.MaxDrawdownStartTime = maxDrawdownStart;
+        overall.MaxDrawdownEndTime = maxDrawdownEnd;
         
         // 计算盈亏比
         var totalWin = trades.Where(t => t.IsWinning == true).Sum(t => t.ProfitLoss ?? 0);
@@ -213,26 +219,57 @@ public class BacktestEngine
     /// <summary>
     /// 计算最大连续盈亏
     /// </summary>
-    private void CalculateConsecutiveWinsLosses(List<Trade> trades, out int maxWins, out int maxLosses)
+    private void CalculateConsecutiveWinsLosses(List<Trade> trades, 
+        out int maxWins, out DateTime? maxWinsStart, out DateTime? maxWinsEnd,
+        out int maxLosses, out DateTime? maxLossesStart, out DateTime? maxLossesEnd)
     {
         maxWins = 0;
+        maxWinsStart = null;
+        maxWinsEnd = null;
         maxLosses = 0;
+        maxLossesStart = null;
+        maxLossesEnd = null;
+        
         int currentWins = 0;
         int currentLosses = 0;
+        DateTime? currentWinsStart = null;
+        DateTime? currentLossesStart = null;
         
         foreach (var trade in trades)
         {
             if (trade.IsWinning == true)
             {
+                if (currentWins == 0)
+                {
+                    currentWinsStart = trade.OpenTime;
+                }
                 currentWins++;
                 currentLosses = 0;
-                maxWins = Math.Max(maxWins, currentWins);
+                currentLossesStart = null;
+                
+                if (currentWins > maxWins)
+                {
+                    maxWins = currentWins;
+                    maxWinsStart = currentWinsStart;
+                    maxWinsEnd = trade.CloseTime;
+                }
             }
             else if (trade.IsWinning == false)
             {
+                if (currentLosses == 0)
+                {
+                    currentLossesStart = trade.OpenTime;
+                }
                 currentLosses++;
                 currentWins = 0;
-                maxLosses = Math.Max(maxLosses, currentLosses);
+                currentWinsStart = null;
+                
+                if (currentLosses > maxLosses)
+                {
+                    maxLosses = currentLosses;
+                    maxLossesStart = currentLossesStart;
+                    maxLossesEnd = trade.CloseTime;
+                }
             }
         }
     }
@@ -240,13 +277,16 @@ public class BacktestEngine
     /// <summary>
     /// 计算最大回撤
     /// </summary>
-    private void CalculateMaxDrawdown(List<Trade> trades, out decimal maxDrawdown, out DateTime? maxDrawdownTime)
+    private void CalculateMaxDrawdown(List<Trade> trades, out decimal maxDrawdown, 
+        out DateTime? maxDrawdownStart, out DateTime? maxDrawdownEnd)
     {
         maxDrawdown = 0;
-        maxDrawdownTime = null;
+        maxDrawdownStart = null;
+        maxDrawdownEnd = null;
         
         decimal peak = 0;
         decimal cumulative = 0;
+        DateTime? peakTime = null;
         
         foreach (var trade in trades)
         {
@@ -255,13 +295,15 @@ public class BacktestEngine
             if (cumulative > peak)
             {
                 peak = cumulative;
+                peakTime = trade.CloseTime;
             }
             
             var drawdown = peak - cumulative;
             if (drawdown > maxDrawdown)
             {
                 maxDrawdown = drawdown;
-                maxDrawdownTime = trade.CloseTime;
+                maxDrawdownStart = peakTime;
+                maxDrawdownEnd = trade.CloseTime;
             }
         }
     }
@@ -279,7 +321,8 @@ public class BacktestEngine
             var periodTrades = group.ToList();
             var winningTrades = periodTrades.Count(t => t.IsWinning == true);
             
-            CalculateConsecutiveWinsLosses(periodTrades, out var maxWins, out var maxLosses);
+            CalculateConsecutiveWinsLosses(periodTrades, out var maxWins, out _, out _, 
+                out var maxLosses, out _, out _);
             
             metrics.Add(new PeriodMetrics
             {

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交易策略系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 交易策略系统</h1>
+            <p class="subtitle">专业的量化交易回测平台</p>
+        </header>
+
+        <div class="strategy-grid">
+            <!-- Pin Bar 策略卡片 -->
+            <div class="strategy-card">
+                <div class="strategy-icon">📊</div>
+                <h2>Pin Bar 策略</h2>
+                <p>基于Pin Bar形态的趋势跟踪策略，适用于黄金、白银等品种</p>
+                <span class="badge active">可用</span>
+                <a href="pinbar-backtest.html" class="btn btn-primary">开始回测</a>
+            </div>
+
+            <!-- Breakout 策略卡片 -->
+            <div class="strategy-card disabled">
+                <div class="strategy-icon">⚡</div>
+                <h2>突破策略</h2>
+                <p>基于关键价格突破的短线交易策略，捕捉快速行情</p>
+                <span class="badge coming-soon">即将上线</span>
+                <button class="btn btn-secondary" disabled>敬请期待</button>
+            </div>
+
+            <!-- Grid 策略卡片 -->
+            <div class="strategy-card disabled">
+                <div class="strategy-icon">🔲</div>
+                <h2>网格策略</h2>
+                <p>适用于震荡行情的网格交易系统，稳定收益</p>
+                <span class="badge planned">计划中</span>
+                <button class="btn btn-secondary" disabled>开发中</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2026 Trading Strategy System. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>

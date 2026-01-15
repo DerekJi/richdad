@@ -113,9 +113,29 @@ public class PerformanceMetrics
     public int MaxConsecutiveWins { get; set; }
     
     /// <summary>
+    /// 最大连续盈利开始时间
+    /// </summary>
+    public DateTime? MaxConsecutiveWinsStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大连续盈利结束时间
+    /// </summary>
+    public DateTime? MaxConsecutiveWinsEndTime { get; set; }
+    
+    /// <summary>
     /// 最大连续亏损单数
     /// </summary>
     public int MaxConsecutiveLosses { get; set; }
+    
+    /// <summary>
+    /// 最大连续亏损开始时间
+    /// </summary>
+    public DateTime? MaxConsecutiveLossesStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大连续亏损结束时间
+    /// </summary>
+    public DateTime? MaxConsecutiveLossesEndTime { get; set; }
     
     /// <summary>
     /// 最大回撤
@@ -123,9 +143,14 @@ public class PerformanceMetrics
     public decimal MaxDrawdown { get; set; }
     
     /// <summary>
-    /// 最大回撤时间
+    /// 最大回撤开始时间
     /// </summary>
-    public DateTime? MaxDrawdownTime { get; set; }
+    public DateTime? MaxDrawdownStartTime { get; set; }
+    
+    /// <summary>
+    /// 最大回撤结束时间
+    /// </summary>
+    public DateTime? MaxDrawdownEndTime { get; set; }
     
     /// <summary>
     /// 平均每月开仓单数
