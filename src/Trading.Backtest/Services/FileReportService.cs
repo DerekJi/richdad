@@ -228,14 +228,14 @@ public class FileReportService
         // 主图：权益曲线
         var equityLine = plt.Add.Scatter(xValues, yEquity);
         equityLine.LegendText = "账户权益";
-        equityLine.Color = ScottPlot.Color.FromHex("#2E7D32"); // 深绿色
+        equityLine.Color = Color.FromHex("#2E7D32"); // 深绿色
         equityLine.LineWidth = 2;
         equityLine.MarkerSize = 0;
         
         // 添加初始资金参考线
         var initialLine = plt.Add.HorizontalLine((double)initialCapital);
         initialLine.Text = $"初始资金 ({initialCapital:N0} USD)";
-        initialLine.Color = ScottPlot.Color.FromHex("#757575"); // 灰色
+        initialLine.Color = Color.FromHex("#757575"); // 灰色
         initialLine.LineWidth = 1;
         initialLine.LinePattern = LinePattern.Dashed;
         
@@ -244,8 +244,8 @@ public class FileReportService
         var finalTime = xValues.Last();
         var marker = plt.Add.Marker(finalTime, finalEquity);
         marker.Color = finalEquity >= (double)initialCapital 
-            ? ScottPlot.Color.FromHex("#2E7D32") // 绿色
-            : ScottPlot.Color.FromHex("#C62828"); // 红色
+            ? Color.FromHex("#2E7D32") // 绿色
+            : Color.FromHex("#C62828"); // 红色
         marker.Size = 10;
         marker.Shape = MarkerShape.FilledCircle;
         
@@ -258,15 +258,15 @@ public class FileReportService
         plt.Axes.DateTimeTicksBottom();
         
         // 添加网格
-        plt.Grid.MajorLineColor = ScottPlot.Color.FromHex("#E0E0E0");
-        plt.Grid.MinorLineColor = ScottPlot.Color.FromHex("#F5F5F5");
+        plt.Grid.MajorLineColor = Color.FromHex("#E0E0E0");
+        plt.Grid.MinorLineColor = Color.FromHex("#F5F5F5");
         
         // 显示图例
         plt.ShowLegend(Alignment.UpperLeft);
         
         // 设置图表尺寸
-        plt.FigureBackground.Color = ScottPlot.Color.FromHex("#FFFFFF");
-        plt.DataBackground.Color = ScottPlot.Color.FromHex("#FAFAFA");
+        plt.FigureBackground.Color = Color.FromHex("#FFFFFF");
+        plt.DataBackground.Color = Color.FromHex("#FAFAFA");
         
         // 保存图表
         plt.SavePng(filePath, 1600, 900);

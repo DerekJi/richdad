@@ -74,7 +74,7 @@ public class BacktestEngine
         // 如果还有未平仓的交易，在最后一根K线收盘价平仓
         if (openTrade != null)
         {
-            ClosePosition(openTrade, candles.Last(), Data.Models.TradeCloseReason.Manual, config, accountSettings);
+            ClosePosition(openTrade, candles.Last(), TradeCloseReason.Manual, config, accountSettings);
             result.Trades.Add(openTrade);
         }
         
@@ -106,23 +106,23 @@ public class BacktestEngine
     /// <summary>
     /// 检查是否需要平仓
     /// </summary>
-    private Data.Models.TradeCloseReason? CheckClosePosition(Candle candle, Trade trade)
+    private TradeCloseReason? CheckClosePosition(Candle candle, Trade trade)
     {
         if (trade.Direction == TradeDirection.Long)
         {
             // 做多：低点触及止损或高点触及止盈
             if (candle.Low <= trade.StopLoss)
-                return Data.Models.TradeCloseReason.StopLoss;
+                return TradeCloseReason.StopLoss;
             if (candle.High >= trade.TakeProfit)
-                return Data.Models.TradeCloseReason.TakeProfit;
+                return TradeCloseReason.TakeProfit;
         }
         else
         {
             // 做空：高点触及止损或低点触及止盈
             if (candle.High >= trade.StopLoss)
-                return Data.Models.TradeCloseReason.StopLoss;
+                return TradeCloseReason.StopLoss;
             if (candle.Low <= trade.TakeProfit)
-                return Data.Models.TradeCloseReason.TakeProfit;
+                return TradeCloseReason.TakeProfit;
         }
         
         return null;
@@ -131,7 +131,7 @@ public class BacktestEngine
     /// <summary>
     /// 平仓
     /// </summary>
-    private void ClosePosition(Trade trade, Candle candle, Data.Models.TradeCloseReason closeReason, StrategyConfig config, AccountSettings accountSettings)
+    private void ClosePosition(Trade trade, Candle candle, TradeCloseReason closeReason, StrategyConfig config, AccountSettings accountSettings)
     {
         trade.CloseTime = candle.DateTime;
         trade.CloseReason = closeReason;
@@ -139,9 +139,9 @@ public class BacktestEngine
         // 根据平仓原因确定平仓价格
         trade.ClosePrice = closeReason switch
         {
-            Data.Models.TradeCloseReason.StopLoss => trade.StopLoss,
-            Data.Models.TradeCloseReason.TakeProfit => trade.TakeProfit,
-            Data.Models.TradeCloseReason.Manual => candle.Close,
+            TradeCloseReason.StopLoss => trade.StopLoss,
+            TradeCloseReason.TakeProfit => trade.TakeProfit,
+            TradeCloseReason.Manual => candle.Close,
             _ => candle.Close
         };
         

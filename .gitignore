@@ -157,3 +157,6 @@ appsettings.local.json
 **/reports/
 *.txt
 *.png
+
+
+**/cosmos_test_data

@@ -27,26 +27,26 @@ public class ResultPrinter
     {
         var metrics = result.OverallMetrics;
 
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine("总体统计");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"策略名称: {result.Config.StrategyName}");
-        System.Console.WriteLine($"交易品种: {result.Config.Symbol}");
-        System.Console.WriteLine($"回测周期: {result.StartTime:yyyy-MM-dd} 至 {result.EndTime:yyyy-MM-dd}");
-        System.Console.WriteLine($"初始资金: {initialCapital:N2} USD (杠杆: {leverage}x)");
-        System.Console.WriteLine(new string('-', 80));
-        System.Console.WriteLine($"总交易数: {metrics.TotalTrades}");
-        System.Console.WriteLine($"盈利交易: {metrics.WinningTrades} ({metrics.WinRate:F2}%)");
-        System.Console.WriteLine($"亏损交易: {metrics.LosingTrades}");
-        System.Console.WriteLine($"总收益: {metrics.TotalProfit:N2} USD");
-        System.Console.WriteLine($"总收益率: {metrics.TotalReturnRate:F2}%");
-        System.Console.WriteLine($"最终资金: {(initialCapital + metrics.TotalProfit):N2} USD");
-        System.Console.WriteLine($"盈亏比: {metrics.ProfitFactor:F2}");
-        System.Console.WriteLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
-        System.Console.WriteLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
-        System.Console.WriteLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
-        System.Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownTime.HasValue ? metrics.MaxDrawdownTime.Value.ToString("yyyy-MM-dd") : "N/A")})");
-        System.Console.WriteLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine("总体统计");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"策略名称: {result.Config.StrategyName}");
+        Console.WriteLine($"交易品种: {result.Config.Symbol}");
+        Console.WriteLine($"回测周期: {result.StartTime:yyyy-MM-dd} 至 {result.EndTime:yyyy-MM-dd}");
+        Console.WriteLine($"初始资金: {initialCapital:N2} USD (杠杆: {leverage}x)");
+        Console.WriteLine(new string('-', 80));
+        Console.WriteLine($"总交易数: {metrics.TotalTrades}");
+        Console.WriteLine($"盈利交易: {metrics.WinningTrades} ({metrics.WinRate:F2}%)");
+        Console.WriteLine($"亏损交易: {metrics.LosingTrades}");
+        Console.WriteLine($"总收益: {metrics.TotalProfit:N2} USD");
+        Console.WriteLine($"总收益率: {metrics.TotalReturnRate:F2}%");
+        Console.WriteLine($"最终资金: {(initialCapital + metrics.TotalProfit):N2} USD");
+        Console.WriteLine($"盈亏比: {metrics.ProfitFactor:F2}");
+        Console.WriteLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
+        Console.WriteLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
+        Console.WriteLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
+        Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownTime.HasValue ? metrics.MaxDrawdownTime.Value.ToString("yyyy-MM-dd") : "N/A")})");
+        Console.WriteLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
     }
 
     /// <summary>
@@ -55,16 +55,16 @@ public class ResultPrinter
     private void PrintYearlyMetrics(BacktestResult result)
     {
         if (result.YearlyMetrics.Count == 0) return;
-        
-        System.Console.WriteLine("\n" + new string('=', 80));
-        System.Console.WriteLine("年度统计");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"{"年份",-8} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
-        System.Console.WriteLine(new string('-', 80));
+
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.WriteLine("年度统计");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"{"年份",-8} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
+        Console.WriteLine(new string('-', 80));
         
         foreach (var year in result.YearlyMetrics)
         {
-            System.Console.WriteLine(
+            Console.WriteLine(
                 $"{year.Period,-8} " +
                 $"{year.TradeCount,8} " +
                 $"{year.WinRate,9:F1}% " +
@@ -82,16 +82,16 @@ public class ResultPrinter
     private void PrintMonthlyMetrics(BacktestResult result)
     {
         if (result.MonthlyMetrics.Count == 0) return;
-        
-        System.Console.WriteLine("\n" + new string('=', 80));
-        System.Console.WriteLine("月度统计 (最近12个月)");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"{"月份",-10} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
-        System.Console.WriteLine(new string('-', 80));
+
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.WriteLine("月度统计 (最近12个月)");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"{"月份",-10} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
+        Console.WriteLine(new string('-', 80));
         
         foreach (var month in result.MonthlyMetrics.TakeLast(12))
         {
-            System.Console.WriteLine(
+            Console.WriteLine(
                 $"{month.Period,-10} " +
                 $"{month.TradeCount,8} " +
                 $"{month.WinRate,9:F1}% " +
@@ -109,16 +109,16 @@ public class ResultPrinter
     private void PrintWeeklyMetrics(BacktestResult result)
     {
         if (result.WeeklyMetrics.Count == 0) return;
-        
-        System.Console.WriteLine("\n" + new string('=', 80));
-        System.Console.WriteLine("周度统计 (最近12周)");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"{"周",-12} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
-        System.Console.WriteLine(new string('-', 80));
+
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.WriteLine("周度统计 (最近12周)");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"{"周",-12} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
+        Console.WriteLine(new string('-', 80));
         
         foreach (var week in result.WeeklyMetrics.TakeLast(12))
         {
-            System.Console.WriteLine(
+            Console.WriteLine(
                 $"{week.Period,-12} " +
                 $"{week.TradeCount,8} " +
                 $"{week.WinRate,9:F1}% " +
@@ -136,22 +136,22 @@ public class ResultPrinter
     private void PrintEquityCurve(BacktestResult result)
     {
         if (result.EquityCurve.Count == 0) return;
-        
-        System.Console.WriteLine("\n" + new string('=', 80));
-        System.Console.WriteLine("收益曲线摘要 (最近10个数据点)");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"{"时间",-20} {"累计收益(USD)",20} {"累计收益率",15}");
-        System.Console.WriteLine(new string('-', 80));
+
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.WriteLine("收益曲线摘要 (最近10个数据点)");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"{"时间",-20} {"累计收益(USD)",20} {"累计收益率",15}");
+        Console.WriteLine(new string('-', 80));
         
         foreach (var point in result.EquityCurve.TakeLast(10))
         {
-            System.Console.WriteLine(
+            Console.WriteLine(
                 $"{point.Time:yyyy-MM-dd HH:mm:ss,-20} " +
                 $"{point.CumulativeProfit,19:N2} " +
                 $"{point.CumulativeReturnRate,14:F2}%");
         }
-        
-        System.Console.WriteLine($"\n注: 完整收益曲线共 {result.EquityCurve.Count} 个数据点已保存至数据库");
+
+        Console.WriteLine($"\n注: 完整收益曲线共 {result.EquityCurve.Count} 个数据点已保存至数据库");
     }
 
     /// <summary>
@@ -159,11 +159,11 @@ public class ResultPrinter
     /// </summary>
     private void PrintTradeDetails(BacktestResult result)
     {
-        System.Console.WriteLine("\n" + new string('=', 80));
-        System.Console.WriteLine($"交易详情 (共 {result.Trades.Count} 笔，显示前20笔)");
-        System.Console.WriteLine(new string('=', 80));
-        System.Console.WriteLine($"{"开仓时间",-17} {"方向",6} {"开仓价",10} {"止损",10} {"止盈",10} {"平仓价",10} {"盈亏(USD)",12} {"收益率",10} {"原因",8}");
-        System.Console.WriteLine(new string('-', 80));
+        Console.WriteLine("\n" + new string('=', 80));
+        Console.WriteLine($"交易详情 (共 {result.Trades.Count} 笔，显示前20笔)");
+        Console.WriteLine(new string('=', 80));
+        Console.WriteLine($"{"开仓时间",-17} {"方向",6} {"开仓价",10} {"止损",10} {"止盈",10} {"平仓价",10} {"盈亏(USD)",12} {"收益率",10} {"原因",8}");
+        Console.WriteLine(new string('-', 80));
 
         foreach (var trade in result.Trades.Take(20))
         {
@@ -174,8 +174,8 @@ public class ResultPrinter
             var plPrefix = pl > 0 ? "+" : "";
             var returnRate = trade.ReturnRate ?? 0;
             var returnPrefix = returnRate > 0 ? "+" : "";
-            
-            System.Console.WriteLine(
+
+            Console.WriteLine(
                 $"{trade.OpenTime:yyyy-MM-dd HH:mm} {direction,6} " +
                 $"{trade.OpenPrice,10:F2} {trade.StopLoss,10:F2} {trade.TakeProfit,10:F2} " +
                 $"{trade.ClosePrice,10:F2} {plPrefix}{pl,11:N2} {returnPrefix}{returnRate,9:F2}% {reason,8}");
@@ -183,7 +183,7 @@ public class ResultPrinter
 
         if (result.Trades.Count > 20)
         {
-            System.Console.WriteLine($"... 还有 {result.Trades.Count - 20} 笔交易未显示");
+            Console.WriteLine($"... 还有 {result.Trades.Count - 20} 笔交易未显示");
         }
     }
 

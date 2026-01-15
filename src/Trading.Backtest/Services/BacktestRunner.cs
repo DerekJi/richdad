@@ -20,17 +20,17 @@ public class BacktestRunner
     /// </summary>
     public async Task<BacktestResult> RunAsync(StrategyConfig config, AccountSettings accountSettings, string dataDirectory)
     {
-        System.Console.WriteLine($"数据目录: {dataDirectory}\n");
+        Console.WriteLine($"数据目录: {dataDirectory}\n");
 
         // 创建数据提供者
         IMarketDataProvider dataProvider = new CsvDataProvider(dataDirectory);
 
         // 加载数据
-        System.Console.WriteLine($"正在加载 {config.Symbol} 的历史数据...");
+        Console.WriteLine($"正在加载 {config.Symbol} 的历史数据...");
         var candles = await dataProvider.GetCandlesAsync(config.Symbol);
         LoadedCandles = candles; // 保存供诊断使用
-        System.Console.WriteLine($"加载完成，共 {candles.Count} 根K线");
-        System.Console.WriteLine($"数据范围: {candles.First().DateTime:yyyy-MM-dd HH:mm} 至 {candles.Last().DateTime:yyyy-MM-dd HH:mm}\n");
+        Console.WriteLine($"加载完成，共 {candles.Count} 根K线");
+        Console.WriteLine($"数据范围: {candles.First().DateTime:yyyy-MM-dd HH:mm} 至 {candles.Last().DateTime:yyyy-MM-dd HH:mm}\n");
 
         // 创建策略
         var strategy = new PinBarStrategy(config);
@@ -39,7 +39,7 @@ public class BacktestRunner
         var backtestEngine = new BacktestEngine(strategy);
 
         // 执行回测
-        System.Console.WriteLine("开始执行回测...\n");
+        Console.WriteLine("开始执行回测...\n");
         return backtestEngine.RunBacktest(candles, config, accountSettings);
     }
 }

@@ -3,6 +3,7 @@ using System.Text.Json;
 using Trading.Data.Interfaces;
 using Trading.Data.Models;
 using Trading.Data.Infrastructure;
+using System;
 
 namespace Trading.Data.Repositories;
 
@@ -35,15 +36,15 @@ public class CosmosBacktestRepository : IBacktestRepository
         try
         {
             var response = await _container.UpsertItemAsync(result, new PartitionKey(result.Config.Symbol));
-            System.Console.WriteLine($"\n✓ 成功保存到Cosmos DB (ID: {response.Resource.Id})");
+            Console.WriteLine($"\n✓ 成功保存到Cosmos DB (ID: {response.Resource.Id})");
             return response.Resource.Id;
         }
-        catch (Microsoft.Azure.Cosmos.CosmosException ex)
+        catch (CosmosException ex)
         {
-            System.Console.WriteLine($"\n✗ Cosmos DB保存失败: {ex.Message}");
-            System.Console.WriteLine($"   StatusCode: {ex.StatusCode}, SubStatusCode: {ex.SubStatusCode}");
+            Console.WriteLine($"\n✗ Cosmos DB保存失败: {ex.Message}");
+            Console.WriteLine($"   StatusCode: {ex.StatusCode}, SubStatusCode: {ex.SubStatusCode}");
             if (ex.ResponseBody != null)
-                System.Console.WriteLine($"   Response: {ex.ResponseBody}");
+                Console.WriteLine($"   Response: {ex.ResponseBody}");
             throw;
         }
     }

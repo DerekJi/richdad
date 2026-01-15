@@ -1,5 +1,4 @@
 using Microsoft.Azure.Cosmos;
-using System.Text.Json;
 using Trading.Data.Configuration;
 
 namespace Trading.Data.Infrastructure;
@@ -18,6 +17,7 @@ public class CosmosDbContext
         var clientOptions = new CosmosClientOptions
         {
             Serializer = new CustomCosmosSerializer(),
+            ConnectionMode = ConnectionMode.Gateway,  // 使用 Gateway 模式以支持更大的文档
             HttpClientFactory = () =>
             {
                 var handler = new HttpClientHandler

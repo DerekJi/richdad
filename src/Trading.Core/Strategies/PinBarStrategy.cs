@@ -179,7 +179,7 @@ public class PinBarStrategy : ITradingStrategy
     {
         switch (_config.StopLossStrategy)
         {
-            case Data.Models.StopLossStrategy.PinbarEndPlusAtr:
+            case StopLossStrategy.PinbarEndPlusAtr:
                 var offset = _config.StopLossAtrRatio * pinbar.ATR;
                 return direction == TradeDirection.Long
                     ? pinbar.Low - offset
