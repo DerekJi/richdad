@@ -1,9 +1,10 @@
 using Trading.Data.Models;
+using Skender.Stock.Indicators;
 
 namespace Trading.Core.Indicators;
 
 /// <summary>
-/// 技术指标计算服务 (手动实现)
+/// 技术指标计算服务 (使用Skender.Stock.Indicators)
 /// </summary>
 public class IndicatorCalculator
 {
@@ -31,81 +32,58 @@ public class IndicatorCalculator
     }
     
     /// <summary>
-    /// 计算ATR (Average True Range)
+    /// 计算ATR (Average True Range) 使用Skender.Stock.Indicators
     /// </summary>
     private void CalculateATR(List<Candle> candles, int period)
     {
         if (candles.Count < period) return;
         
-        // 计算True Range
+        // 转换为Skender Quote格式
+        var quotes = candles.Select(c => new Quote
+        {
+            Date = c.DateTime,
+            Open = c.Open,
+            High = c.High,
+            Low = c.Low,
+            Close = c.Close,
+            Volume = c.TickVolume
+        }).ToList();
+        
+        // 调用Skender计算ATR
+        var atrResults = quotes.GetAtr(period).ToList();
+        
+        // 填充ATR值到原始candles
         for (int i = 0; i < candles.Count; i++)
         {
-            var candle = candles[i];
-            
-            if (i == 0)
-            {
-                candle.ATR = candle.High - candle.Low;
-            }
-            else
-            {
-                var prevClose = candles[i - 1].Close;
-                var tr1 = candle.High - candle.Low;
-                var tr2 = Math.Abs(candle.High - prevClose);
-                var tr3 = Math.Abs(candle.Low - prevClose);
-                var tr = Math.Max(tr1, Math.Max(tr2, tr3));
-                
-                // 使用简单移动平均计算ATR (第一个ATR)
-                if (i < period)
-                {
-                    candle.ATR = tr;
-                }
-                else if (i == period)
-                {
-                    var sum = candles.Skip(1).Take(period).Sum(c => 
-                    {
-                        var idx = candles.IndexOf(c);
-                        var pc = candles[idx - 1].Close;
-                        var t1 = c.High - c.Low;
-                        var t2 = Math.Abs(c.High - pc);
-                        var t3 = Math.Abs(c.Low - pc);
-                        return Math.Max(t1, Math.Max(t2, t3));
-                    });
-                    candle.ATR = sum / period;
-                }
-                else
-                {
-                    // 使用指数移动平均
-                    var prevATR = candles[i - 1].ATR;
-                    candle.ATR = (prevATR * (period - 1) + tr) / period;
-                }
-            }
+            candles[i].ATR = (decimal)(atrResults[i].Atr ?? 0);
         }
     }
     
     /// <summary>
-    /// 计算EMA (Exponential Moving Average)
+    /// 计算EMA (Exponential Moving Average) 使用Skender.Stock.Indicators
     /// </summary>
     private void CalculateEMA(List<Candle> candles, int period)
     {
         if (candles.Count < period) return;
         
-        decimal multiplier = 2.0m / (period + 1);
-        
-        // 第一个EMA使用SMA
-        var sma = candles.Take(period).Average(c => c.Close);
-        candles[period - 1].EMA[period] = sma;
-        
-        // 后续使用EMA公式: EMA = (Close - EMA(previous)) * multiplier + EMA(previous)
-        for (int i = period; i < candles.Count; i++)
+        // 转换为Skender Quote格式
+        var quotes = candles.Select(c => new Quote
         {
-            var prevEma = candles[i - 1].EMA.ContainsKey(period) ? candles[i - 1].EMA[period] : sma;
-            candles[i].EMA[period] = (candles[i].Close - prevEma) * multiplier + prevEma;
-        }
+            Date = c.DateTime,
+            Open = c.Open,
+            High = c.High,
+            Low = c.Low,
+            Close = c.Close,
+            Volume = c.TickVolume
+        }).ToList();
         
-        // 填充前面的值为0
-        for (int i = 0; i < period - 1; i++)
+        // 调用Skender计算EMA
+        var emaResults = quotes.GetEma(period).ToList();
+        
+        // 填充EMA值到原始candles
+        for (int i = 0; i < candles.Count; i++)
         {
-            candles[i].EMA[period] = 0;
+            candles[i].EMA[period] = (decimal)(emaResults[i].Ema ?? 0);
         }
     }
     

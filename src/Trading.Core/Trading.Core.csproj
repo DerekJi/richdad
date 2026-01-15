@@ -4,4 +4,8 @@
     <ProjectReference Include="..\Trading.Data\Trading.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Skender.Stock.Indicators" Version="2.7.1" />
+  </ItemGroup>
+
 </Project>
