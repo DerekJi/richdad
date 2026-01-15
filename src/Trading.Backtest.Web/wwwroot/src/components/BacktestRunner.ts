@@ -50,39 +50,28 @@ export class BacktestRunner {
   private buildRequest(strategyName: string): BacktestRequest {
     return {
       strategyName,
-      config: {
-        strategyName,  // 添加这个字段
-        symbol: this.getInputValue('symbol'),
-        csvFilter: this.getInputValue('csvFilter'),
-        contractSize: this.getInputNumber('contractSize'),
-        maxBodyPercentage: this.getInputNumber('maxBodyPercentage'),
-        minLongerWickPercentage: this.getInputNumber('minLongerWickPercentage'),
-        maxShorterWickPercentage: this.getInputNumber('maxShorterWickPercentage'),
-        minLowerWickAtrRatio: this.getInputNumber('minLowerWickAtrRatio'),
-        threshold: this.getInputNumber('threshold'),
-        baseEma: this.getInputNumber('baseEma'),
-        emaList: this.parseEmaList(this.getInputValue('emaList')),
-        nearEmaThreshold: this.getInputNumber('nearEmaThreshold'),
-        atrPeriod: this.getInputNumber('atrPeriod'),
-        stopLossAtrRatio: this.getInputNumber('stopLossAtrRatio'),
-        riskRewardRatio: this.getInputNumber('riskRewardRatio'),
-        noTradingHoursLimit: this.getCheckboxValue('noTradingHoursLimit'),
-        startTradingHour: this.getInputNumber('startTradingHour'),
-        endTradingHour: this.getInputNumber('endTradingHour'),
-        requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch')
-      },
-      account: {
-        initialCapital: this.getInputNumber('initialCapital'),
-        leverage: this.getInputNumber('leverage'),
-        maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
-        maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent')
-      },
-      indicators: {
-        baseEma: this.getInputNumber('globalBaseEma'),
-        atrPeriod: this.getInputNumber('globalAtrPeriod'),
-        emaFastPeriod: this.getInputNumber('emaFastPeriod'),
-        emaSlowPeriod: this.getInputNumber('emaSlowPeriod')
-      }
+      symbol: this.getInputValue('symbol'),
+      csvFilter: this.getInputValue('csvFilter'),
+      contractSize: this.getInputNumber('contractSize'),
+      maxBodyPercentage: this.getInputNumber('maxBodyPercentage'),
+      minLongerWickPercentage: this.getInputNumber('minLongerWickPercentage'),
+      maxShorterWickPercentage: this.getInputNumber('maxShorterWickPercentage'),
+      minLowerWickAtrRatio: this.getInputNumber('minLowerWickAtrRatio'),
+      threshold: this.getInputNumber('threshold'),
+      baseEma: this.getInputNumber('baseEma'),
+      emaList: this.parseEmaList(this.getInputValue('emaList')),
+      nearEmaThreshold: this.getInputNumber('nearEmaThreshold'),
+      atrPeriod: this.getInputNumber('atrPeriod'),
+      stopLossAtrRatio: this.getInputNumber('stopLossAtrRatio'),
+      riskRewardRatio: this.getInputNumber('riskRewardRatio'),
+      noTradingHoursLimit: this.getCheckboxValue('noTradingHoursLimit'),
+      startTradingHour: this.getInputNumber('startTradingHour'),
+      endTradingHour: this.getInputNumber('endTradingHour'),
+      requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch'),
+      initialCapital: this.getInputNumber('initialCapital'),
+      leverage: this.getInputNumber('leverage'),
+      maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
+      maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent')
     };
   }
 
@@ -91,50 +80,89 @@ export class BacktestRunner {
    */
   private displayResults(response: BacktestResponse): void {
     const result = response.result;
-    const metrics = result.performanceMetrics;
+    const metrics = result.overallMetrics;
 
-    // 基础信息
-    this.setTextContent('resultStrategy', response.strategyName);
-    this.setTextContent('resultSymbol', result.symbol);
-    this.setTextContent('resultPeriod', `${result.startTime} ~ ${result.endTime}`);
-
-    // 交易统计
-    this.setTextContent('totalTrades', metrics.totalTrades);
-    this.setTextContent('winningTrades', metrics.winningTrades);
-    this.setTextContent('losingTrades', metrics.losingTrades);
-    this.setTextContent('winRate', formatNumber(metrics.winRate * 100, 2) + '%');
-
-    // 收益统计
-    this.setTextContent('totalProfit', formatNumber(metrics.totalProfit, 2));
-    this.setTextContent('totalReturn', formatNumber(metrics.totalReturn * 100, 2) + '%');
-    this.setTextContent('maxDrawdown', formatNumber(metrics.maxDrawdown * 100, 2) + '%');
-    this.setTextContent('sharpeRatio', formatNumber(metrics.sharpeRatio, 2));
-
-    // 最大连续盈利/亏损
-    this.setInnerHTML('maxConsecutiveWins', 
-      `${metrics.maxConsecutiveWins}<br/><small class="date-range">${formatDateRange(metrics.maxConsecutiveWinsStartTime, metrics.maxConsecutiveWinsEndTime)}</small>`
-    );
-    this.setInnerHTML('maxConsecutiveLosses', 
-      `${metrics.maxConsecutiveLosses}<br/><small class="date-range">${formatDateRange(metrics.maxConsecutiveLossesStartTime, metrics.maxConsecutiveLossesEndTime)}</small>`
-    );
-    
-    // 更新最大回撤显示（添加日期）
-    this.setInnerHTML('maxDrawdown', 
-      `${formatNumber(metrics.maxDrawdown * 100, 2)}%<br/><small class="date-range">${formatDateRange(metrics.maxDrawdownStartTime, metrics.maxDrawdownEndTime)}</small>`
-    );
-
-    // 平均值
-    this.setTextContent('avgWin', formatNumber(metrics.avgWin, 2));
-    this.setTextContent('avgLoss', formatNumber(metrics.avgLoss, 2));
-    this.setTextContent('profitFactor', formatNumber(metrics.profitFactor, 2));
+    // 动态生成关键指标网格
+    const metricsGrid = document.getElementById('metricsGrid');
+    if (metricsGrid) {
+      metricsGrid.innerHTML = `
+        <div class="metric-card">
+          <div class="metric-label">策略名称</div>
+          <div class="metric-value">${response.strategyName || response.config.strategyName}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">交易品种</div>
+          <div class="metric-value">${result.symbol || response.config.symbol}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">回测周期</div>
+          <div class="metric-value">${result.startTime.split('T')[0]} ~ ${result.endTime.split('T')[0]}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">总交易数</div>
+          <div class="metric-value">${metrics.totalTrades}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">盈利/亏损</div>
+          <div class="metric-value">${metrics.winningTrades} / ${metrics.losingTrades}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">胜率</div>
+          <div class="metric-value">${formatNumber(metrics.winRate, 2)}%</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">总收益</div>
+          <div class="metric-value ${metrics.totalProfit >= 0 ? 'positive' : 'negative'}">
+            $${formatNumber(metrics.totalProfit, 2)}
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">收益率</div>
+          <div class="metric-value ${metrics.totalReturnRate >= 0 ? 'positive' : 'negative'}">
+            ${formatNumber(metrics.totalReturnRate, 2)}%
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">夏普比率</div>
+          <div class="metric-value">${formatNumber(metrics.sharpeRatio, 2)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">盈亏比</div>
+          <div class="metric-value">${formatNumber(metrics.profitFactor, 2)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">平均盈利</div>
+          <div class="metric-value positive">$${formatNumber(metrics.avgWin, 2)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">平均亏损</div>
+          <div class="metric-value negative">$${formatNumber(Math.abs(metrics.avgLoss), 2)}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">最大回撤</div>
+          <div class="metric-value negative">$${formatNumber(metrics.maxDrawdown, 2)}</div>
+          ${formatDateRange(metrics.maxDrawdownStartTime, metrics.maxDrawdownEndTime)}
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">最大连续盈利</div>
+          <div class="metric-value">${metrics.maxConsecutiveWins}</div>
+          ${formatDateRange(metrics.maxConsecutiveWinsStartTime, metrics.maxConsecutiveWinsEndTime)}
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">最大连续亏损</div>
+          <div class="metric-value">${metrics.maxConsecutiveLosses}</div>
+          ${formatDateRange(metrics.maxConsecutiveLossesStartTime, metrics.maxConsecutiveLossesEndTime)}
+        </div>
+      `;
+    }
 
     // 绘制图表
-    chartManager.drawEquityChart(result.equity);
+    chartManager.drawEquityChart(result.equityCurve);
     chartManager.drawYearlyChart(result.yearlyMetrics);
     chartManager.drawMonthlyChart(result.monthlyMetrics);
 
     // 显示交易明细
-    tradeTable.displayTrades(result.trades);
+    tradeTable.displayTrades(result.allTrades);
 
     // 显示结果区域
     const resultsDiv = document.getElementById('results');

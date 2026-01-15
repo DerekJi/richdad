@@ -29,7 +29,7 @@ export class ChartManager {
         labels: data.map(d => d.time),
         datasets: [{
           label: '账户权益',
-          data: data.map(d => d.equity),
+          data: data.map(d => d.cumulativeProfit),
           borderColor: '#4a90e2',
           backgroundColor: 'rgba(74, 144, 226, 0.1)',
           tension: 0.1,
@@ -94,13 +94,13 @@ export class ChartManager {
         labels: data.map(d => d.period),
         datasets: [
           {
-            label: '年度收益率 (%)',
-            data: data.map(d => d.return * 100),
+            label: '年度收益 (USD)',
+            data: data.map(d => d.profitLoss),
             backgroundColor: data.map(d => 
-              d.return >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
+              d.profitLoss >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
             ),
             borderColor: data.map(d => 
-              d.return >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
+              d.profitLoss >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
             ),
             borderWidth: 1
           }
@@ -120,9 +120,8 @@ export class ChartManager {
                 const index = context.dataIndex;
                 const item = data[index];
                 return [
-                  `收益率: ${(item.return * 100).toFixed(2)}%`,
-                  `收益: ${item.profit.toFixed(2)}`,
-                  `交易数: ${item.trades}`,
+                  `收益: ${item.profitLoss.toFixed(2)}`,
+                  `交易数: ${item.tradeCount}`,
                   `胜率: ${(item.winRate * 100).toFixed(2)}%`
                 ];
               }
@@ -141,7 +140,7 @@ export class ChartManager {
             display: true,
             title: {
               display: true,
-              text: '收益率 (%)'
+              text: '收益 (USD)'
             }
           }
         }
@@ -168,13 +167,13 @@ export class ChartManager {
         labels: data.map(d => d.period),
         datasets: [
           {
-            label: '月度收益率 (%)',
-            data: data.map(d => d.return * 100),
+            label: '月度收益 (USD)',
+            data: data.map(d => d.profitLoss),
             backgroundColor: data.map(d => 
-              d.return >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
+              d.profitLoss >= 0 ? 'rgba(75, 192, 192, 0.6)' : 'rgba(255, 99, 132, 0.6)'
             ),
             borderColor: data.map(d => 
-              d.return >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
+              d.profitLoss >= 0 ? 'rgb(75, 192, 192)' : 'rgb(255, 99, 132)'
             ),
             borderWidth: 1
           }
@@ -194,9 +193,8 @@ export class ChartManager {
                 const index = context.dataIndex;
                 const item = data[index];
                 return [
-                  `收益率: ${(item.return * 100).toFixed(2)}%`,
-                  `收益: ${item.profit.toFixed(2)}`,
-                  `交易数: ${item.trades}`,
+                  `收益: ${item.profitLoss.toFixed(2)}`,
+                  `交易数: ${item.tradeCount}`,
                   `胜率: ${(item.winRate * 100).toFixed(2)}%`
                 ];
               }
@@ -221,7 +219,7 @@ export class ChartManager {
             display: true,
             title: {
               display: true,
-              text: '收益率 (%)'
+              text: '收益 (USD)'
             }
           }
         }

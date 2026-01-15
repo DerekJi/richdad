@@ -19,7 +19,11 @@ builder.Services.AddSingleton<CosmosDbContext>();
 builder.Services.AddScoped<BacktestRunner>();
 
 // 添加控制器
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 
 // 配置CORS（允许前端访问）
 builder.Services.AddCors(options =>

@@ -49,10 +49,10 @@ export interface PerformanceMetrics {
   losingTrades: number;
   winRate: number;
   totalProfit: number;
-  totalReturn: number;  // 改名
-  avgWin: number;  // 新增
-  avgLoss: number;  // 新增
-  sharpeRatio: number;  // 新增
+  totalReturnRate: number;
+  avgWin: number;
+  avgLoss: number;
+  sharpeRatio: number;
   maxConsecutiveWins: number;
   maxConsecutiveWinsStartTime?: string;
   maxConsecutiveWinsEndTime?: string;
@@ -67,47 +67,80 @@ export interface PerformanceMetrics {
 
 export interface PeriodMetrics {
   period: string;
-  trades: number;  // 改名
+  startDate: string;
+  endDate: string;
+  tradeCount: number;
+  winningTrades: number;
   winRate: number;
-  profit: number;  // 改名
-  return: number;  // 新增
+  profitLoss: number;
 }
 
 export interface EquityPoint {
   time: string;
-  equity: number;  // 改名
+  cumulativeProfit: number;
+  cumulativeReturnRate: number;
 }
 
 export interface Trade {
-  entryTime: string;  // 改名
-  type: string;  // 改名
-  entryPrice: number;  // 改名
-  exitPrice: number;  // 改名
-  volume: number;  // 改名
-  profit: number;  // 改名
-  profitPercent: number;  // 改名
-  exitReason: string;  // 改名
+  id: string;
+  direction: string;
+  openTime: string;
+  openPrice: number;
+  stopLoss: number;
+  takeProfit: number;
+  stopLossPips: number;
+  takeProfitPips: number;
+  closeTime?: string;
+  closePrice?: number;
+  closeReason?: string;
+  profitLoss: number;
+  returnRate: number;
+  lots: number;
 }
 
 export interface BacktestResult {
-  symbol: string;  // 新增
+  id: string;
+  symbol: string;
   startTime: string;
   endTime: string;
-  performanceMetrics: PerformanceMetrics;  // 改名
+  overallMetrics: PerformanceMetrics;
   yearlyMetrics: PeriodMetrics[];
   monthlyMetrics: PeriodMetrics[];
-  equity: EquityPoint[];  // 改名
-  trades: Trade[];  // 改名
+  weeklyMetrics: PeriodMetrics[];
+  equityCurve: EquityPoint[];
+  allTrades: Trade[];
 }
 
 export interface BacktestResponse {
-  strategyName: string;  // 新增
+  strategyName: string;
+  config: StrategyConfig;
+  account: AccountSettings;
   result: BacktestResult;
 }
 
 export interface BacktestRequest {
   strategyName: string;
-  config: StrategyConfig;
-  account: AccountSettings;
-  indicators: IndicatorSettings;
+  symbol: string;
+  csvFilter?: string;
+  contractSize: number;
+  baseEma: number;
+  atrPeriod: number;
+  threshold: number;
+  maxBodyPercentage: number;
+  minLongerWickPercentage: number;
+  maxShorterWickPercentage: number;
+  emaList?: number[];
+  nearEmaThreshold: number;
+  riskRewardRatio: number;
+  stopLossAtrRatio: number;
+  startTradingHour: number;
+  endTradingHour: number;
+  noTradingHoursLimit: boolean;
+  requirePinBarDirectionMatch: boolean;
+  minLowerWickAtrRatio: number;
+  // Account settings
+  initialCapital: number;
+  leverage: number;
+  maxLossPerTradePercent: number;
+  maxDailyLossPercent: number;
 }

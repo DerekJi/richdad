@@ -45,7 +45,8 @@ export class StrategyManager {
   async loadStrategy(name: string): Promise<void> {
     try {
       const data = await backtestService.getStrategy(name);
-      this.currentStrategy = data;
+      // 将name存储到data对象中，确保有值
+      this.currentStrategy = { ...data, name };
       
       const config = data.config;
       const account = data.account;

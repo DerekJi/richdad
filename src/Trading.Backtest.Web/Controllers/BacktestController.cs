@@ -75,6 +75,7 @@ public class BacktestController : ControllerBase
             
         return Ok(new
         {
+            Name = name,
             Config = config,
             Account = _appSettings.Account,
             Indicators = _appSettings.Indicators
@@ -143,10 +144,18 @@ public class BacktestController : ControllerBase
                         result.OverallMetrics.TotalTrades,
                         result.OverallMetrics.WinningTrades,
                         result.OverallMetrics.LosingTrades,
-                        WinRate = result.OverallMetrics.WinRate, // 显式包含计算属性
+                        result.OverallMetrics.WinRate,
                         result.OverallMetrics.TotalProfit,
                         result.OverallMetrics.TotalReturnRate,
                         result.OverallMetrics.AverageHoldingTime,
+                        // 从交易列表计算平均盈利和亏损
+                        AvgWin = result.Trades.Where(t => t.ProfitLoss > 0).Any() 
+                            ? result.Trades.Where(t => t.ProfitLoss > 0).Average(t => t.ProfitLoss ?? 0)
+                            : 0,
+                        AvgLoss = result.Trades.Where(t => t.ProfitLoss < 0).Any()
+                            ? result.Trades.Where(t => t.ProfitLoss < 0).Average(t => t.ProfitLoss ?? 0)
+                            : 0,
+                        SharpeRatio = 0m, // 夏普比率：风险调整后的收益率，需要收益率序列计算
                         result.OverallMetrics.MaxConsecutiveWins,
                         MaxConsecutiveWinsStartTime = result.OverallMetrics.MaxConsecutiveWinsStartTime?.ToString("yyyy-MM-dd"),
                         MaxConsecutiveWinsEndTime = result.OverallMetrics.MaxConsecutiveWinsEndTime?.ToString("yyyy-MM-dd"),

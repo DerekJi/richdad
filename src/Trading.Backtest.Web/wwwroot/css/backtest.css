@@ -145,10 +145,24 @@ body {
     margin-bottom: 8px;
 }
 
-.metric-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
+.metrics-grid .metric-card .metric-value,
+.metric-card .metric-value {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    letter-spacing: -0.3px !important;
+    line-height: 1.4 !important;
+}
+
+.metrics-grid .metric-card .metric-value.positive,
+.metric-card .metric-value.positive {
+    color: #10b981 !important;
+}
+
+.metrics-grid .metric-card .metric-value.negative,
+.metric-card .metric-value.negative {
+    color: #ef4444 !important;
 }
 
 .metric-date {

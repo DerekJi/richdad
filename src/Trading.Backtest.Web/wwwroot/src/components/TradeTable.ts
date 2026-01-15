@@ -7,7 +7,7 @@ import { formatNumber, getPropertyValue } from '../utils/helpers';
 export class TradeTable {
   private trades: Trade[] = [];
   private currentPage = 1;
-  private pageSize = 50;
+  private pageSize = 20;
   private sortColumn: string | null = null;
   private sortAscending = true;
 
@@ -26,7 +26,7 @@ export class TradeTable {
    * 更新交易明细显示
    */
   private updateTradesDisplay(): void {
-    const tbody = document.getElementById('tradesBody');
+    const tbody = document.getElementById('tradesTable');
     if (!tbody) return;
 
     // 计算分页
@@ -37,14 +37,19 @@ export class TradeTable {
     // 渲染表格
     tbody.innerHTML = pageTrades.map(trade => `
       <tr>
-        <td>${trade.entryTime}</td>
-        <td>${trade.type}</td>
-        <td>${formatNumber(trade.entryPrice, 5)}</td>
-        <td>${formatNumber(trade.exitPrice, 5)}</td>
-        <td>${formatNumber(trade.volume, 2)}</td>
-        <td class="${trade.profit >= 0 ? 'profit' : 'loss'}">${formatNumber(trade.profit, 2)}</td>
-        <td>${formatNumber(trade.profitPercent * 100, 2)}%</td>
-        <td>${trade.exitReason}</td>
+        <td>${trade.openTime}</td>
+        <td>${trade.direction}</td>
+        <td>${formatNumber(trade.lots, 2)}</td>
+        <td>${formatNumber(trade.openPrice, 5)}</td>
+        <td>${formatNumber(trade.stopLoss, 5)}</td>
+        <td>${formatNumber(trade.stopLossPips, 1)}</td>
+        <td>${formatNumber(trade.takeProfit, 5)}</td>
+        <td>${formatNumber(trade.takeProfitPips, 1)}</td>
+        <td>${trade.closeTime || '-'}</td>
+        <td>${trade.closePrice ? formatNumber(trade.closePrice, 5) : '-'}</td>
+        <td>${trade.closeReason || '-'}</td>
+        <td class="${trade.profitLoss >= 0 ? 'profit' : 'loss'}">${formatNumber(trade.profitLoss, 2)}</td>
+        <td>${formatNumber(trade.returnRate * 100, 2)}%</td>
       </tr>
     `).join('');
 
@@ -165,6 +170,15 @@ export class TradeTable {
         icon.classList.remove('active');
       }
     });
+  }
+
+  /**
+   * 改变每页显示数量
+   */
+  changePageSize(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 1;
+    this.updateTradesDisplay();
   }
 }
 

@@ -33,6 +33,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   });
+
+  // 绑定每页显示数量变化
+  const pageSizeSelect = document.getElementById('pageSize') as HTMLSelectElement;
+  if (pageSizeSelect) {
+    pageSizeSelect.addEventListener('change', () => {
+      tradeTable.changePageSize(parseInt(pageSizeSelect.value));
+    });
+  }
 });
 
 // 导出全局函数供HTML onclick使用
@@ -42,3 +50,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 (window as any).toggleAdvanced = toggleAdvanced;
 (window as any).toggleIndicators = toggleIndicators;
 (window as any).toggleAccount = toggleAccount;
+(window as any).runBacktest = () => backtestRunner.runBacktest();
+(window as any).sortTrades = (column: string) => tradeTable.sortTrades(column);
