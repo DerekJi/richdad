@@ -31,6 +31,7 @@ public class FileReportService
         var sb = new StringBuilder();
         
         // 生成报告内容
+        AppendStrategyConfig(sb, result.Config);
         AppendOverallMetrics(sb, result, initialCapital, leverage);
         AppendYearlyMetrics(sb, result);
         AppendMonthlyMetrics(sb, result);
@@ -53,6 +54,50 @@ public class FileReportService
         GenerateEquityChart(result, initialCapital, chartFilePath);
         
         return txtFilePath;
+    }
+
+    private void AppendStrategyConfig(StringBuilder sb, StrategyConfig config)
+    {
+        sb.AppendLine(new string('=', 80));
+        sb.AppendLine("策略配置");
+        sb.AppendLine(new string('=', 80));
+        sb.AppendLine($"策略名称: {config.StrategyName}");
+        sb.AppendLine($"交易品种: {config.Symbol}");
+        if (!string.IsNullOrEmpty(config.CsvFilter))
+        {
+            sb.AppendLine($"CSV过滤: {config.CsvFilter}");
+        }
+        sb.AppendLine($"合约规模: {config.ContractSize}");
+        sb.AppendLine(new string('-', 80));
+        
+        sb.AppendLine("Pin Bar 识别参数:");
+        sb.AppendLine($"  K线波动阈值: {config.Threshold} USD");
+        sb.AppendLine($"  最大实体占比: {config.MaxBodyPercentage}%");
+        sb.AppendLine($"  最小长影线占比: {config.MinLongerWickPercentage}%");
+        sb.AppendLine($"  最大短影线占比: {config.MaxShorterWickPercentage}%");
+        sb.AppendLine($"  最小下影线ATR倍数: {config.MinLowerWickAtrRatio}");
+        sb.AppendLine($"  要求方向匹配: {(config.RequirePinBarDirectionMatch ? "是" : "否")}");
+        
+        sb.AppendLine("\nEMA 相关参数:");
+        sb.AppendLine($"  基准EMA周期: {config.BaseEma}");
+        sb.AppendLine($"  EMA列表: {string.Join(", ", config.EmaList)}");
+        sb.AppendLine($"  靠近EMA阈值: {config.NearEmaThreshold} USD");
+        
+        sb.AppendLine("\n风险管理参数:");
+        sb.AppendLine($"  ATR周期: {config.AtrPeriod}");
+        sb.AppendLine($"  止损ATR倍数: {config.StopLossAtrRatio}");
+        sb.AppendLine($"  盈亏比: {config.RiskRewardRatio}");
+        sb.AppendLine($"  止损策略: {config.StopLossStrategy}");
+        
+        sb.AppendLine("\n交易时段:");
+        if (config.NoTradingHoursLimit)
+        {
+            sb.AppendLine($"  24小时交易（不限时段）");
+        }
+        else
+        {
+            sb.AppendLine($"  交易时段: {config.StartTradingHour:D2}:00 - {config.EndTradingHour:D2}:00 UTC");
+        }
     }
 
     private void AppendOverallMetrics(StringBuilder sb, BacktestResult result, decimal initialCapital, decimal leverage)
