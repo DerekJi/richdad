@@ -37,7 +37,7 @@ class Program
 
         // 运行应用
         var app = serviceProvider.GetRequiredService<Application>();
-        await app.RunAsync();
+        await app.RunAsync(args);
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -94,14 +94,14 @@ class Application
         _dbService = dbService;
     }
 
-    public async Task RunAsync()
+    public async Task RunAsync(string[] args)
     {
         _userInteraction.ShowWelcome();
 
         try
         {
-            // 让用户选择策略
-            var strategyName = _userInteraction.SelectStrategy(_configService.GetAvailableStrategies());
+            // 从命令行参数或用户交互获取策略名称
+            var strategyName = GetStrategyName(args, _configService.GetAvailableStrategies());
             var config = _configService.GetStrategyConfig(strategyName);
             var dataDirectory = _configService.GetDataDirectory();
             
@@ -111,18 +111,37 @@ class Application
             // 显示结果
             _printer.Print(result);
 
-            // 保存结果（可选）
-            if (_userInteraction.AskToSaveResults())
-            {
-                await _dbService.SaveResultAsync(result);
-            }
-
-            _userInteraction.WaitForExit();
+            // 自动保存结果到Cosmos DB
+            await _dbService.SaveResultAsync(result);
         }
         catch (Exception ex)
         {
             _userInteraction.ShowError(ex);
-            _userInteraction.WaitForExit();
         }
+    }
+
+    private string GetStrategyName(string[] args, List<string> availableStrategies)
+    {
+        const string defaultStrategy = "PinBar-XAUUSD-v1";
+
+        // 如果有命令行参数，使用第一个参数作为策略名称
+        if (args.Length > 0)
+        {
+            var strategyArg = args[0];
+            if (availableStrategies.Contains(strategyArg))
+            {
+                System.Console.WriteLine($"使用命令行参数指定的策略: {strategyArg}\n");
+                return strategyArg;
+            }
+            else
+            {
+                System.Console.WriteLine($"警告: 策略 '{strategyArg}' 不存在，可用策略: {string.Join(", ", availableStrategies)}");
+                System.Console.WriteLine($"使用默认策略: {defaultStrategy}\n");
+                return defaultStrategy;
+            }
+        }
+
+        // 没有命令行参数，让用户交互选择（默认为PinBar-XAUUSD-v1）
+        return _userInteraction.SelectStrategy(availableStrategies, defaultStrategy);
     }
 }
