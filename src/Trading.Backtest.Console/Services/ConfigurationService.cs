@@ -34,37 +34,10 @@ public class ConfigurationService
             throw new ArgumentException($"找不到策略配置: {strategyName}");
         }
 
-        // 从策略配置中获取EmaList（PinBar策略特有）
-        var emaList = new List<int>(settings.EmaList ?? new List<int>());
-        
-        // 确保BaseEma在列表中
-        if (_appSettings.Indicators.BaseEma > 0 && !emaList.Contains(_appSettings.Indicators.BaseEma))
-        {
-            emaList.Add(_appSettings.Indicators.BaseEma);
-        }
-
-        return new StrategyConfig
-        {
-            StrategyName = strategyName,
-            Symbol = settings.Symbol,
-            ContractSize = settings.Symbol == "XAUUSD" ? 100 : 
-                           settings.Symbol == "XAGUSD" ? 1000 : 100, // 默认100
-            BaseEma = _appSettings.Indicators.BaseEma,
-            AtrPeriod = _appSettings.Indicators.AtrPeriod,
-            RiskRewardRatio = (decimal)settings.RiskRewardRatio,
-            StopLossAtrRatio = (decimal)settings.StopLossAtrRatio,
-            MinLowerWickAtrRatio = (decimal)settings.MinLowerWickAtrRatio,
-            Threshold = (decimal)settings.Threshold,
-            NearEmaThreshold = (decimal)settings.NearEmaThreshold,
-            StartTradingHour = settings.StartTradingHour,
-            EndTradingHour = settings.EndTradingHour,
-            NoTradingHoursLimit = settings.NoTradingHoursLimit,
-            RequirePinBarDirectionMatch = settings.RequirePinBarDirectionMatch,
-            MaxBodyPercentage = (decimal)settings.MaxBodyPercentage,
-            MinLongerWickPercentage = (decimal)settings.MinLongerWickPercentage,
-            MaxShorterWickPercentage = (decimal)settings.MaxShorterWickPercentage,
-            EmaList = emaList
-        };
+        return settings.ToStrategyConfig(
+            strategyName, 
+            _appSettings.Indicators.BaseEma, 
+            _appSettings.Indicators.AtrPeriod);
     }
 
     /// <summary>

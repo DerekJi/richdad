@@ -27,7 +27,7 @@ public class BacktestRunner
 
         // 加载数据
         Console.WriteLine($"正在加载 {config.Symbol} 的历史数据...");
-        var candles = await dataProvider.GetCandlesAsync(config.Symbol);
+        var candles = await dataProvider.GetCandlesAsync(config.Symbol, config.CsvFilter);
         LoadedCandles = candles; // 保存供诊断使用
         Console.WriteLine($"加载完成，共 {candles.Count} 根K线");
         Console.WriteLine($"数据范围: {candles.First().DateTime:yyyy-MM-dd HH:mm} 至 {candles.Last().DateTime:yyyy-MM-dd HH:mm}\n");

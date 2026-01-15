@@ -19,10 +19,10 @@ public class CsvDataProvider : IMarketDataProvider
     /// <summary>
     /// 从CSV文件读取K线数据
     /// </summary>
-    public async Task<List<Candle>> GetCandlesAsync(string symbol, DateTime? startTime = null, DateTime? endTime = null)
+    public async Task<List<Candle>> GetCandlesAsync(string symbol, string? csvFilter = null, DateTime? startTime = null, DateTime? endTime = null)
     {
         // 查找匹配的CSV文件
-        var csvFile = FindCsvFile(symbol);
+        var csvFile = FindCsvFile(symbol, csvFilter);
         if (string.IsNullOrEmpty(csvFile))
         {
             throw new FileNotFoundException($"找不到 {symbol} 的CSV文件");
@@ -55,11 +55,11 @@ public class CsvDataProvider : IMarketDataProvider
     /// <summary>
     /// 查找CSV文件
     /// </summary>
-    private string FindCsvFile(string symbol)
+    private string FindCsvFile(string symbol, string? csvFilter = null)
     {
         // 查找包含symbol的文件，如 XAUUSD.a_M15_*.csv
         var files = Directory.GetFiles(_dataDirectory, $"{symbol}*.csv");
-        return files.FirstOrDefault() ?? string.Empty;
+        return files.FirstOrDefault(x => string.IsNullOrEmpty(csvFilter) ||Path.GetFileName(x).Contains(csvFilter, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
     }
 
     /// <summary>

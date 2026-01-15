@@ -22,6 +22,11 @@ public class StrategyConfig
     /// 交易品种 (如 XAUUSD, XAGUSD)
     /// </summary>
     public string Symbol { get; set; } = string.Empty;
+
+    /// <summary>
+    /// CSV文件名应包含的过滤字符串
+    /// </summary>
+    public string CsvFilter { get; set; } = string.Empty;
     
     /// <summary>
     /// 合约规模

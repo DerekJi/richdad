@@ -14,5 +14,5 @@ public interface IMarketDataProvider
     /// <param name="startTime">开始时间</param>
     /// <param name="endTime">结束时间</param>
     /// <returns>K线数据列表</returns>
-    Task<List<Candle>> GetCandlesAsync(string symbol, DateTime? startTime = null, DateTime? endTime = null);
+    Task<List<Candle>> GetCandlesAsync(string symbol, string? csvFilter = null, DateTime? startTime = null, DateTime? endTime = null);
 }
