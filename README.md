@@ -5,19 +5,21 @@
 ## 项目结构
 
 ```
-TradingBacktest/
+TradingSystem/
 ├── src/
-│   ├── TradingBacktest.Data/        # 数据层
+│   ├── Trading.Data/                # 数据层
 │   │   ├── Models/                   # 数据模型
 │   │   ├── Interfaces/               # 接口定义
 │   │   ├── Providers/                # 数据提供者（CSV、API）
 │   │   └── Repositories/             # 数据仓储（Cosmos DB）
-│   ├── TradingBacktest.Core/        # 业务层
+│   ├── Trading.Core/                # 核心策略层（可复用于实盘）
 │   │   ├── Strategies/               # 交易策略
-│   │   ├── Indicators/               # 技术指标
-│   │   └── Backtest/                 # 回测引擎
-│   ├── TradingBacktest.Console/     # Console应用
-│   └── TradingBacktest.Web/         # Web应用（待完善）
+│   │   └── Indicators/               # 技术指标
+│   ├── Trading.Backtest/            # 回测引擎层
+│   │   ├── Engine/                   # 回测引擎
+│   │   └── Services/                 # 回测服务
+│   ├── Trading.Backtest.Console/    # Console应用
+│   └── Trading.Backtest.Web/        # Web应用（待完善）
 ├── data/                             # CSV历史数据
 └── docs/                             # 文档
 ```
@@ -68,13 +70,13 @@ TradingBacktest/
 
 3. 运行Console应用：
 ```bash
-cd src/TradingBacktest.Console
+cd src/Trading.Backtest.Console
 dotnet run
 ```
 
 ### 配置策略参数
 
-在 [Program.cs](src/TradingBacktest.Console/Program.cs#L21-L22) 中修改策略配置：
+在 [Program.cs](src/Trading.Backtest.Console/Program.cs#L21-L22) 中修改策略配置：
 
 ```csharp
 var config = StrategyConfig.CreateXauDefault();

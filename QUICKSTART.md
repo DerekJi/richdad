@@ -12,7 +12,7 @@
 ### 1. 运行回测
 
 ```bash
-cd src/TradingBacktest.Console
+cd src/Trading.Backtest.Console
 dotnet run
 ```
 
@@ -24,7 +24,7 @@ dotnet run
 
 ### 2. 修改策略参数
 
-编辑 `src/TradingBacktest.Console/Program.cs`:
+编辑 `src/Trading.Backtest.Console/Program.cs`:
 
 ```csharp
 var config = StrategyConfig.CreateXauDefault();
@@ -38,21 +38,24 @@ config.StartTradingHour = 6;            // UTC 6点开始交易
 ## 项目结构
 
 ```
-TradingBacktest/
+TradingSystem/
 ├── src/
-│   ├── TradingBacktest.Data/        # 数据层
+│   ├── Trading.Data/                # 数据层
 │   │   ├── Models/                   # Candle, Trade, BacktestResult等
 │   │   ├── Providers/                # CsvDataProvider
 │   │   ├── Repositories/             # CosmosBacktestRepository
 │   │   └── Interfaces/               # IMarketDataProvider
 │   │
-│   ├── TradingBacktest.Core/        # 业务层
+│   ├── Trading.Core/                # 核心策略层（可复用于实盘）
 │   │   ├── Strategies/               # PinBarStrategy
-│   │   ├── Indicators/               # IndicatorCalculator (EMA/ATR)
-│   │   └── Backtest/                 # BacktestEngine
+│   │   └── Indicators/               # IndicatorCalculator (EMA/ATR)
 │   │
-│   ├── TradingBacktest.Console/     # Console应用
-│   └── TradingBacktest.Web/         # Web应用（待完善）
+│   ├── Trading.Backtest/            # 回测引擎层
+│   │   ├── Engine/                   # BacktestEngine
+│   │   └── Services/                 # BacktestRunner, ResultPrinter
+│   │
+│   ├── Trading.Backtest.Console/    # Console应用
+│   └── Trading.Backtest.Web/        # Web应用（待完善）
 │
 ├── data/                             # CSV历史数据
 │   └── XAUUSD*.csv
