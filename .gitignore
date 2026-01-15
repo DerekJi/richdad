@@ -152,3 +152,8 @@ FodyWeavers.xsd
 appsettings.Development.json
 appsettings.local.json
 *.log
+
+# Backtest reports
+**/reports/
+*.txt
+*.png

@@ -3,6 +3,7 @@ using Trading.Core.Strategies;
 using Trading.Data.Interfaces;
 using Trading.Data.Models;
 using Trading.Data.Providers;
+using Trading.Data.Configuration;
 
 namespace Trading.Backtest.Services;
 
@@ -17,7 +18,7 @@ public class BacktestRunner
     /// <summary>
     /// 执行回测
     /// </summary>
-    public async Task<BacktestResult> RunAsync(StrategyConfig config, string dataDirectory)
+    public async Task<BacktestResult> RunAsync(StrategyConfig config, AccountSettings accountSettings, string dataDirectory)
     {
         System.Console.WriteLine($"数据目录: {dataDirectory}\n");
 
@@ -39,6 +40,6 @@ public class BacktestRunner
 
         // 执行回测
         System.Console.WriteLine("开始执行回测...\n");
-        return backtestEngine.RunBacktest(candles, config);
+        return backtestEngine.RunBacktest(candles, config, accountSettings);
     }
 }

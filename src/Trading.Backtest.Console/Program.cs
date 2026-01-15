@@ -65,6 +65,7 @@ class Program
         services.AddScoped<BacktestRunner>();
         services.AddScoped<ResultPrinter>();
         services.AddScoped<DatabaseService>();
+        services.AddScoped<FileReportService>();
         services.AddScoped<Application>();
     }
 }
@@ -79,19 +80,22 @@ class Application
     private readonly BacktestRunner _runner;
     private readonly ResultPrinter _printer;
     private readonly DatabaseService _dbService;
+    private readonly FileReportService _fileReportService;
 
     public Application(
         UserInteractionService userInteraction,
         ConfigurationService configService,
         BacktestRunner runner,
         ResultPrinter printer,
-        DatabaseService dbService)
+        DatabaseService dbService,
+        FileReportService fileReportService)
     {
         _userInteraction = userInteraction;
         _configService = configService;
         _runner = runner;
         _printer = printer;
         _dbService = dbService;
+        _fileReportService = fileReportService;
     }
 
     public async Task RunAsync(string[] args)
@@ -103,21 +107,51 @@ class Application
             // 从命令行参数或用户交互获取策略名称
             var strategyName = GetStrategyName(args, _configService.GetAvailableStrategies());
             var config = _configService.GetStrategyConfig(strategyName);
+            var accountSettings = _configService.GetAccountSettings();
             var dataDirectory = _configService.GetDataDirectory();
             
             // 运行回测
-            var result = await _runner.RunAsync(config, dataDirectory);
+            var result = await _runner.RunAsync(config, accountSettings, dataDirectory);
 
             // 显示结果
-            _printer.Print(result);
+            _printer.Print(result, (decimal)accountSettings.InitialCapital, (decimal)accountSettings.Leverage);
 
             // 运行诊断分析
             var diagnosticService = new StrategyDiagnosticService(config);
             var diagnosticResult = diagnosticService.Analyze(_runner.LoadedCandles);
             diagnosticService.PrintDiagnostic(diagnosticResult);
+            
+            // 生成诊断文本用于保存到文件
+            var diagnosticText = diagnosticService.GenerateDiagnosticText(diagnosticResult);
+
+            // 保存报告到文件
+            try
+            {
+                var reportPath = _fileReportService.SaveReport(
+                    result, 
+                    (decimal)accountSettings.InitialCapital, 
+                    (decimal)accountSettings.Leverage,
+                    diagnosticText);
+                
+                var chartPath = reportPath.Replace(".txt", ".png");
+                System.Console.WriteLine($"\n✓ 报告已保存到文件: {reportPath}");
+                System.Console.WriteLine($"✓ 收益曲线图已保存: {chartPath}");
+            }
+            catch (Exception fileEx)
+            {
+                System.Console.WriteLine($"\n✗ 保存报告文件失败: {fileEx.Message}");
+            }
 
             // 自动保存结果到Cosmos DB
-            await _dbService.SaveResultAsync(result);
+            try
+            {
+                await _dbService.SaveResultAsync(result);
+            }
+            catch (Exception dbEx)
+            {
+                _userInteraction.ShowError(dbEx);
+                System.Console.WriteLine("\n警告: Cosmos DB保存失败，但回测结果已成功显示。");
+            }
         }
         catch (Exception ex)
         {

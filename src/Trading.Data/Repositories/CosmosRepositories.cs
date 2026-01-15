@@ -21,14 +21,35 @@ public class CosmosBacktestRepository : IBacktestRepository
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = true
+            WriteIndented = true,
+            Converters =
+            {
+                new DecimalJsonConverter(8),
+                new NullableDecimalJsonConverter(8)
+            }
         };
     }
 
     public async Task<string> SaveBacktestResultAsync(BacktestResult result)
     {
-        var response = await _container.UpsertItemAsync(result, new PartitionKey(result.Config.Symbol));
-        return response.Resource.Id;
+        // TODO: 暂时跳过Cosmos DB保存，待问题解决后再启用
+        System.Console.WriteLine("\n⊙ 跳过Cosmos DB保存（暂时禁用）");
+        return result.Id;
+        
+        // try
+        // {
+        //     var response = await _container.UpsertItemAsync(result, new PartitionKey(result.Config.Symbol));
+        //     System.Console.WriteLine($"\n✓ 成功保存到Cosmos DB (ID: {response.Resource.Id})");
+        //     return response.Resource.Id;
+        // }
+        // catch (Microsoft.Azure.Cosmos.CosmosException ex)
+        // {
+        //     System.Console.WriteLine($"\n✗ Cosmos DB保存失败: {ex.Message}");
+        //     System.Console.WriteLine($"   StatusCode: {ex.StatusCode}, SubStatusCode: {ex.SubStatusCode}");
+        //     if (ex.ResponseBody != null)
+        //         System.Console.WriteLine($"   Response: {ex.ResponseBody}");
+        //     throw;
+        // }
     }
 
     public async Task<BacktestResult?> GetBacktestResultAsync(string id)

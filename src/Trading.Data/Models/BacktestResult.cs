@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Trading.Data.Infrastructure;
+
 namespace Trading.Data.Models;
 
 /// <summary>
@@ -6,8 +9,9 @@ namespace Trading.Data.Models;
 public class BacktestResult
 {
     /// <summary>
-    /// 结果ID
+    /// 结果ID (Cosmos DB要求小写)
     /// </summary>
+    [JsonPropertyName("id")]
     public string Id { get; set; } = Guid.NewGuid().ToString();
     
     /// <summary>
@@ -84,6 +88,7 @@ public class PerformanceMetrics
     /// <summary>
     /// 胜率 (%)
     /// </summary>
+    [JsonIgnore]
     public decimal WinRate => TotalTrades > 0 ? (decimal)WinningTrades / TotalTrades * 100 : 0;
     
     /// <summary>
@@ -99,6 +104,7 @@ public class PerformanceMetrics
     /// <summary>
     /// 平均持仓时间
     /// </summary>
+    [JsonConverter(typeof(TimeSpanConverter))]
     public TimeSpan AverageHoldingTime { get; set; }
     
     /// <summary>
@@ -165,6 +171,7 @@ public class PeriodMetrics
     /// <summary>
     /// 胜率 (%)
     /// </summary>
+    [JsonIgnore]
     public decimal WinRate => TradeCount > 0 ? (decimal)WinningTrades / TradeCount * 100 : 0;
     
     /// <summary>
@@ -180,6 +187,7 @@ public class PeriodMetrics
     /// <summary>
     /// 平均持仓时间
     /// </summary>
+    [JsonConverter(typeof(TimeSpanConverter))]
     public TimeSpan AverageHoldingTime { get; set; }
     
     /// <summary>

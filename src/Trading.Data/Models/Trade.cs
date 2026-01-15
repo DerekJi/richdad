@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Trading.Data.Models;
 
 /// <summary>
@@ -12,7 +14,7 @@ public enum TradeDirection
 /// <summary>
 /// 平仓原因
 /// </summary>
-public enum CloseReason
+public enum TradeCloseReason
 {
     StopLoss,       // 止损
     TakeProfit,     // 止盈
@@ -67,16 +69,18 @@ public class Trade
     /// <summary>
     /// 平仓原因
     /// </summary>
-    public CloseReason? CloseReason { get; set; }
+    public TradeCloseReason? CloseReason { get; set; }
     
     /// <summary>
     /// 是否已平仓
     /// </summary>
+    [JsonIgnore]
     public bool IsClosed => CloseTime.HasValue;
     
     /// <summary>
     /// 止损点差
     /// </summary>
+    [JsonIgnore]
     public decimal StopLossPips => Direction == TradeDirection.Long 
         ? (OpenPrice - StopLoss) 
         : (StopLoss - OpenPrice);
@@ -84,43 +88,30 @@ public class Trade
     /// <summary>
     /// 止盈点差
     /// </summary>
+    [JsonIgnore]
     public decimal TakeProfitPips => Direction == TradeDirection.Long 
         ? (TakeProfit - OpenPrice) 
         : (OpenPrice - TakeProfit);
     
     /// <summary>
-    /// 盈亏额 (点数)
+    /// 盈亏额 (USD)
     /// </summary>
-    public decimal? ProfitLoss
-    {
-        get
-        {
-            if (!IsClosed) return null;
-            return Direction == TradeDirection.Long
-                ? (ClosePrice!.Value - OpenPrice)
-                : (OpenPrice - ClosePrice!.Value);
-        }
-    }
+    public decimal? ProfitLoss { get; set; }
     
     /// <summary>
-    /// 收益率 (相对于风险)
+    /// 收益率 (相对于初始资金的百分比)
     /// </summary>
-    public decimal? ReturnRate
-    {
-        get
-        {
-            if (!IsClosed || StopLossPips == 0) return null;
-            return ProfitLoss!.Value / StopLossPips;
-        }
-    }
+    public decimal? ReturnRate { get; set; }
     
     /// <summary>
     /// 是否盈利
     /// </summary>
+    [JsonIgnore]
     public bool? IsWinning => ProfitLoss > 0;
     
     /// <summary>
     /// 持仓时长
     /// </summary>
+    [JsonIgnore]
     public TimeSpan? HoldingDuration => IsClosed ? CloseTime!.Value - OpenTime : null;
 }

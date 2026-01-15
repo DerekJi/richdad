@@ -216,36 +216,47 @@ public class StrategyDiagnosticService
 
     public void PrintDiagnostic(DiagnosticResult result)
     {
-        System.Console.WriteLine("\n============================================================");
-        System.Console.WriteLine("策略诊断分析");
-        System.Console.WriteLine("============================================================");
-        System.Console.WriteLine($"总K线数: {result.TotalCandles:N0}");
-        System.Console.WriteLine($"EMA准备就绪的K线: {result.CandlesWithValidEma:N0} ({Percent(result.CandlesWithValidEma, result.TotalCandles)})");
-        System.Console.WriteLine($"交易时段内的K线: {result.CandlesInTradingHours:N0} ({Percent(result.CandlesInTradingHours, result.TotalCandles)})");
+        var diagnosticText = GenerateDiagnosticText(result);
+        System.Console.WriteLine(diagnosticText);
+    }
+
+    /// <summary>
+    /// 生成诊断信息文本
+    /// </summary>
+    public string GenerateDiagnosticText(DiagnosticResult result)
+    {
+        var sb = new System.Text.StringBuilder();
         
-        System.Console.WriteLine("\n--- Pin Bar识别统计 ---");
-        System.Console.WriteLine($"潜在Pin Bar总数: {result.PotentialPinBars:N0}");
-        System.Console.WriteLine($"  - 看涨Pin Bar: {result.BullishPinBars:N0}");
-        System.Console.WriteLine($"  - 看跌Pin Bar: {result.BearishPinBars:N0}");
+        sb.AppendLine("\n============================================================");
+        sb.AppendLine("策略诊断分析");
+        sb.AppendLine("============================================================");
+        sb.AppendLine($"总K线数: {result.TotalCandles:N0}");
+        sb.AppendLine($"EMA准备就绪的K线: {result.CandlesWithValidEma:N0} ({Percent(result.CandlesWithValidEma, result.TotalCandles)})");
+        sb.AppendLine($"交易时段内的K线: {result.CandlesInTradingHours:N0} ({Percent(result.CandlesInTradingHours, result.TotalCandles)})");
         
-        System.Console.WriteLine("\n--- 过滤统计 (按优先级) ---");
-        System.Console.WriteLine($"1. 波动太小(Threshold): {result.FilteredByThreshold:N0}");
-        System.Console.WriteLine($"2. 影线长度不足(ATR倍数): {result.FilteredByAtrRatio:N0}");
-        System.Console.WriteLine($"3. 实体太大(>{_config.MaxBodyPercentage}%): {result.FilteredByBodySize:N0}");
-        System.Console.WriteLine($"4. 长影线占比不足(<{_config.MinLongerWickPercentage}%): {result.FilteredByWickPercentage:N0}");
-        System.Console.WriteLine($"5. 短影线太长(>{_config.MaxShorterWickPercentage}%): {result.FilteredByShorterWick:N0}");
-        System.Console.WriteLine($"6. EMA位置不符(多/空方向): {result.FilteredByBaseEmaPosition:N0}");
-        System.Console.WriteLine($"7. 不靠近任何EMA: {result.FilteredByNotNearEma:N0}");
-        System.Console.WriteLine($"8. 无突破确认: {result.FilteredByNoBreakout:N0}");
+        sb.AppendLine("\n--- Pin Bar识别统计 ---");
+        sb.AppendLine($"潜在Pin Bar总数: {result.PotentialPinBars:N0}");
+        sb.AppendLine($"  - 看涨Pin Bar: {result.BullishPinBars:N0}");
+        sb.AppendLine($"  - 看跌Pin Bar: {result.BearishPinBars:N0}");
         
-        System.Console.WriteLine("\n--- 通过各阶段的信号数 ---");
-        System.Console.WriteLine($"Pin Bar识别: {result.PotentialPinBars:N0}");
-        System.Console.WriteLine($"+ 在基准EMA正确一侧: {result.PinBarsAboveBaseEma + result.PinBarsBelowBaseEma:N0}");
-        System.Console.WriteLine($"+ 靠近EMA: {result.PinBarsNearEma:N0}");
-        System.Console.WriteLine($"+ 突破确认: {result.BreakoutConfirmations:N0}");
-        System.Console.WriteLine($"+ 交易时段内: {result.FinalSignals:N0}");
+        sb.AppendLine("\n--- 过滤统计 (按优先级) ---");
+        sb.AppendLine($"1. 波动太小(Threshold): {result.FilteredByThreshold:N0}");
+        sb.AppendLine($"2. 影线长度不足(ATR倍数): {result.FilteredByAtrRatio:N0}");
+        sb.AppendLine($"3. 实体太大(>{_config.MaxBodyPercentage}%): {result.FilteredByBodySize:N0}");
+        sb.AppendLine($"4. 长影线占比不足(<{_config.MinLongerWickPercentage}%): {result.FilteredByWickPercentage:N0}");
+        sb.AppendLine($"5. 短影线太长(>{_config.MaxShorterWickPercentage}%): {result.FilteredByShorterWick:N0}");
+        sb.AppendLine($"6. EMA位置不符(多/空方向): {result.FilteredByBaseEmaPosition:N0}");
+        sb.AppendLine($"7. 不靠近任何EMA: {result.FilteredByNotNearEma:N0}");
+        sb.AppendLine($"8. 无突破确认: {result.FilteredByNoBreakout:N0}");
         
-        System.Console.WriteLine("\n--- 最大瓶颈分析 ---");
+        sb.AppendLine("\n--- 通过各阶段的信号数 ---");
+        sb.AppendLine($"Pin Bar识别: {result.PotentialPinBars:N0}");
+        sb.AppendLine($"+ 在基准EMA正确一侧: {result.PinBarsAboveBaseEma + result.PinBarsBelowBaseEma:N0}");
+        sb.AppendLine($"+ 靠近EMA: {result.PinBarsNearEma:N0}");
+        sb.AppendLine($"+ 突破确认: {result.BreakoutConfirmations:N0}");
+        sb.AppendLine($"+ 交易时段内: {result.FinalSignals:N0}");
+        
+        sb.AppendLine("\n--- 最大瓶颈分析 ---");
         var bottlenecks = new[]
         {
             ("波动太小", result.FilteredByThreshold),
@@ -258,16 +269,18 @@ public class StrategyDiagnosticService
         
         foreach (var (name, count) in bottlenecks.OrderByDescending(x => x.Item2).Take(3))
         {
-            System.Console.WriteLine($"  {name}: {count:N0}");
+            sb.AppendLine($"  {name}: {count:N0}");
         }
         
-        System.Console.WriteLine("\n--- 信号转化率 ---");
-        System.Console.WriteLine($"K线 → Pin Bar: {Percent(result.PotentialPinBars, result.CandlesWithValidEma)}");
-        System.Console.WriteLine($"Pin Bar → 靠近EMA: {Percent(result.PinBarsNearEma, result.PotentialPinBars)}");
-        System.Console.WriteLine($"靠近EMA → 突破确认: {Percent(result.BreakoutConfirmations, result.PinBarsNearEma)}");
-        System.Console.WriteLine($"突破确认 → 最终信号: {Percent(result.FinalSignals, result.BreakoutConfirmations)}");
-        System.Console.WriteLine($"总转化率: {Percent(result.FinalSignals, result.CandlesWithValidEma)}");
-        System.Console.WriteLine("============================================================\n");
+        sb.AppendLine("\n--- 信号转化率 ---");
+        sb.AppendLine($"K线 → Pin Bar: {Percent(result.PotentialPinBars, result.CandlesWithValidEma)}");
+        sb.AppendLine($"Pin Bar → 靠近EMA: {Percent(result.PinBarsNearEma, result.PotentialPinBars)}");
+        sb.AppendLine($"靠近EMA → 突破确认: {Percent(result.BreakoutConfirmations, result.PinBarsNearEma)}");
+        sb.AppendLine($"突破确认 → 最终信号: {Percent(result.FinalSignals, result.BreakoutConfirmations)}");
+        sb.AppendLine($"总转化率: {Percent(result.FinalSignals, result.CandlesWithValidEma)}");
+        sb.AppendLine("============================================================\n");
+        
+        return sb.ToString();
     }
 
     private string Percent(int value, int total)

@@ -2,6 +2,7 @@ using System.Globalization;
 using Trading.Core.Indicators;
 using Trading.Core.Strategies;
 using Trading.Data.Models;
+using Trading.Data.Configuration;
 
 namespace Trading.Backtest.Engine;
 
@@ -22,7 +23,7 @@ public class BacktestEngine
     /// <summary>
     /// 执行回测
     /// </summary>
-    public BacktestResult RunBacktest(List<Candle> candles, StrategyConfig config)
+    public BacktestResult RunBacktest(List<Candle> candles, StrategyConfig config, AccountSettings accountSettings)
     {
         // 计算技术指标
         _indicatorCalculator.CalculateIndicators(candles, config);
@@ -48,7 +49,7 @@ public class BacktestEngine
                 var closeReason = CheckClosePosition(current, openTrade);
                 if (closeReason.HasValue)
                 {
-                    ClosePosition(openTrade, current, closeReason.Value);
+                    ClosePosition(openTrade, current, closeReason.Value, config, accountSettings);
                     result.Trades.Add(openTrade);
                     openTrade = null;
                 }
@@ -73,12 +74,12 @@ public class BacktestEngine
         // 如果还有未平仓的交易，在最后一根K线收盘价平仓
         if (openTrade != null)
         {
-            ClosePosition(openTrade, candles.Last(), Data.Models.CloseReason.Manual);
+            ClosePosition(openTrade, candles.Last(), Data.Models.TradeCloseReason.Manual, config, accountSettings);
             result.Trades.Add(openTrade);
         }
         
         // 计算统计指标
-        CalculateMetrics(result);
+        CalculateMetrics(result, accountSettings);
         
         return result;
     }
@@ -105,23 +106,23 @@ public class BacktestEngine
     /// <summary>
     /// 检查是否需要平仓
     /// </summary>
-    private Data.Models.CloseReason? CheckClosePosition(Candle candle, Trade trade)
+    private Data.Models.TradeCloseReason? CheckClosePosition(Candle candle, Trade trade)
     {
         if (trade.Direction == TradeDirection.Long)
         {
             // 做多：低点触及止损或高点触及止盈
             if (candle.Low <= trade.StopLoss)
-                return Data.Models.CloseReason.StopLoss;
+                return Data.Models.TradeCloseReason.StopLoss;
             if (candle.High >= trade.TakeProfit)
-                return Data.Models.CloseReason.TakeProfit;
+                return Data.Models.TradeCloseReason.TakeProfit;
         }
         else
         {
             // 做空：高点触及止损或低点触及止盈
             if (candle.High >= trade.StopLoss)
-                return Data.Models.CloseReason.StopLoss;
+                return Data.Models.TradeCloseReason.StopLoss;
             if (candle.Low <= trade.TakeProfit)
-                return Data.Models.CloseReason.TakeProfit;
+                return Data.Models.TradeCloseReason.TakeProfit;
         }
         
         return null;
@@ -130,7 +131,7 @@ public class BacktestEngine
     /// <summary>
     /// 平仓
     /// </summary>
-    private void ClosePosition(Trade trade, Candle candle, Data.Models.CloseReason closeReason)
+    private void ClosePosition(Trade trade, Candle candle, Data.Models.TradeCloseReason closeReason, StrategyConfig config, AccountSettings accountSettings)
     {
         trade.CloseTime = candle.DateTime;
         trade.CloseReason = closeReason;
@@ -138,17 +139,36 @@ public class BacktestEngine
         // 根据平仓原因确定平仓价格
         trade.ClosePrice = closeReason switch
         {
-            Data.Models.CloseReason.StopLoss => trade.StopLoss,
-            Data.Models.CloseReason.TakeProfit => trade.TakeProfit,
-            Data.Models.CloseReason.Manual => candle.Close,
+            Data.Models.TradeCloseReason.StopLoss => trade.StopLoss,
+            Data.Models.TradeCloseReason.TakeProfit => trade.TakeProfit,
+            Data.Models.TradeCloseReason.Manual => candle.Close,
             _ => candle.Close
         };
+        
+        // 计算点数差
+        decimal priceDiff = trade.Direction == TradeDirection.Long
+            ? (trade.ClosePrice!.Value - trade.OpenPrice)
+            : (trade.OpenPrice - trade.ClosePrice!.Value);
+        
+        // 计算USD盈亏 = 点数差 × 合约大小 × 手数
+        // 手数根据风险计算: (InitialCapital × MaxLossPerTradePercent%) / (StopLossPips × ContractSize)
+        decimal stopLossPips = trade.Direction == TradeDirection.Long 
+            ? (trade.OpenPrice - trade.StopLoss) 
+            : (trade.StopLoss - trade.OpenPrice);
+        
+        decimal riskAmount = (decimal)accountSettings.InitialCapital * (decimal)accountSettings.MaxLossPerTradePercent / 100m;
+        decimal lotSize = stopLossPips > 0 ? riskAmount / (stopLossPips * config.ContractSize) : 0.01m;
+        
+        trade.ProfitLoss = Math.Round(priceDiff * config.ContractSize * lotSize, 8);
+        
+        // 计算收益率 (相对于初始资金的百分比)
+        trade.ReturnRate = Math.Round((trade.ProfitLoss ?? 0) / (decimal)accountSettings.InitialCapital * 100m, 8);
     }
 
     /// <summary>
     /// 计算统计指标
     /// </summary>
-    private void CalculateMetrics(BacktestResult result)
+    private void CalculateMetrics(BacktestResult result, AccountSettings accountSettings)
     {
         var trades = result.Trades;
         if (trades.Count == 0) return;
@@ -187,7 +207,7 @@ public class BacktestEngine
         result.YearlyMetrics = CalculatePeriodMetrics(trades, PeriodType.Year);
         
         // 收益曲线
-        result.EquityCurve = CalculateEquityCurve(trades);
+        result.EquityCurve = CalculateEquityCurve(trades, accountSettings);
     }
 
     /// <summary>
@@ -282,22 +302,20 @@ public class BacktestEngine
     /// <summary>
     /// 计算收益曲线
     /// </summary>
-    private List<EquityPoint> CalculateEquityCurve(List<Trade> trades)
+    private List<EquityPoint> CalculateEquityCurve(List<Trade> trades, AccountSettings accountSettings)
     {
         var curve = new List<EquityPoint>();
-        decimal cumulative = 0;
-        decimal cumulativeRate = 0;
+        decimal cumulativeProfit = 0;
         
         foreach (var trade in trades.OrderBy(t => t.CloseTime))
         {
-            cumulative += trade.ProfitLoss ?? 0;
-            cumulativeRate += trade.ReturnRate ?? 0;
+            cumulativeProfit += trade.ProfitLoss ?? 0;
             
             curve.Add(new EquityPoint
             {
                 Time = trade.CloseTime!.Value,
-                CumulativeProfit = cumulative,
-                CumulativeReturnRate = cumulativeRate,
+                CumulativeProfit = cumulativeProfit,
+                CumulativeReturnRate = cumulativeProfit / (decimal)accountSettings.InitialCapital * 100m,
                 TradeId = trade.Id
             });
         }

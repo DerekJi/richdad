@@ -165,6 +165,9 @@ public class PinBarStrategy : ITradingStrategy
     /// </summary>
     private bool IsValidTradingTime(Candle candle)
     {
+        if (_config.NoTradingHoursLimit)
+            return true;
+            
         var hour = candle.UtcHour;
         return hour >= _config.StartTradingHour && hour <= _config.EndTradingHour;
     }

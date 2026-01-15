@@ -21,57 +21,57 @@ public class StrategyConfig
     /// <summary>
     /// 交易品种 (如 XAUUSD, XAGUSD)
     /// </summary>
-    public string Symbol { get; set; } = "XAUUSD";
+    public string Symbol { get; set; } = string.Empty;
     
     /// <summary>
     /// 合约规模
     /// </summary>
-    public decimal ContractSize { get; set; } = 100;
+    public decimal ContractSize { get; set; }
     
     /// <summary>
     /// 基准EMA周期
     /// </summary>
-    public int BaseEma { get; set; } = 200;
+    public int BaseEma { get; set; }
     
     /// <summary>
     /// K线最小阈值(美元)，过滤波动太小的K线
     /// </summary>
-    public decimal Threshold { get; set; } = 1.0m;
+    public decimal Threshold { get; set; }
     
     /// <summary>
     /// 实体最大占比(%)
     /// </summary>
-    public decimal MaxBodyPercentage { get; set; } = 30;
+    public decimal MaxBodyPercentage { get; set; }
     
     /// <summary>
     /// 长影线最小占比(%)
     /// </summary>
-    public decimal MinLongerWickPercentage { get; set; } = 60;
+    public decimal MinLongerWickPercentage { get; set; }
     
     /// <summary>
     /// 短影线最大占比(%)
     /// </summary>
-    public decimal MaxShorterWickPercentage { get; set; } = 20;
+    public decimal MaxShorterWickPercentage { get; set; }
     
     /// <summary>
     /// EMA列表，用于判断是否靠近
     /// </summary>
-    public List<int> EmaList { get; set; } = new() { 20, 60, 80, 100, 200 };
+    public List<int> EmaList { get; set; } = new();
     
     /// <summary>
     /// 靠近EMA的阈值(美元)
     /// </summary>
-    public decimal NearEmaThreshold { get; set; } = 0.8m;
+    public decimal NearEmaThreshold { get; set; }
     
     /// <summary>
     /// 盈亏比
     /// </summary>
-    public decimal RiskRewardRatio { get; set; } = 1.5m;
+    public decimal RiskRewardRatio { get; set; }
     
     /// <summary>
     /// 止损ATR倍数
     /// </summary>
-    public decimal StopLossAtrRatio { get; set; } = 1.0m;
+    public decimal StopLossAtrRatio { get; set; }
     
     /// <summary>
     /// 止损策略
@@ -81,17 +81,22 @@ public class StrategyConfig
     /// <summary>
     /// 开始交易时间 (UTC小时)
     /// </summary>
-    public int StartTradingHour { get; set; } = 5;
+    public int StartTradingHour { get; set; }
     
     /// <summary>
     /// 结束交易时间 (UTC小时)
     /// </summary>
-    public int EndTradingHour { get; set; } = 11;
+    public int EndTradingHour { get; set; }
+    
+    /// <summary>
+    /// 不限制交易时段（true表示24小时交易）
+    /// </summary>
+    public bool NoTradingHoursLimit { get; set; } = false;
     
     /// <summary>
     /// ATR周期
     /// </summary>
-    public int AtrPeriod { get; set; } = 14;
+    public int AtrPeriod { get; set; }
     
     /// <summary>
     /// 是否要求Pin Bar为阳线/阴线
@@ -101,7 +106,7 @@ public class StrategyConfig
     /// <summary>
     /// Pin Bar下影线最小ATR倍数
     /// </summary>
-    public decimal MinLowerWickAtrRatio { get; set; } = 1.2m;
+    public decimal MinLowerWickAtrRatio { get; set; }
     
     /// <summary>
     /// 创建默认XAUUSD配置
@@ -110,8 +115,6 @@ public class StrategyConfig
     {
         Symbol = "XAUUSD",
         ContractSize = 100,
-        Threshold = 1.0m,
-        NearEmaThreshold = 0.8m
     };
     
     /// <summary>
@@ -121,7 +124,6 @@ public class StrategyConfig
     {
         Symbol = "XAGUSD",
         ContractSize = 1000,
-        Threshold = 0.8m,
         NearEmaThreshold = 0.2m
     };
 }

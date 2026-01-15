@@ -1,0 +1,21 @@
+{
+  "name": "cfd-trading",
+  "version": "1.0.0",
+  "description": "CFD Trading",
+  "scripts": {
+    "console": "cd src/Trading.Backtest.Console/ && dotnet run",
+    "start": "cd src/Trading.Backtest.Web/ && dotnet watch",
+    "build": "dotnet build",
+    "clean": "dotnet clean"
+  },
+  "keywords": [
+    "trading",
+    "backtest",
+    "forex",
+    "CFD",
+    "gold",
+    "silver"
+  ],
+  "author": "",
+  "license": "ISC"
+}

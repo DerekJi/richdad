@@ -1,4 +1,5 @@
 using Microsoft.Azure.Cosmos;
+using System.Text.Json;
 using Trading.Data.Configuration;
 
 namespace Trading.Data.Infrastructure;
@@ -16,10 +17,7 @@ public class CosmosDbContext
         _settings = settings;
         var clientOptions = new CosmosClientOptions
         {
-            SerializerOptions = new CosmosSerializationOptions
-            {
-                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
-            },
+            Serializer = new CustomCosmosSerializer(),
             HttpClientFactory = () =>
             {
                 var handler = new HttpClientHandler
