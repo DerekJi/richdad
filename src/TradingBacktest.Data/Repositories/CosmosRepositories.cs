@@ -2,6 +2,7 @@ using Microsoft.Azure.Cosmos;
 using System.Text.Json;
 using TradingBacktest.Data.Interfaces;
 using TradingBacktest.Data.Models;
+using TradingBacktest.Data.Infrastructure;
 
 namespace TradingBacktest.Data.Repositories;
 
@@ -13,10 +14,9 @@ public class CosmosBacktestRepository : IBacktestRepository
     private readonly Container _container;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public CosmosBacktestRepository(CosmosClient cosmosClient, string databaseName = "TradingBacktest", string containerName = "BacktestResults")
+    public CosmosBacktestRepository(CosmosDbContext dbContext)
     {
-        var database = cosmosClient.GetDatabase(databaseName);
-        _container = database.GetContainer(containerName);
+        _container = dbContext.BacktestContainer;
         
         _jsonOptions = new JsonSerializerOptions
         {
@@ -90,29 +90,6 @@ public class CosmosBacktestRepository : IBacktestRepository
             await _container.DeleteItemAsync<BacktestResult>(id, new PartitionKey(result.Config.Symbol));
         }
     }
-
-    /// <summary>
-    /// 初始化数据库和容器
-    /// </summary>
-    public static async Task InitializeDatabaseAsync(CosmosClient cosmosClient, string databaseName = "TradingBacktest")
-    {
-        // 创建数据库
-        var database = await cosmosClient.CreateDatabaseIfNotExistsAsync(databaseName);
-        
-        // 创建回测结果容器
-        await database.Database.CreateContainerIfNotExistsAsync(
-            new ContainerProperties("BacktestResults", "/config/symbol")
-            {
-                DefaultTimeToLive = -1 // 不过期
-            });
-        
-        // 创建配置容器
-        await database.Database.CreateContainerIfNotExistsAsync(
-            new ContainerProperties("StrategyConfigs", "/symbol")
-            {
-                DefaultTimeToLive = -1
-            });
-    }
 }
 
 /// <summary>
@@ -122,10 +99,9 @@ public class CosmosStrategyConfigRepository : IStrategyConfigRepository
 {
     private readonly Container _container;
 
-    public CosmosStrategyConfigRepository(CosmosClient cosmosClient, string databaseName = "TradingBacktest", string containerName = "StrategyConfigs")
+    public CosmosStrategyConfigRepository(CosmosDbContext dbContext)
     {
-        var database = cosmosClient.GetDatabase(databaseName);
-        _container = database.GetContainer(containerName);
+        _container = dbContext.ConfigContainer;
     }
 
     public async Task<string> SaveConfigAsync(StrategyConfig config)

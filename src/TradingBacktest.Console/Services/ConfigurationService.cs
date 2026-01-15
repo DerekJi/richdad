@@ -1,20 +1,49 @@
 using TradingBacktest.Data.Models;
+using TradingBacktest.Data.Configuration;
 
 namespace TradingBacktest.Console.Services;
 
 /// <summary>
 /// 配置服务
+/// 职责：从appsettings提供策略配置和路径信息
 /// </summary>
 public class ConfigurationService
 {
-    /// <summary>
-    /// 创建默认配置
-    /// </summary>
-    public StrategyConfig CreateDefaultConfig()
+    private readonly AppSettings _appSettings;
+
+    public ConfigurationService(AppSettings appSettings)
     {
-        var config = StrategyConfig.CreateXauDefault();
-        config.StrategyName = "PinBar-XAUUSD-v1";
-        return config;
+        _appSettings = appSettings;
+    }
+
+    /// <summary>
+    /// 获取可用的策略名称列表
+    /// </summary>
+    public List<string> GetAvailableStrategies()
+    {
+        return _appSettings.Strategies.Keys.ToList();
+    }
+
+    /// <summary>
+    /// 根据策略名称获取策略配置
+    /// </summary>
+    public StrategyConfig GetStrategyConfig(string strategyName)
+    {
+        if (!_appSettings.Strategies.TryGetValue(strategyName, out var settings))
+        {
+            throw new ArgumentException($"找不到策略配置: {strategyName}");
+        }
+
+        return new StrategyConfig
+        {
+            StrategyName = strategyName,
+            Symbol = settings.Symbol,
+            AtrPeriod = settings.AtrPeriod,
+            RiskRewardRatio = (decimal)settings.AtrMultiplierTakeProfit,
+            StopLossAtrRatio = (decimal)settings.AtrMultiplierStopLoss,
+            // 使用appsettings中的EMA配置
+            EmaList = new List<int> { settings.EmaFastPeriod, settings.EmaSlowPeriod }
+        };
     }
 
     /// <summary>
@@ -22,21 +51,19 @@ public class ConfigurationService
     /// </summary>
     public string GetDataDirectory()
     {
-        // 设置数据目录 - 使用绝对路径或相对路径
-        var dataDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "data"));
-        if (!Directory.Exists(dataDirectory))
+        var dataPath = _appSettings.DataPath;
+        
+        // 处理相对路径
+        if (!Path.IsPathRooted(dataPath))
         {
-            // 如果找不到，尝试从当前工作目录查找
-            dataDirectory = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "data"));
+            dataPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, dataPath));
         }
-        return dataDirectory;
-    }
 
-    /// <summary>
-    /// 获取Cosmos DB连接字符串
-    /// </summary>
-    public string GetCosmosConnectionString()
-    {
-        return "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+        if (!Directory.Exists(dataPath))
+        {
+            throw new DirectoryNotFoundException($"数据目录不存在: {dataPath}");
+        }
+
+        return dataPath;
     }
 }

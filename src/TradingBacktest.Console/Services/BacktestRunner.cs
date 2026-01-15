@@ -8,25 +8,19 @@ namespace TradingBacktest.Console.Services;
 
 /// <summary>
 /// 回测运行服务
+/// 职责：加载数据并执行回测
 /// </summary>
 public class BacktestRunner
 {
-    private readonly string _dataDirectory;
-
-    public BacktestRunner(string dataDirectory)
-    {
-        _dataDirectory = dataDirectory;
-    }
-
     /// <summary>
     /// 执行回测
     /// </summary>
-    public async Task<BacktestResult> RunAsync(StrategyConfig config)
+    public async Task<BacktestResult> RunAsync(StrategyConfig config, string dataDirectory)
     {
-        System.Console.WriteLine($"数据目录: {_dataDirectory}\n");
+        System.Console.WriteLine($"数据目录: {dataDirectory}\n");
 
         // 创建数据提供者
-        IMarketDataProvider dataProvider = new CsvDataProvider(_dataDirectory);
+        IMarketDataProvider dataProvider = new CsvDataProvider(dataDirectory);
 
         // 加载数据
         System.Console.WriteLine($"正在加载 {config.Symbol} 的历史数据...");
