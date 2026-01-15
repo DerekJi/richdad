@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\TradingBacktest.Data\TradingBacktest.Data.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TradingBacktest.Core\TradingBacktest.Core.csproj" />
+    <ProjectReference Include="..\TradingBacktest.Data\TradingBacktest.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.56.0" />
+  </ItemGroup>
+
+</Project>

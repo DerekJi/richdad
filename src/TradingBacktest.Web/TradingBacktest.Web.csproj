@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TradingBacktest.Core\TradingBacktest.Core.csproj" />
+    <ProjectReference Include="..\TradingBacktest.Data\TradingBacktest.Data.csproj" />
+  </ItemGroup>
+
+</Project>
