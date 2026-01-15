@@ -18,6 +18,13 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        // 检查是否是cosmos-test命令
+        if (args.Length > 0 && args[0].ToLower() == "cosmos-test")
+        {
+            await CosmosTestCommand.RunAsync(args);
+            return;
+        }
+
         // 构建配置
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
