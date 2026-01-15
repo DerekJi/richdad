@@ -14,7 +14,22 @@ public class CosmosDbContext
     public CosmosDbContext(CosmosDbSettings settings)
     {
         _settings = settings;
-        _client = new CosmosClient(_settings.ConnectionString);
+        var clientOptions = new CosmosClientOptions
+        {
+            SerializerOptions = new CosmosSerializationOptions
+            {
+                PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+            },
+            HttpClientFactory = () =>
+            {
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+                };
+                return new HttpClient(handler);
+            }
+        };
+        _client = new CosmosClient(_settings.ConnectionString, clientOptions);
     }
 
     public async Task InitializeAsync()
