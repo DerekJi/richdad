@@ -130,6 +130,11 @@ public class BacktestController : ControllerBase
             // 运行回测
             var result = await _runner.RunAsync(config, accountSettings, dataDirectory);
 
+            // 获取CSV文件名
+            var dataProvider = new Trading.Data.Providers.CsvDataProvider(dataDirectory);
+            var csvFilePath = dataProvider.FindCsvFile(config.Symbol, config.CsvFilter);
+            var csvFileName = !string.IsNullOrEmpty(csvFilePath) ? System.IO.Path.GetFileName(csvFilePath) : "N/A";
+
             // 计算时间段分析
             var topProfitSlots = TimeSlotAnalyzer.GetTopProfitableSlots(result.Trades, 5);
             var topLossSlots = TimeSlotAnalyzer.GetTopLossSlots(result.Trades, 5);
@@ -139,6 +144,7 @@ public class BacktestController : ControllerBase
             {
                 Config = config,
                 Account = accountSettings,
+                CsvFileName = csvFileName,
                 Result = new
                 {
                     result.Id,

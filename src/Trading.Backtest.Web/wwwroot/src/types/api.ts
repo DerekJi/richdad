@@ -161,6 +161,7 @@ export interface BacktestResponse {
   strategyName: string;
   config: StrategyConfig;
   account: AccountSettings;
+  csvFileName?: string;
   result: BacktestResult;
 }
 

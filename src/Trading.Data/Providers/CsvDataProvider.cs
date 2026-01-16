@@ -29,23 +29,23 @@ public class CsvDataProvider : IMarketDataProvider
         }
 
         var candles = new List<Candle>();
-        
+
         using var reader = new StreamReader(csvFile);
-        
+
         // 跳过标题行
         await reader.ReadLineAsync();
-        
+
         while (!reader.EndOfStream)
         {
             var line = await reader.ReadLineAsync();
             if (string.IsNullOrWhiteSpace(line)) continue;
-            
+
             var candle = ParseCsvLine(line);
-            
+
             // 应用时间过滤
             if (startTime.HasValue && candle.DateTime < startTime.Value) continue;
             if (endTime.HasValue && candle.DateTime > endTime.Value) continue;
-            
+
             candles.Add(candle);
         }
 
@@ -55,7 +55,7 @@ public class CsvDataProvider : IMarketDataProvider
     /// <summary>
     /// 查找CSV文件
     /// </summary>
-    private string FindCsvFile(string symbol, string? csvFilter = null)
+    public string FindCsvFile(string symbol, string? csvFilter = null)
     {
         // 查找包含symbol的文件，如 XAUUSD.a_M15_*.csv
         var files = Directory.GetFiles(_dataDirectory, $"{symbol}*.csv");
@@ -69,7 +69,7 @@ public class CsvDataProvider : IMarketDataProvider
     private Candle ParseCsvLine(string line)
     {
         var parts = line.Split('\t');
-        
+
         if (parts.Length < 9)
         {
             throw new FormatException($"CSV格式不正确: {line}");

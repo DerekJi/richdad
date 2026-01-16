@@ -4,7 +4,8 @@
   "description": "CFD Trading",
   "scripts": {
     "console": "cd src/Trading.Backtest.Console/ && dotnet run",
-    "start": "cd src/Trading.Backtest.Web/ && dotnet watch",
+    "api": "cd src/Trading.Backtest.Web/ && dotnet watch",
+    "ui": "cd src/Trading.Backtest.Web/wwwroot && npm run dev",
     "build": "dotnet build",
     "clean": "dotnet clean"
   },

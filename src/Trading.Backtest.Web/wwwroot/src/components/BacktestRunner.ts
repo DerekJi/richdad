@@ -105,22 +105,23 @@ export class BacktestRunner {
     const result = response.result;
     const metrics = result.overallMetrics;
 
+    // 显示基本信息
+    const basicInfo = document.getElementById('basicInfo');
+    if (basicInfo) {
+      basicInfo.innerHTML = `
+        <div style="margin-bottom: 20px; line-height: 1.8;">
+          <strong>策略名称：</strong>${response.strategyName || response.config.strategyName} &nbsp;&nbsp;
+          <strong>交易品种：</strong>${result.symbol || response.config.symbol} &nbsp;&nbsp;
+          <strong>回测周期：</strong>${result.startTime.split('T')[0]} ~ ${result.endTime.split('T')[0]} &nbsp;&nbsp;
+          <strong>CSV文件：</strong>${response.csvFileName || 'N/A'}
+        </div>
+      `;
+    }
+
     // 动态生成关键指标网格
     const metricsGrid = document.getElementById('metricsGrid');
     if (metricsGrid) {
       metricsGrid.innerHTML = `
-        <div class="metric-card">
-          <div class="metric-label">策略名称</div>
-          <div class="metric-value">${response.strategyName || response.config.strategyName}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">交易品种</div>
-          <div class="metric-value">${result.symbol || response.config.symbol}</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">回测周期</div>
-          <div class="metric-value">${result.startTime.split('T')[0]} ~ ${result.endTime.split('T')[0]}</div>
-        </div>
         <div class="metric-card">
           <div class="metric-label">总交易数</div>
           <div class="metric-value">${metrics.totalTrades}</div>
