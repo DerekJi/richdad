@@ -6,8 +6,6 @@ public class StrategySettings
 {
     public string Symbol { get; set; } = string.Empty;
     public string CsvFilter { get; set; } = string.Empty;
-    public double AtrMultiplierStopLoss { get; set; }
-    public double AtrMultiplierTakeProfit { get; set; }
     public double MinLowerWickAtrRatio { get; set; }
     public double Threshold { get; set; }
     public double NearEmaThreshold { get; set; }
