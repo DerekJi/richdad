@@ -4,6 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <NoWarn>$(NoWarn);NU1604;CS1998</NoWarn>
   </PropertyGroup>
 
   <ItemGroup Label="Common Package Versions">
