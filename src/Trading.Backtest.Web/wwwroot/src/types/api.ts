@@ -17,6 +17,7 @@ export interface StrategyConfig {
   stopLossAtrRatio: number;
   riskRewardRatio: number;
   noTradingHoursLimit: boolean;
+  noTradeHours: number[];
   startTradingHour: number;
   endTradingHour: number;
   requirePinBarDirectionMatch: boolean;
@@ -98,6 +99,14 @@ export interface Trade {
   lots: number;
 }
 
+export interface TimeSlot {
+  timeSlot: string;
+  tradeCount: number;
+  totalProfitLoss: number;
+  avgProfitLoss: number;
+  winRate: number;
+}
+
 export interface BacktestResult {
   id: string;
   symbol: string;
@@ -107,6 +116,8 @@ export interface BacktestResult {
   yearlyMetrics: PeriodMetrics[];
   monthlyMetrics: PeriodMetrics[];
   weeklyMetrics: PeriodMetrics[];
+  topProfitSlots: TimeSlot[];
+  topLossSlots: TimeSlot[];
   equityCurve: EquityPoint[];
   allTrades: Trade[];
 }
@@ -136,6 +147,7 @@ export interface BacktestRequest {
   startTradingHour: number;
   endTradingHour: number;
   noTradingHoursLimit: boolean;
+  noTradeHours?: number[];
   requirePinBarDirectionMatch: boolean;
   minLowerWickAtrRatio: number;
   // Account settings

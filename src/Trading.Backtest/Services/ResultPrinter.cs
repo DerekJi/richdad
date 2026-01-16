@@ -16,6 +16,7 @@ public class ResultPrinter
         PrintYearlyMetrics(result);
         PrintMonthlyMetrics(result);
         PrintWeeklyMetrics(result);
+        PrintTimeSlotAnalysis(result);
         PrintEquityCurve(result);
         PrintTradeDetails(result);
     }
@@ -128,6 +129,14 @@ public class ResultPrinter
                 $"{week.MaxConsecutiveWins,8} " +
                 $"{week.MaxConsecutiveLosses,8}");
         }
+    }
+
+    /// <summary>
+    /// 打印时间段盈亏分析
+    /// </summary>
+    private void PrintTimeSlotAnalysis(BacktestResult result)
+    {
+        Console.WriteLine("\n" + TimeSlotAnalyzer.GenerateTimeSlotReportText(result.Trades));
     }
 
     /// <summary>

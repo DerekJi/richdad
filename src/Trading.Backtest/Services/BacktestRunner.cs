@@ -40,6 +40,9 @@ public class BacktestRunner
 
         // 执行回测
         Console.WriteLine("开始执行回测...\n");
-        return backtestEngine.RunBacktest(candles, config, accountSettings);
+        var result = backtestEngine.RunBacktest(candles, config, accountSettings);
+        Console.WriteLine($"回测执行完毕。完成 {result.Trades.Count} 笔交易\n");
+
+        return result;
     }
 }

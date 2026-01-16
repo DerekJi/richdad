@@ -83,6 +83,7 @@ export class StrategyManager {
       this.setCheckboxValue('noTradingHoursLimit', config.noTradingHoursLimit);
       this.setInputValue('startTradingHour', config.startTradingHour);
       this.setInputValue('endTradingHour', config.endTradingHour);
+      this.setInputValue('noTradeHours', (config.noTradeHours || []).join(', '));
       
       // 高级参数
       this.setCheckboxValue('requirePinBarDirectionMatch', config.requirePinBarDirectionMatch);

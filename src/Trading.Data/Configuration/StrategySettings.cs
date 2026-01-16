@@ -14,6 +14,7 @@ public class StrategySettings
     public int StartTradingHour { get; set; }
     public int EndTradingHour { get; set; }
     public bool NoTradingHoursLimit { get; set; } = false;
+    public List<int> NoTradeHours { get; set; } = new();
     public bool RequirePinBarDirectionMatch { get; set; }
     public double MaxBodyPercentage { get; set; }
     public double MinLongerWickPercentage { get; set; }
@@ -55,6 +56,7 @@ public class StrategySettings
             StartTradingHour = StartTradingHour,
             EndTradingHour = EndTradingHour,
             NoTradingHoursLimit = NoTradingHoursLimit,
+            NoTradeHours = NoTradeHours ?? new List<int>(),
             RequirePinBarDirectionMatch = RequirePinBarDirectionMatch,
             MaxBodyPercentage = (decimal)MaxBodyPercentage,
             MinLongerWickPercentage = (decimal)MinLongerWickPercentage,

@@ -67,6 +67,7 @@ export class BacktestRunner {
       noTradingHoursLimit: this.getCheckboxValue('noTradingHoursLimit'),
       startTradingHour: this.getInputNumber('startTradingHour'),
       endTradingHour: this.getInputNumber('endTradingHour'),
+      noTradeHours: this.parseNoTradeHours(this.getInputValue('noTradeHours')),
       requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch'),
       initialCapital: this.getInputNumber('initialCapital'),
       leverage: this.getInputNumber('leverage'),
@@ -160,6 +161,7 @@ export class BacktestRunner {
     chartManager.drawEquityChart(result.equityCurve);
     chartManager.drawYearlyChart(result.yearlyMetrics);
     chartManager.drawMonthlyChart(result.monthlyMetrics);
+    chartManager.drawTimeSlotCharts(result.topProfitSlots, result.topLossSlots);
 
     // 显示交易明细
     tradeTable.displayTrades(result.allTrades);
@@ -216,24 +218,33 @@ export class BacktestRunner {
   }
 
   /**
-   * 设置文本内容
+   * 解析禁止交易时段
    */
-  private setTextContent(id: string, value: any): void {
-    const element = document.getElementById(id);
-    if (element) {
-      element.textContent = String(value);
-    }
+  private parseNoTradeHours(value: string): number[] {
+    if (!value || value.trim() === '') return [];
+    return value.split(',').map(v => parseInt(v.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 23);
   }
 
-  /**
-   * 设置HTML内容
-   */
-  private setInnerHTML(id: string, html: string): void {
-    const element = document.getElementById(id);
-    if (element) {
-      element.innerHTML = html;
-    }
-  }
+  // Unused utility functions - keeping for potential future use
+  // /**
+  //  * 设置文本内容
+  //  */
+  // private setTextContent(id: string, value: any): void {
+  //   const element = document.getElementById(id);
+  //   if (element) {
+  //     element.textContent = String(value);
+  //   }
+  // }
+
+  // /**
+  //  * 设置HTML内容
+  //  */
+  // private setInnerHTML(id: string, html: string): void {
+  //   const element = document.getElementById(id);
+  //   if (element) {
+  //     element.innerHTML = html;
+  //   }
+  // }
 }
 
 // 全局实例

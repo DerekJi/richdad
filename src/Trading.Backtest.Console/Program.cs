@@ -167,7 +167,7 @@ class Application
 
     private string GetStrategyName(string[] args, List<string> availableStrategies)
     {
-        const string defaultStrategy = "PinBar-XAUUSD-v1";
+        const string defaultStrategy = "PinBar-XAUUSD-v2";
 
         // 如果有命令行参数，使用第一个参数作为策略名称
         if (args.Length > 0)

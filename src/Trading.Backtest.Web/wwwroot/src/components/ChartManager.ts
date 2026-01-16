@@ -1,4 +1,4 @@
-import type { EquityPoint, PeriodMetrics } from '../types/api';
+import type { EquityPoint, PeriodMetrics, TimeSlot } from '../types/api';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 
 // 注册Chart.js组件
@@ -11,6 +11,8 @@ export class ChartManager {
   private equityChart: Chart | null = null;
   private yearlyChart: Chart | null = null;
   private monthlyChart: Chart | null = null;
+  private profitSlotChart: Chart | null = null;
+  private lossSlotChart: Chart | null = null;
 
   /**
    * 绘制权益曲线
@@ -230,6 +232,150 @@ export class ChartManager {
   }
 
   /**
+   * 绘制时间段盈亏图表
+   */
+  drawTimeSlotCharts(profitSlots: TimeSlot[], lossSlots: TimeSlot[]): void {
+    this.drawProfitSlotChart(profitSlots);
+    this.drawLossSlotChart(lossSlots);
+  }
+
+  /**
+   * 绘制盈利时间段TOP5
+   */
+  private drawProfitSlotChart(data: TimeSlot[]): void {
+    if (this.profitSlotChart) {
+      this.profitSlotChart.destroy();
+    }
+
+    const canvas = document.getElementById('profitSlotChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.timeSlot),
+        datasets: [{
+          label: '总盈利 (USD)',
+          data: data.map(d => d.totalProfitLoss),
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgb(75, 192, 192)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const index = context.dataIndex;
+                const item = data[index];
+                return [
+                  `总盈利: ${item.totalProfitLoss.toFixed(2)}`,
+                  `交易数: ${item.tradeCount}`,
+                  `平均: ${item.avgProfitLoss.toFixed(2)}`,
+                  `胜率: ${item.winRate.toFixed(2)}%`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: '时间段 (UTC)'
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: '盈利 (USD)'
+            }
+          }
+        }
+      }
+    };
+
+    this.profitSlotChart = new Chart(canvas, config);
+  }
+
+  /**
+   * 绘制亏损时间段TOP5
+   */
+  private drawLossSlotChart(data: TimeSlot[]): void {
+    if (this.lossSlotChart) {
+      this.lossSlotChart.destroy();
+    }
+
+    const canvas = document.getElementById('lossSlotChart') as HTMLCanvasElement;
+    if (!canvas) return;
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.timeSlot),
+        datasets: [{
+          label: '总亏损 (USD)',
+          data: data.map(d => d.totalProfitLoss),
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgb(255, 99, 132)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top'
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const index = context.dataIndex;
+                const item = data[index];
+                return [
+                  `总亏损: ${item.totalProfitLoss.toFixed(2)}`,
+                  `交易数: ${item.tradeCount}`,
+                  `平均: ${item.avgProfitLoss.toFixed(2)}`,
+                  `胜率: ${item.winRate.toFixed(2)}%`
+                ];
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            display: true,
+            title: {
+              display: true,
+              text: '时间段 (UTC)'
+            }
+          },
+          y: {
+            display: true,
+            title: {
+              display: true,
+              text: '亏损 (USD)'
+            }
+          }
+        }
+      }
+    };
+
+    this.lossSlotChart = new Chart(canvas, config);
+  }
+
+  /**
    * 销毁所有图表
    */
   destroyAll(): void {
@@ -244,6 +390,14 @@ export class ChartManager {
     if (this.monthlyChart) {
       this.monthlyChart.destroy();
       this.monthlyChart = null;
+    }
+    if (this.profitSlotChart) {
+      this.profitSlotChart.destroy();
+      this.profitSlotChart = null;
+    }
+    if (this.lossSlotChart) {
+      this.lossSlotChart.destroy();
+      this.lossSlotChart = null;
     }
   }
 }

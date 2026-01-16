@@ -36,6 +36,7 @@ public class FileReportService
         AppendYearlyMetrics(sb, result);
         AppendMonthlyMetrics(sb, result);
         AppendWeeklyMetrics(sb, result);
+        AppendTimeSlotAnalysis(sb, result);
         AppendEquityCurve(sb, result);
         AppendTradeDetails(sb, result);
         
@@ -178,6 +179,11 @@ public class FileReportService
                          $"{(metric.TradeCount > 0 ? (decimal)metric.WinningTrades / metric.TradeCount * 100 : 0),9:F2}% " +
                          $"{metric.ProfitLoss,14:N2} {metric.ReturnRate,11:F2}%");
         }
+    }
+
+    private void AppendTimeSlotAnalysis(StringBuilder sb, BacktestResult result)
+    {
+        sb.AppendLine("\n" + TimeSlotAnalyzer.GenerateTimeSlotReportText(result.Trades));
     }
 
     private void AppendEquityCurve(StringBuilder sb, BacktestResult result)

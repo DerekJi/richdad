@@ -114,6 +114,7 @@ public class BacktestController : ControllerBase
                 StartTradingHour = request.StartTradingHour,
                 EndTradingHour = request.EndTradingHour,
                 NoTradingHoursLimit = request.NoTradingHoursLimit,
+                NoTradeHours = request.NoTradeHours ?? new List<int>(),
                 RequirePinBarDirectionMatch = request.RequirePinBarDirectionMatch,
                 MinLowerWickAtrRatio = request.MinLowerWickAtrRatio
             };
@@ -128,6 +129,10 @@ public class BacktestController : ControllerBase
 
             // 运行回测
             var result = await _runner.RunAsync(config, accountSettings, dataDirectory);
+
+            // 计算时间段分析
+            var topProfitSlots = TimeSlotAnalyzer.GetTopProfitableSlots(result.Trades, 5);
+            var topLossSlots = TimeSlotAnalyzer.GetTopLossSlots(result.Trades, 5);
 
             // 返回结果（包含用于图表的数据）
             return Ok(new
@@ -180,6 +185,22 @@ public class BacktestController : ControllerBase
                     }),
                     result.MonthlyMetrics,
                     result.WeeklyMetrics,
+                    TopProfitSlots = topProfitSlots.Select(s => new
+                    {
+                        s.TimeSlot,
+                        s.TradeCount,
+                        s.TotalProfitLoss,
+                        s.AvgProfitLoss,
+                        s.WinRate
+                    }),
+                    TopLossSlots = topLossSlots.Select(s => new
+                    {
+                        s.TimeSlot,
+                        s.TradeCount,
+                        s.TotalProfitLoss,
+                        s.AvgProfitLoss,
+                        s.WinRate
+                    }),
                     EquityCurve = result.EquityCurve.Select(p => new
                     {
                         Time = p.Time.ToString("yyyy-MM-dd HH:mm"),
@@ -234,6 +255,7 @@ public class BacktestRequest
     public int StartTradingHour { get; set; }
     public int EndTradingHour { get; set; }
     public bool NoTradingHoursLimit { get; set; }
+    public List<int>? NoTradeHours { get; set; }
     public bool RequirePinBarDirectionMatch { get; set; }
     public decimal MinLowerWickAtrRatio { get; set; }
     

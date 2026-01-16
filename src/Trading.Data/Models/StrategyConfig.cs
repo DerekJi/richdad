@@ -99,6 +99,11 @@ public class StrategyConfig
     public bool NoTradingHoursLimit { get; set; } = false;
     
     /// <summary>
+    /// 禁止开单的小时（UTC时间）
+    /// </summary>
+    public List<int> NoTradeHours { get; set; } = new();
+    
+    /// <summary>
     /// ATR周期
     /// </summary>
     public int AtrPeriod { get; set; }
