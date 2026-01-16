@@ -99,6 +99,41 @@ export interface Trade {
   lots: number;
 }
 
+export interface Candle {
+  dateTime: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
+export interface TradeKlineResponse {
+  candles: Candle[];
+  emaData: { [key: number]: (number | null)[] };
+  openIndex: number;
+  closeIndex: number;
+  openPrice: number;
+  closePrice?: number;
+  stopLoss: number;
+  takeProfit: number;
+  direction: string;
+}
+
+export interface TradeKlineRequest {
+  symbol: string;
+  csvFilter?: string;
+  openTime: string;
+  closeTime?: string;
+  openPrice: number;
+  closePrice?: number;
+  stopLoss: number;
+  takeProfit: number;
+  direction: string;
+  baseEma: number;
+  atrPeriod: number;
+  emaList?: number[];
+}
+
 export interface TimeSlot {
   timeSlot: string;
   tradeCount: number;

@@ -1,4 +1,4 @@
-import type { StrategyData, BacktestRequest, BacktestResponse } from '../types/api';
+import type { StrategyData, BacktestRequest, BacktestResponse, TradeKlineRequest, TradeKlineResponse } from '../types/api';
 
 /**
  * 回测API服务
@@ -33,6 +33,24 @@ export class BacktestService {
    */
   async runBacktest(request: BacktestRequest): Promise<BacktestResponse> {
     const response = await fetch(`${this.baseUrl}/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request)
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+
+    return response.json();
+  }
+
+  /**
+   * 获取交易K线数据
+   */
+  async getTradeKlines(request: TradeKlineRequest): Promise<TradeKlineResponse> {
+    const response = await fetch(`${this.baseUrl}/trade-klines`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request)

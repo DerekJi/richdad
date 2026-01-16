@@ -35,7 +35,7 @@ export class TradeTable {
     const pageTrades = this.trades.slice(start, end);
 
     // 渲染表格
-    tbody.innerHTML = pageTrades.map(trade => `
+    tbody.innerHTML = pageTrades.map((trade, index) => `
       <tr>
         <td>${trade.openTime}</td>
         <td>${trade.direction}</td>
@@ -50,6 +50,7 @@ export class TradeTable {
         <td>${trade.closeReason || '-'}</td>
         <td class="${trade.profitLoss >= 0 ? 'profit' : 'loss'}">${formatNumber(trade.profitLoss, 2)}</td>
         <td>${formatNumber(trade.returnRate * 100, 2)}%</td>
+        <td><button class="btn btn-secondary" onclick="showTradeChart(${start + index})">查看</button></td>
       </tr>
     `).join('');
 
@@ -63,7 +64,7 @@ export class TradeTable {
   private updatePagination(): void {
     const totalPages = Math.ceil(this.trades.length / this.pageSize);
     const paginationDiv = document.getElementById('pagination');
-    
+
     if (!paginationDiv) return;
 
     if (totalPages <= 1) {
@@ -81,7 +82,7 @@ export class TradeTable {
     // 更新按钮状态
     const prevBtn = document.getElementById('prevPage') as HTMLButtonElement;
     const nextBtn = document.getElementById('nextPage') as HTMLButtonElement;
-    
+
     if (prevBtn) {
       prevBtn.disabled = this.currentPage === 1;
     }
@@ -159,7 +160,7 @@ export class TradeTable {
     document.querySelectorAll('.sortable').forEach(th => {
       const column = th.getAttribute('data-column');
       const icon = th.querySelector('.sort-icon');
-      
+
       if (!icon) return;
 
       if (column === activeColumn) {
@@ -179,6 +180,20 @@ export class TradeTable {
     this.pageSize = size;
     this.currentPage = 1;
     this.updateTradesDisplay();
+  }
+
+  /**
+   * 获取指定索引的交易
+   */
+  getTrade(index: number): Trade | undefined {
+    return this.trades[index];
+  }
+
+  /**
+   * 获取所有交易
+   */
+  getAllTrades(): Trade[] {
+    return this.trades;
   }
 }
 

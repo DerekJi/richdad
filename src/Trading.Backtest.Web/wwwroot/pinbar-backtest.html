@@ -12,6 +12,7 @@
     <div class="top-nav">
         <h1>📊 Pin Bar 策略回测系统</h1>
         <div class="nav-links">
+            <button class="btn btn-run-backtest" onclick="runBacktest()" id="runBacktestBtn">🚀 运行回测</button>
             <a href="index.html">← 返回主页</a>
         </div>
     </div>
@@ -30,7 +31,7 @@
             <!-- 策略配置 -->
             <div class="section">
                 <h2>策略配置</h2>
-                
+
                 <!-- 基础参数 -->
                 <h3>基础配置</h3>
                 <div class="form-grid">
@@ -203,50 +204,45 @@
                 </div>
             </div>
 
-            <!-- 运行回测按钮 -->
-            <div class="section">
-                <button class="btn btn-success" onclick="runBacktest()">🚀 运行回测</button>
-            </div>
-
             <!-- 回测结果 -->
             <div class="results" id="results">
                 <div class="section">
                     <h2>回测结果</h2>
                     <div id="errorMessage" class="error-message" style="display:none;"></div>
-                    
+
                     <!-- 关键指标 -->
                     <div class="metrics-grid" id="metricsGrid"></div>
-                    
+
                     <!-- 收益曲线 -->
                     <div class="chart-container">
                         <h3>收益曲线</h3>
                         <canvas id="equityChart"></canvas>
                     </div>
-                    
+
                     <!-- 年度收益 -->
                     <div class="chart-container">
                         <h3>年度收益</h3>
                         <canvas id="yearlyChart"></canvas>
                     </div>
-                    
+
                     <!-- 月度收益 -->
                     <div class="chart-container">
                         <h3>月度收益</h3>
                         <canvas id="monthlyChart"></canvas>
                     </div>
-                    
+
                     <!-- 盈利时间段TOP5 -->
                     <div class="chart-container">
                         <h3>盈利最多时间段 TOP5</h3>
                         <canvas id="profitSlotChart"></canvas>
                     </div>
-                    
+
                     <!-- 亏损时间段TOP5 -->
                     <div class="chart-container">
                         <h3>亏损最多时间段 TOP5</h3>
                         <canvas id="lossSlotChart"></canvas>
                     </div>
-                    
+
                     <!-- 交易记录 -->
                     <div class="chart-container">
                         <h3>交易记录</h3>
@@ -282,12 +278,24 @@
                                     <th onclick="sortTrades('closeReason')" style="cursor: pointer;">平仓理由 <span class="sort-indicator"></span></th>
                                     <th onclick="sortTrades('profitLoss')" style="cursor: pointer;">盈亏 (USD) <span class="sort-indicator"></span></th>
                                     <th onclick="sortTrades('returnRate')" style="cursor: pointer;">收益率 (%) <span class="sort-indicator"></span></th>
+                                    <th>K线</th>
                                 </tr>
                             </thead>
                             <tbody id="tradesTable"></tbody>
                         </table>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- K线图弹窗 -->
+    <div id="tradeChartModal" class="modal" style="display: none;">
+        <div class="modal-content" style="width: 90%; max-width: 1200px;">
+            <span class="modal-close" onclick="closeTradeChart()">&times;</span>
+            <h2 id="tradeChartTitle">交易K线图</h2>
+            <div style="height: 500px; margin-top: 20px;">
+                <canvas id="tradeKlineChart"></canvas>
             </div>
         </div>
     </div>

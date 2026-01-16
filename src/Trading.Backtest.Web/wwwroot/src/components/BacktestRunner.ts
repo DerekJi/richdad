@@ -10,6 +10,8 @@ import { tradeTable } from './TradeTable';
  */
 export class BacktestRunner {
   private isRunning = false;
+  public lastConfig: any = null;
+  public lastResponse: BacktestResponse | null = null;
 
   /**
    * 运行回测
@@ -35,6 +37,14 @@ export class BacktestRunner {
 
       this.displayResults(response);
       this.showLoading(false);
+
+      // 滚动到统计结果部分
+      setTimeout(() => {
+        const resultsElement = document.getElementById('results');
+        if (resultsElement) {
+          resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 300);
     } catch (error) {
       console.error('回测失败:', error);
       alert('回测失败: ' + (error as Error).message);
@@ -48,7 +58,7 @@ export class BacktestRunner {
    * 构建回测请求
    */
   private buildRequest(strategyName: string): BacktestRequest {
-    return {
+    const request: BacktestRequest = {
       strategyName,
       symbol: this.getInputValue('symbol'),
       csvFilter: this.getInputValue('csvFilter'),
@@ -74,12 +84,24 @@ export class BacktestRunner {
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
       maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent')
     };
+
+    // 保存配置供K线图使用
+    this.lastConfig = {
+      symbol: request.symbol,
+      csvFilter: request.csvFilter,
+      baseEma: request.baseEma,
+      atrPeriod: request.atrPeriod,
+      emaList: request.emaList
+    };
+
+    return request;
   }
 
   /**
    * 显示回测结果
    */
   private displayResults(response: BacktestResponse): void {
+    this.lastResponse = response;
     const result = response.result;
     const metrics = result.overallMetrics;
 
@@ -178,10 +200,16 @@ export class BacktestRunner {
    * 显示/隐藏加载状态
    */
   private showLoading(show: boolean): void {
-    const button = document.querySelector('.run-button') as HTMLButtonElement;
-    if (button) {
-      button.disabled = show;
-      button.textContent = show ? '回测中...' : '运行回测';
+    const results = document.getElementById('results');
+    const btn = document.getElementById('runBacktestBtn') as HTMLButtonElement;
+
+    if (results) {
+      results.style.display = show ? 'none' : 'block';
+    }
+
+    if (btn) {
+      btn.disabled = show;
+      btn.textContent = show ? '⏳ 运行中...' : '🚀 运行回测';
     }
   }
 

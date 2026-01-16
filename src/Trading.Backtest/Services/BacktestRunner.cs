@@ -16,6 +16,16 @@ public class BacktestRunner
     public List<Candle> LoadedCandles { get; private set; } = new();
 
     /// <summary>
+    /// 加载CSV数据（供Web API使用）
+    /// </summary>
+    public List<Candle> LoadCandlesFromCsv(string dataDirectory, string symbol, string csvFilter)
+    {
+        var dataProvider = new CsvDataProvider(dataDirectory);
+        var candles = dataProvider.GetCandlesAsync(symbol, csvFilter).GetAwaiter().GetResult();
+        return candles;
+    }
+
+    /// <summary>
     /// 执行回测
     /// </summary>
     public async Task<BacktestResult> RunAsync(StrategyConfig config, AccountSettings accountSettings, string dataDirectory)

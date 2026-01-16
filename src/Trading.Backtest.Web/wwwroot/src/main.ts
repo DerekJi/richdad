@@ -1,6 +1,7 @@
 import { strategyManager, toggleAdvanced, toggleIndicators, toggleAccount } from './components/StrategyManager';
 import { backtestRunner } from './components/BacktestRunner';
 import { tradeTable } from './components/TradeTable';
+import { chartManager } from './components/ChartManager';
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', async () => {
@@ -52,3 +53,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 (window as any).toggleAccount = toggleAccount;
 (window as any).runBacktest = () => backtestRunner.runBacktest();
 (window as any).sortTrades = (column: string) => tradeTable.sortTrades(column);
+(window as any).showTradeChart = async (index: number) => {
+  const trade = tradeTable.getTrade(index);
+  const config = backtestRunner.lastConfig;
+
+  if (trade && config) {
+    await chartManager.drawTradeKlineChart(index, config.symbol, trade, config);
+  } else {
+    alert('请先运行回测');
+  }
+};
+(window as any).closeTradeChart = () => {
+  const modal = document.getElementById('tradeChartModal');
+  if (modal) modal.style.display = 'none';
+};

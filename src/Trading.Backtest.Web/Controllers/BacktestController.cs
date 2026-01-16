@@ -36,7 +36,7 @@ public class BacktestController : ControllerBase
             {
                 return Ok(new List<object>()); // 返回空数组而不是错误
             }
-            
+
             var strategies = _appSettings.Strategies.Keys
                 .Select(name => new
                 {
@@ -69,10 +69,10 @@ public class BacktestController : ControllerBase
 
         var strategySettings = _appSettings.Strategies[name];
         var config = strategySettings.ToStrategyConfig(
-            name, 
+            name,
             _appSettings.Indicators.BaseEma,
             _appSettings.Indicators.AtrPeriod);
-            
+
         return Ok(new
         {
             Name = name,
@@ -93,7 +93,7 @@ public class BacktestController : ControllerBase
             // 获取数据目录
             var dataPath = _configuration["DataPath"] ?? "..\\..\\..\\..\\..\\data";
             var dataDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, dataPath));
-            
+
             // 构建策略配置
             var config = new StrategyConfig
             {
@@ -154,7 +154,7 @@ public class BacktestController : ControllerBase
                         result.OverallMetrics.TotalReturnRate,
                         result.OverallMetrics.AverageHoldingTime,
                         // 从交易列表计算平均盈利和亏损
-                        AvgWin = result.Trades.Where(t => t.ProfitLoss > 0).Any() 
+                        AvgWin = result.Trades.Where(t => t.ProfitLoss > 0).Any()
                             ? result.Trades.Where(t => t.ProfitLoss > 0).Average(t => t.ProfitLoss ?? 0)
                             : 0,
                         AvgLoss = result.Trades.Where(t => t.ProfitLoss < 0).Any()
@@ -232,6 +232,100 @@ public class BacktestController : ControllerBase
             return BadRequest(new { error = ex.Message, stack = ex.StackTrace });
         }
     }
+
+    /// <summary>
+    /// 获取指定交易的K线数据
+    /// </summary>
+    [HttpPost("trade-klines")]
+    public IActionResult GetTradeKlines([FromBody] TradeKlineRequest request)
+    {
+        try
+        {
+            // 获取数据目录
+            var dataPath = _configuration["DataPath"] ?? "..\\..\\..\\..\\..\\data";
+            var dataDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, dataPath));
+
+            // 加载CSV数据
+            var candles = _runner.LoadCandlesFromCsv(dataDirectory, request.Symbol, request.CsvFilter ?? string.Empty);
+            if (candles == null || candles.Count == 0)
+            {
+                return BadRequest(new { error = "无法加载K线数据" });
+            }
+
+            // 找到开仓和平仓时间对应的K线索引
+            var openTime = DateTime.Parse(request.OpenTime);
+            var closeTime = request.CloseTime != null ? DateTime.Parse(request.CloseTime) : openTime;
+
+            var openIndex = candles.FindIndex(c => c.DateTime >= openTime);
+            var closeIndex = candles.FindIndex(c => c.DateTime >= closeTime);
+
+            if (openIndex == -1 || closeIndex == -1)
+            {
+                return BadRequest(new { error = "找不到对应的K线数据" });
+            }
+
+            // 计算范围：开仓前200根到平仓后50根
+            var startIndex = Math.Max(0, openIndex - 200);
+            var endIndex = Math.Min(candles.Count - 1, closeIndex + 50);
+            var rangeCandles = candles.GetRange(startIndex, endIndex - startIndex + 1);
+
+            // 计算EMA
+            var emaList = request.EmaList ?? new List<int> { 20, 60, 80, 100, 200 };
+            var indicatorCalculator = new Trading.Core.Indicators.IndicatorCalculator();
+
+            // 为了计算EMA，需要从更早的K线开始（至少需要EMA周期的2-3倍数据）
+            var maxEmaPeriod = emaList.Max();
+            var emaStartIndex = Math.Max(0, startIndex - maxEmaPeriod * 3);
+            var emaCandles = candles.GetRange(emaStartIndex, endIndex - emaStartIndex + 1);
+
+            var config = new StrategyConfig
+            {
+                BaseEma = request.BaseEma,
+                AtrPeriod = request.AtrPeriod,
+                EmaList = emaList
+            };
+            indicatorCalculator.CalculateIndicators(emaCandles, config);
+
+            // 只返回需要显示的K线范围（开仓前200根到平仓后50根）
+            var displayStartIndex = startIndex - emaStartIndex;
+            var displayCandles = emaCandles.Skip(displayStartIndex).ToList();
+
+            // 构造响应数据
+            var response = new
+            {
+                Candles = displayCandles.Select(c => new
+                {
+                    DateTime = c.DateTime.ToString("yyyy-MM-dd HH:mm"),
+                    Open = c.Open,
+                    High = c.High,
+                    Low = c.Low,
+                    Close = c.Close,
+                    Atr = c.ATR
+                }).ToList(),
+                EmaData = emaList.ToDictionary(
+                    period => period,
+                    period => displayCandles.Select(c =>
+                    {
+                        var ema = Trading.Core.Indicators.IndicatorCalculator.GetEma(c, period);
+                        return ema > 0 ? (decimal?)ema : null;
+                    }).ToList()
+                ),
+                OpenIndex = openIndex - startIndex,
+                CloseIndex = closeIndex - startIndex,
+                OpenPrice = request.OpenPrice,
+                ClosePrice = request.ClosePrice,
+                StopLoss = request.StopLoss,
+                TakeProfit = request.TakeProfit,
+                Direction = request.Direction
+            };
+
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message, stack = ex.StackTrace });
+        }
+    }
 }
 
 /// <summary>
@@ -258,10 +352,29 @@ public class BacktestRequest
     public List<int>? NoTradeHours { get; set; }
     public bool RequirePinBarDirectionMatch { get; set; }
     public decimal MinLowerWickAtrRatio { get; set; }
-    
+
     // Account settings
     public double InitialCapital { get; set; } = 100000;
     public double Leverage { get; set; } = 30;
     public double MaxLossPerTradePercent { get; set; } = 0.5;
     public double MaxDailyLossPercent { get; set; } = 3.0;
+}
+
+/// <summary>
+/// 获取交易K线请求参数
+/// </summary>
+public class TradeKlineRequest
+{
+    public string Symbol { get; set; } = string.Empty;
+    public string? CsvFilter { get; set; }
+    public string OpenTime { get; set; } = string.Empty;
+    public string? CloseTime { get; set; }
+    public decimal OpenPrice { get; set; }
+    public decimal? ClosePrice { get; set; }
+    public decimal StopLoss { get; set; }
+    public decimal TakeProfit { get; set; }
+    public string Direction { get; set; } = string.Empty;
+    public int BaseEma { get; set; } = 200;
+    public int AtrPeriod { get; set; } = 14;
+    public List<int>? EmaList { get; set; }
 }
