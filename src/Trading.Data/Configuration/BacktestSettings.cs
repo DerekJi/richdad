@@ -24,4 +24,9 @@ public class AccountSettings
     /// 单日最大亏损百分比
     /// </summary>
     public double MaxDailyLossPercent { get; set; }
+    
+    /// <summary>
+    /// 启用动态风险管理（连续亏损后逐级减半风险）
+    /// </summary>
+    public bool EnableDynamicRiskManagement { get; set; }
 }

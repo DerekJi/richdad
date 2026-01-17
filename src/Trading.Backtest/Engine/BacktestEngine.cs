@@ -44,6 +44,8 @@ public class BacktestEngine
         _reductionThresholds.Clear();
         _consecutiveLossesAtCurrentLevel = 0;
 
+        Console.WriteLine($"动态风险管理: {(accountSettings.EnableDynamicRiskManagement ? "启用" : "禁用")}");
+
         var result = new BacktestResult
         {
             Config = config,
@@ -81,7 +83,7 @@ public class BacktestEngine
                 }
 
                 // 检查风险敦口是否足够 (低于10 USD停止交易)
-                decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent);
+                decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent, accountSettings);
                 decimal currentRiskAmount = _currentEquity * currentRiskPercent / 100m;
                 if (currentRiskAmount < 10m)
                 {
@@ -187,7 +189,7 @@ public class BacktestEngine
             : (trade.StopLoss - trade.OpenPrice);
 
         // 获取当前动态风险敦口
-        decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent);
+        decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent, accountSettings);
         decimal riskAmount = _currentEquity * currentRiskPercent / 100m;
 
         // 确保风险金额不低于10 USD
@@ -207,7 +209,7 @@ public class BacktestEngine
         _currentEquity += trade.ProfitLoss ?? 0;
 
         // 更新动态风险管理状态
-        UpdateDynamicRiskManagement(trade, config);
+        UpdateDynamicRiskManagement(trade, config, accountSettings);
     }
 
     /// <summary>
@@ -440,8 +442,14 @@ public class BacktestEngine
     /// <summary>
     /// 获取当前动态风险百分比
     /// </summary>
-    private decimal GetCurrentRiskPercent(double baseRiskPercent)
+    private decimal GetCurrentRiskPercent(double baseRiskPercent, AccountSettings accountSettings)
     {
+        // 如果未启用动态风险管理，直接返回基础风险
+        if (!accountSettings.EnableDynamicRiskManagement)
+        {
+            return (decimal)baseRiskPercent;
+        }
+
         // 根据减半级别计算当前风险
         decimal risk = (decimal)baseRiskPercent;
         for (int i = 0; i < _riskReductionLevel; i++)
@@ -454,10 +462,10 @@ public class BacktestEngine
     /// <summary>
     /// 更新动态风险管理状态
     /// </summary>
-    private void UpdateDynamicRiskManagement(Trade trade, StrategyConfig config)
+    private void UpdateDynamicRiskManagement(Trade trade, StrategyConfig config, AccountSettings accountSettings)
     {
-        // 如果未启用连续亏损规则，使用原有逻辑
-        if (config.MaxConsecutiveLosses <= 0)
+        // 如果未启用动态风险管理，使用原有逻辑
+        if (!accountSettings.EnableDynamicRiskManagement || config.MaxConsecutiveLosses <= 0)
         {
             UpdateConsecutiveLossesLegacy(trade, config);
             return;
