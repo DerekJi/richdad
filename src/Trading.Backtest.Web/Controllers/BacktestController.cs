@@ -130,7 +130,8 @@ public class BacktestController : ControllerBase
                 InitialCapital = request.InitialCapital,
                 Leverage = request.Leverage,
                 MaxLossPerTradePercent = request.MaxLossPerTradePercent,
-                MaxDailyLossPercent = request.MaxDailyLossPercent
+                MaxDailyLossPercent = request.MaxDailyLossPercent,
+                EnableDynamicRiskManagement = request.EnableDynamicRiskManagement
             };
 
             // 解析日期范围
@@ -399,6 +400,7 @@ public class BacktestRequest
     public double Leverage { get; set; } = 30;
     public double MaxLossPerTradePercent { get; set; } = 0.5;
     public double MaxDailyLossPercent { get; set; } = 3.0;
+    public bool EnableDynamicRiskManagement { get; set; } = true;
 
     // Date range filter
     public string? StartDate { get; set; }

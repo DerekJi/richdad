@@ -27,6 +27,7 @@ export interface StrategyConfig {
   lowAdxRiskRewardRatio: number;
   maxConsecutiveLosses: number;
   pauseDaysAfterLosses: number;
+  enableDynamicRiskManagement: boolean;
 }
 
 export interface AccountSettings {
@@ -204,6 +205,7 @@ export interface BacktestRequest {
   leverage: number;
   maxLossPerTradePercent: number;
   maxDailyLossPercent: number;
+  enableDynamicRiskManagement: boolean;
   // Date range filter
   startDate?: string;
   endDate?: string;

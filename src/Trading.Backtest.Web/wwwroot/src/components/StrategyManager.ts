@@ -87,6 +87,7 @@ export class StrategyManager {
       this.setInputValue('riskRewardRatio', config.riskRewardRatio);
       this.setInputValue('maxConsecutiveLosses', config.maxConsecutiveLosses || 0);
       this.setInputValue('pauseDaysAfterLosses', config.pauseDaysAfterLosses || 5);
+      this.setCheckboxValue('enableDynamicRiskManagement', config.enableDynamicRiskManagement !== false);
 
       // 交易时段
       this.setCheckboxValue('noTradingHoursLimit', config.noTradingHoursLimit);

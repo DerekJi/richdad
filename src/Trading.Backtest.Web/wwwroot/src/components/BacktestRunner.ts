@@ -89,6 +89,7 @@ export class BacktestRunner {
       leverage: this.getInputNumber('leverage'),
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
       maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent'),
+      enableDynamicRiskManagement: this.getCheckboxValue('enableDynamicRiskManagement'),
       startDate: this.getInputValue('startDate') || undefined,
       endDate: this.getInputValue('endDate') || undefined
     };
