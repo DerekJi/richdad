@@ -155,6 +155,16 @@ public class StrategyConfig
     public AdxTimeframe AdxTimeframe { get; set; } = AdxTimeframe.Current;
 
     /// <summary>
+    /// 连续亏损多少次后暂停交易，0表示不启用此规则
+    /// </summary>
+    public int MaxConsecutiveLosses { get; set; } = 0;
+
+    /// <summary>
+    /// 连续亏损后暂停交易的天数
+    /// </summary>
+    public int PauseDaysAfterLosses { get; set; } = 5;
+
+    /// <summary>
     /// 创建默认XAGUSD配置
     /// </summary>
     public static StrategyConfig CreateXagDefault() => new()

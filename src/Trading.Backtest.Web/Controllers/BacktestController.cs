@@ -120,7 +120,9 @@ public class BacktestController : ControllerBase
                 MinAdx = request.MinAdx,
                 AdxPeriod = request.AdxPeriod,
                 AdxTimeframe = Enum.TryParse<AdxTimeframe>(request.AdxTimeframe, out var timeframe) ? timeframe : AdxTimeframe.Current,
-                LowAdxRiskRewardRatio = request.LowAdxRiskRewardRatio
+                LowAdxRiskRewardRatio = request.LowAdxRiskRewardRatio,
+                MaxConsecutiveLosses = request.MaxConsecutiveLosses,
+                PauseDaysAfterLosses = request.PauseDaysAfterLosses
             };
 
             var accountSettings = new AccountSettings
@@ -389,6 +391,8 @@ public class BacktestRequest
     public int AdxPeriod { get; set; } = 14;
     public string AdxTimeframe { get; set; } = "Current";
     public decimal LowAdxRiskRewardRatio { get; set; } = 0;
+    public int MaxConsecutiveLosses { get; set; } = 0;
+    public int PauseDaysAfterLosses { get; set; } = 5;
 
     // Account settings
     public double InitialCapital { get; set; } = 100000;

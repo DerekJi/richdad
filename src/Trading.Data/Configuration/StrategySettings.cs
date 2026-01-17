@@ -24,6 +24,8 @@ public class StrategySettings
     public int AdxPeriod { get; set; } = 14;
     public string AdxTimeframe { get; set; } = "Current";
     public double LowAdxRiskRewardRatio { get; set; } = 0;
+    public int MaxConsecutiveLosses { get; set; } = 0;
+    public int PauseDaysAfterLosses { get; set; } = 5;
 
     /// <summary>
     /// 转换为 StrategyConfig（业务模型）
@@ -69,7 +71,9 @@ public class StrategySettings
             MinAdx = (decimal)MinAdx,
             AdxPeriod = AdxPeriod,
             AdxTimeframe = Enum.TryParse<AdxTimeframe>(AdxTimeframe, out var timeframe) ? timeframe : Models.AdxTimeframe.Current,
-            LowAdxRiskRewardRatio = (decimal)LowAdxRiskRewardRatio
+            LowAdxRiskRewardRatio = (decimal)LowAdxRiskRewardRatio,
+            MaxConsecutiveLosses = MaxConsecutiveLosses,
+            PauseDaysAfterLosses = PauseDaysAfterLosses
         };
     }
 }

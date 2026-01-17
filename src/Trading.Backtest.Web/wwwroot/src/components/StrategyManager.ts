@@ -78,12 +78,15 @@ export class StrategyManager {
       // ADX 参数
       this.setInputValue('minAdx', config.minAdx || 0);
       this.setInputValue('adxPeriod', config.adxPeriod || 14);
+      this.setSelectValue('adxTimeframe', config.adxTimeframe || 'Current');
       this.setInputValue('lowAdxRiskRewardRatio', config.lowAdxRiskRewardRatio || 0);
 
       // 风险管理
       this.setInputValue('atrPeriod', config.atrPeriod);
       this.setInputValue('stopLossAtrRatio', config.stopLossAtrRatio);
       this.setInputValue('riskRewardRatio', config.riskRewardRatio);
+      this.setInputValue('maxConsecutiveLosses', config.maxConsecutiveLosses || 0);
+      this.setInputValue('pauseDaysAfterLosses', config.pauseDaysAfterLosses || 5);
 
       // 交易时段
       this.setCheckboxValue('noTradingHoursLimit', config.noTradingHoursLimit);
@@ -136,6 +139,16 @@ export class StrategyManager {
     const element = document.getElementById(id) as HTMLInputElement;
     if (element) {
       element.checked = value || false;
+    }
+  }
+
+  /**
+   * 设置select值
+   */
+  private setSelectValue(id: string, value: string): void {
+    const element = document.getElementById(id) as HTMLSelectElement;
+    if (element && value !== undefined && value !== null) {
+      element.value = value;
     }
   }
 }

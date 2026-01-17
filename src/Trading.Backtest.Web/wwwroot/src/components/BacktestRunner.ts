@@ -81,7 +81,10 @@ export class BacktestRunner {
       requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch'),
       minAdx: this.getInputNumber('minAdx'),
       adxPeriod: this.getInputNumber('adxPeriod'),
+      adxTimeframe: this.getSelectValue('adxTimeframe'),
       lowAdxRiskRewardRatio: this.getInputNumber('lowAdxRiskRewardRatio'),
+      maxConsecutiveLosses: this.getInputNumber('maxConsecutiveLosses'),
+      pauseDaysAfterLosses: this.getInputNumber('pauseDaysAfterLosses'),
       initialCapital: this.getInputNumber('initialCapital'),
       leverage: this.getInputNumber('leverage'),
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
@@ -241,6 +244,14 @@ export class BacktestRunner {
   private getCheckboxValue(id: string): boolean {
     const element = document.getElementById(id) as HTMLInputElement;
     return element ? element.checked : false;
+  }
+
+  /**
+   * 获取select值
+   */
+  private getSelectValue(id: string): string {
+    const element = document.getElementById(id) as HTMLSelectElement;
+    return element ? element.value : '';
   }
 
   /**
