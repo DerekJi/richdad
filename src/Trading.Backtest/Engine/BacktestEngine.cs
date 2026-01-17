@@ -91,7 +91,7 @@ public class BacktestEngine
     {
         var stopLoss = _strategy.CalculateStopLoss(pinbar, direction);
         var entryPrice = current.Close; // 使用当前K线收盘价开仓
-        var takeProfit = _strategy.CalculateTakeProfit(entryPrice, stopLoss, direction);
+        var takeProfit = _strategy.CalculateTakeProfit(entryPrice, stopLoss, direction, pinbar);
 
         return new Trade
         {

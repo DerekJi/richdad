@@ -118,7 +118,9 @@ public class BacktestController : ControllerBase
                 RequirePinBarDirectionMatch = request.RequirePinBarDirectionMatch,
                 MinLowerWickAtrRatio = request.MinLowerWickAtrRatio,
                 MinAdx = request.MinAdx,
-                AdxPeriod = request.AdxPeriod
+                AdxPeriod = request.AdxPeriod,
+                AdxTimeframe = Enum.TryParse<AdxTimeframe>(request.AdxTimeframe, out var timeframe) ? timeframe : AdxTimeframe.Current,
+                LowAdxRiskRewardRatio = request.LowAdxRiskRewardRatio
             };
 
             var accountSettings = new AccountSettings
@@ -385,6 +387,8 @@ public class BacktestRequest
     public decimal MinLowerWickAtrRatio { get; set; }
     public decimal MinAdx { get; set; } = 0;
     public int AdxPeriod { get; set; } = 14;
+    public string AdxTimeframe { get; set; } = "Current";
+    public decimal LowAdxRiskRewardRatio { get; set; } = 0;
 
     // Account settings
     public double InitialCapital { get; set; } = 100000;

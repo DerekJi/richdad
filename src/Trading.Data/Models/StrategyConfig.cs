@@ -9,6 +9,17 @@ public enum StopLossStrategy
 }
 
 /// <summary>
+/// ADX计算使用的时间周期
+/// </summary>
+public enum AdxTimeframe
+{
+    Current,    // 当前周期（M15）
+    H1,         // 1小时
+    H4,         // 4小时
+    Daily       // 日线
+}
+
+/// <summary>
 /// 交易策略配置
 /// </summary>
 public class StrategyConfig
@@ -131,13 +142,17 @@ public class StrategyConfig
     public int AdxPeriod { get; set; } = 14;
 
     /// <summary>
-    /// 创建默认XAUUSD配置
+    /// <summary>
+    /// 低ADX时使用的盈亏比（震荡市场），0表示使用标准盈亏比
+    /// 当ADX < MinAdx时，使用此较小的盈亏比快速获利
     /// </summary>
-    public static StrategyConfig CreateXauDefault() => new()
-    {
-        Symbol = "XAUUSD",
-        ContractSize = 100,
-    };
+    public decimal LowAdxRiskRewardRatio { get; set; } = 0;
+
+    /// <summary>
+    /// ADX计算使用的时间周期，默认使用当前周期
+    /// 使用更高周期的ADX可以更好地反映大趋势强度
+    /// </summary>
+    public AdxTimeframe AdxTimeframe { get; set; } = AdxTimeframe.Current;
 
     /// <summary>
     /// 创建默认XAGUSD配置

@@ -23,6 +23,7 @@ export interface StrategyConfig {
   requirePinBarDirectionMatch: boolean;
   minAdx: number;
   adxPeriod: number;
+  lowAdxRiskRewardRatio: number;
 }
 
 export interface AccountSettings {
@@ -191,6 +192,7 @@ export interface BacktestRequest {
   minLowerWickAtrRatio: number;
   minAdx: number;
   adxPeriod: number;
+  lowAdxRiskRewardRatio: number;
   // Account settings
   initialCapital: number;
   leverage: number;

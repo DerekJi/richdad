@@ -78,6 +78,7 @@ export class StrategyManager {
       // ADX 参数
       this.setInputValue('minAdx', config.minAdx || 0);
       this.setInputValue('adxPeriod', config.adxPeriod || 14);
+      this.setInputValue('lowAdxRiskRewardRatio', config.lowAdxRiskRewardRatio || 0);
 
       // 风险管理
       this.setInputValue('atrPeriod', config.atrPeriod);

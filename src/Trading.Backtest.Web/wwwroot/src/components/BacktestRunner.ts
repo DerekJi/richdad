@@ -81,6 +81,7 @@ export class BacktestRunner {
       requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch'),
       minAdx: this.getInputNumber('minAdx'),
       adxPeriod: this.getInputNumber('adxPeriod'),
+      lowAdxRiskRewardRatio: this.getInputNumber('lowAdxRiskRewardRatio'),
       initialCapital: this.getInputNumber('initialCapital'),
       leverage: this.getInputNumber('leverage'),
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),

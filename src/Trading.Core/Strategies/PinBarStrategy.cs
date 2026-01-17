@@ -32,7 +32,6 @@ public class PinBarStrategy : ITradingStrategy
     {
         if (hasOpenPosition) return false;
         if (!IsValidTradingTime(current)) return false;
-        if (!HasSufficientAdx(previous)) return false;
 
         var baseEma = IndicatorCalculator.GetEma(previous, _config.BaseEma);
         if (baseEma == 0) return false; // EMA未准备好
@@ -49,6 +48,10 @@ public class PinBarStrategy : ITradingStrategy
         // 当前K线收盘必须高于前一根K线的高点 (突破确认)
         if (current.Close <= previous.High) return false;
 
+        // ADX过滤：如果配置了MinAdx且LowAdxRiskRewardRatio=0，则ADX必须>=MinAdx
+        if (_config.MinAdx > 0 && _config.LowAdxRiskRewardRatio <= 0 && previous.ADX < _config.MinAdx)
+            return false;
+
         return true;
     }
 
@@ -59,7 +62,6 @@ public class PinBarStrategy : ITradingStrategy
     {
         if (hasOpenPosition) return false;
         if (!IsValidTradingTime(current)) return false;
-        if (!HasSufficientAdx(previous)) return false;
 
         var baseEma = IndicatorCalculator.GetEma(previous, _config.BaseEma);
         if (baseEma == 0) return false;
@@ -75,6 +77,10 @@ public class PinBarStrategy : ITradingStrategy
 
         // 当前K线收盘必须低于前一根K线的低点 (突破确认)
         if (current.Close >= previous.Low) return false;
+
+        // ADX过滤：如果配置了MinAdx且LowAdxRiskRewardRatio=0，则ADX必须>=MinAdx
+        if (_config.MinAdx > 0 && _config.LowAdxRiskRewardRatio <= 0 && previous.ADX < _config.MinAdx)
+            return false;
 
         return true;
     }
@@ -164,7 +170,7 @@ public class PinBarStrategy : ITradingStrategy
     }
 
     /// <summary>
-    /// 检查ADX是否满足最小要求
+    /// 检查ADX是否满足最小要求（高ADX）
     /// </summary>
     /// <param name="candle">要检查的K线</param>
     /// <returns>如果MinAdx=0或ADX>=MinAdx则返回true</returns>
@@ -173,8 +179,27 @@ public class PinBarStrategy : ITradingStrategy
         // 如果未配置MinAdx，不进行过滤
         if (_config.MinAdx <= 0) return true;
 
-        // ADX必须大于等于配置的最小值
+        // ADX大于等于配置的最小值
         return candle.ADX >= _config.MinAdx;
+    }
+
+    /// <summary>
+    /// 根据ADX获取当前的盈亏比
+    /// </summary>
+    /// <param name="candle">当前K线</param>
+    /// <returns>当前应使用的盈亏比</returns>
+    public decimal GetRiskRewardRatio(Candle candle)
+    {
+        // 如果未配置MinAdx或未配置LowAdxRiskRewardRatio，使用标准盈亏比
+        if (_config.MinAdx <= 0 || _config.LowAdxRiskRewardRatio <= 0)
+            return _config.RiskRewardRatio;
+
+        // ADX低于最小值时，使用较小的盈亏比（震荡市快速获利）
+        if (candle.ADX < _config.MinAdx)
+            return _config.LowAdxRiskRewardRatio;
+
+        // ADX高于最小值时，使用标准盈亏比
+        return _config.RiskRewardRatio;
     }
 
     /// <summary>
@@ -216,10 +241,15 @@ public class PinBarStrategy : ITradingStrategy
     /// <summary>
     /// 计算止盈位
     /// </summary>
-    public decimal CalculateTakeProfit(decimal entryPrice, decimal stopLoss, TradeDirection direction)
+    /// <param name="entryPrice">入场价</param>
+    /// <param name="stopLoss">止损价</param>
+    /// <param name="direction">交易方向</param>
+    /// <param name="pinbar">Pin Bar K线（用于ADX判断）</param>
+    public decimal CalculateTakeProfit(decimal entryPrice, decimal stopLoss, TradeDirection direction, Candle pinbar)
     {
         var risk = Math.Abs(entryPrice - stopLoss);
-        var reward = risk * _config.RiskRewardRatio;
+        var riskRewardRatio = GetRiskRewardRatio(pinbar);
+        var reward = risk * riskRewardRatio;
 
         return direction == TradeDirection.Long
             ? entryPrice + reward

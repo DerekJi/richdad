@@ -22,6 +22,8 @@ public class StrategySettings
     public List<int> EmaList { get; set; } = new();
     public double MinAdx { get; set; } = 0;
     public int AdxPeriod { get; set; } = 14;
+    public string AdxTimeframe { get; set; } = "Current";
+    public double LowAdxRiskRewardRatio { get; set; } = 0;
 
     /// <summary>
     /// 转换为 StrategyConfig（业务模型）
@@ -65,7 +67,9 @@ public class StrategySettings
             MaxShorterWickPercentage = (decimal)MaxShorterWickPercentage,
             EmaList = emaList,
             MinAdx = (decimal)MinAdx,
-            AdxPeriod = AdxPeriod
+            AdxPeriod = AdxPeriod,
+            AdxTimeframe = Enum.TryParse<AdxTimeframe>(AdxTimeframe, out var timeframe) ? timeframe : Models.AdxTimeframe.Current,
+            LowAdxRiskRewardRatio = (decimal)LowAdxRiskRewardRatio
         };
     }
 }
