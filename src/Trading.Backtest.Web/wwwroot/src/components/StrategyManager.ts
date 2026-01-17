@@ -87,7 +87,6 @@ export class StrategyManager {
       this.setInputValue('riskRewardRatio', config.riskRewardRatio);
       this.setInputValue('maxConsecutiveLosses', config.maxConsecutiveLosses || 0);
       this.setInputValue('pauseDaysAfterLosses', config.pauseDaysAfterLosses || 5);
-      this.setCheckboxValue('enableDynamicRiskManagement', config.enableDynamicRiskManagement !== false);
 
       // 交易时段
       this.setCheckboxValue('noTradingHoursLimit', config.noTradingHoursLimit);
@@ -109,6 +108,7 @@ export class StrategyManager {
       this.setInputValue('leverage', account?.leverage);
       this.setInputValue('maxLossPerTradePercent', account?.maxLossPerTradePercent);
       this.setInputValue('maxDailyLossPercent', account?.maxDailyLossPercent);
+      this.setCheckboxValue('enableDynamicRiskManagement', account?.enableDynamicRiskManagement !== false);
 
     } catch (error) {
       console.error('加载策略配置失败:', error);

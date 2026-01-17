@@ -400,7 +400,7 @@ public class BacktestRequest
     public double Leverage { get; set; } = 30;
     public double MaxLossPerTradePercent { get; set; } = 0.5;
     public double MaxDailyLossPercent { get; set; } = 3.0;
-    public bool EnableDynamicRiskManagement { get; set; } = true;
+    public bool EnableDynamicRiskManagement { get; set; }
 
     // Date range filter
     public string? StartDate { get; set; }

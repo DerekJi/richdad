@@ -35,6 +35,7 @@ export interface AccountSettings {
   leverage: number;
   maxLossPerTradePercent: number;
   maxDailyLossPercent: number;
+  enableDynamicRiskManagement: boolean;
 }
 
 export interface IndicatorSettings {
