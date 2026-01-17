@@ -53,11 +53,14 @@ npm install
 npm run dev
 ```
 
-- 前端服务器: http://localhost:5173
-- API代理: /api → http://localhost:5002
+- 前端服务器: http://localhost:5173（开发模式）
+- 生产服务器: http://localhost:5243
+- API: /api（使用相对路径，自动适配当前端口）
 - 修改代码后自动刷新
 
-**注意**: 需要先启动后端API服务器(端口5002)
+**注意**:
+- 开发模式(npm run dev)使用端口5173
+- 生产模式(dotnet run)直接访问5243端口，前端已编译到wwwroot/dist
 
 ### 3. 生产构建
 
@@ -155,7 +158,7 @@ A: 确保:
 
 ### Q: TypeScript类型错误？
 
-A: 
+A:
 1. 运行 `npm run build` 查看详细错误
 2. 确保类型定义与后端API一致
 3. 使用 `// @ts-ignore` 临时跳过(不推荐)
