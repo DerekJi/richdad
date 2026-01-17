@@ -114,11 +114,13 @@ export interface Candle {
   high: number;
   low: number;
   close: number;
+  adx?: number;
 }
 
 export interface TradeKlineResponse {
   candles: Candle[];
   emaData: { [key: number]: (number | null)[] };
+  adxData?: (number | null)[];
   openIndex: number;
   closeIndex: number;
   openPrice: number;
@@ -141,6 +143,8 @@ export interface TradeKlineRequest {
   baseEma: number;
   atrPeriod: number;
   emaList?: number[];
+  adxPeriod?: number;
+  adxTimeframe?: string;
 }
 
 export interface TimeSlot {

@@ -445,7 +445,9 @@ export class ChartManager {
         direction: trade.direction,
         baseEma: config.baseEma || 200,
         atrPeriod: config.atrPeriod || 14,
-        emaList: config.emaList || [20, 60, 80, 100, 200]
+        emaList: config.emaList || [20, 60, 80, 100, 200],
+        adxPeriod: config.adxPeriod || 14,
+        adxTimeframe: config.adxTimeframe || 'Current'
       });
 
       this.renderKlineChart(response);
@@ -499,8 +501,23 @@ export class ChartManager {
       pointRadius: 0,
       tension: 0.1,
       type: 'line' as const,
-      order: 1
+      order: 1,
+      yAxisID: 'y'
     }));
+
+    // ADX数据集（如果存在）
+    const adxDataset = data.adxData ? {
+      label: 'ADX',
+      data: data.adxData,
+      borderColor: '#FF9800',
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 0,
+      tension: 0.1,
+      type: 'line' as const,
+      order: 1,
+      yAxisID: 'y1'
+    } : null;
 
     // K线数据（使用OHLC格式）
     const candleDataset = {
@@ -528,6 +545,7 @@ export class ChartManager {
         labels: labels,
         datasets: [
           ...emaDatasets,
+          ...(adxDataset ? [adxDataset] : []),
           candleDataset
         ]
       },
@@ -558,6 +576,9 @@ export class ChartManager {
                   ];
                   if (candle.atr && candle.atr > 0) {
                     labels.push(`ATR: ${candle.atr.toFixed(2)}`);
+                  }
+                  if (candle.adx && candle.adx > 0) {
+                    labels.push(`ADX: ${candle.adx.toFixed(2)}`);
                   }
                   return labels;
                 }
@@ -654,6 +675,24 @@ export class ChartManager {
             position: 'right',
             min: Math.min(...data.candles.map((c: any) => c.low)) * 0.998,
             max: Math.max(...data.candles.map((c: any) => c.high)) * 1.002
+          },
+          y1: {
+            display: data.adxData ? true : false,
+            position: 'left',
+            min: 0,
+            max: 100,
+            grid: {
+              drawOnChartArea: false
+            },
+            ticks: {
+              callback: function(value) {
+                return value;
+              }
+            },
+            title: {
+              display: true,
+              text: 'ADX'
+            }
           }
         }
       }

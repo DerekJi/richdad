@@ -318,7 +318,9 @@ public class BacktestController : ControllerBase
             {
                 BaseEma = request.BaseEma,
                 AtrPeriod = request.AtrPeriod,
-                EmaList = emaList
+                EmaList = emaList,
+                AdxPeriod = request.AdxPeriod,
+                AdxTimeframe = Enum.TryParse<AdxTimeframe>(request.AdxTimeframe, out var adxTimeframe) ? adxTimeframe : AdxTimeframe.Current
             };
             indicatorCalculator.CalculateIndicators(emaCandles, config);
 
@@ -336,7 +338,8 @@ public class BacktestController : ControllerBase
                     High = c.High,
                     Low = c.Low,
                     Close = c.Close,
-                    Atr = c.ATR
+                    Atr = c.ATR,
+                    Adx = c.ADX
                 }).ToList(),
                 EmaData = emaList.ToDictionary(
                     period => period,
@@ -346,6 +349,7 @@ public class BacktestController : ControllerBase
                         return ema > 0 ? (decimal?)ema : null;
                     }).ToList()
                 ),
+                AdxData = displayCandles.Select(c => c.ADX > 0 ? (decimal?)c.ADX : null).ToList(),
                 OpenIndex = openIndex - startIndex,
                 CloseIndex = closeIndex - startIndex,
                 OpenPrice = request.OpenPrice,
@@ -424,4 +428,6 @@ public class TradeKlineRequest
     public int BaseEma { get; set; } = 200;
     public int AtrPeriod { get; set; } = 14;
     public List<int>? EmaList { get; set; }
+    public int AdxPeriod { get; set; } = 14;
+    public string AdxTimeframe { get; set; } = "Current";
 }
