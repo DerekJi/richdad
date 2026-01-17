@@ -21,6 +21,8 @@ export interface StrategyConfig {
   startTradingHour: number;
   endTradingHour: number;
   requirePinBarDirectionMatch: boolean;
+  minAdx: number;
+  adxPeriod: number;
 }
 
 export interface AccountSettings {
@@ -187,6 +189,8 @@ export interface BacktestRequest {
   noTradeHours?: number[];
   requirePinBarDirectionMatch: boolean;
   minLowerWickAtrRatio: number;
+  minAdx: number;
+  adxPeriod: number;
   // Account settings
   initialCapital: number;
   leverage: number;

@@ -79,6 +79,8 @@ export class BacktestRunner {
       endTradingHour: this.getInputNumber('endTradingHour'),
       noTradeHours: this.parseNoTradeHours(this.getInputValue('noTradeHours')),
       requirePinBarDirectionMatch: this.getCheckboxValue('requirePinBarDirectionMatch'),
+      minAdx: this.getInputNumber('minAdx'),
+      adxPeriod: this.getInputNumber('adxPeriod'),
       initialCapital: this.getInputNumber('initialCapital'),
       leverage: this.getInputNumber('leverage'),
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),

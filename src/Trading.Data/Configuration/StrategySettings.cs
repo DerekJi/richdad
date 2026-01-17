@@ -20,6 +20,8 @@ public class StrategySettings
     public double MinLongerWickPercentage { get; set; }
     public double MaxShorterWickPercentage { get; set; }
     public List<int> EmaList { get; set; } = new();
+    public double MinAdx { get; set; } = 0;
+    public int AdxPeriod { get; set; } = 14;
 
     /// <summary>
     /// 转换为 StrategyConfig（业务模型）
@@ -61,7 +63,9 @@ public class StrategySettings
             MaxBodyPercentage = (decimal)MaxBodyPercentage,
             MinLongerWickPercentage = (decimal)MinLongerWickPercentage,
             MaxShorterWickPercentage = (decimal)MaxShorterWickPercentage,
-            EmaList = emaList
+            EmaList = emaList,
+            MinAdx = (decimal)MinAdx,
+            AdxPeriod = AdxPeriod
         };
     }
 }

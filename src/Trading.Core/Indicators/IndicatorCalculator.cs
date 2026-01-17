@@ -14,33 +14,39 @@ public class IndicatorCalculator
     public void CalculateIndicators(List<Candle> candles, StrategyConfig config)
     {
         if (candles.Count == 0) return;
-        
+
         // 计算ATR
         if (config.AtrPeriod > 0)
         {
             CalculateATR(candles, config.AtrPeriod);
         }
-        
+
+        // 计算ADX
+        if (config.MinAdx > 0 && config.AdxPeriod > 0)
+        {
+            CalculateADX(candles, config.AdxPeriod);
+        }
+
         // 计算所有EMA
         foreach (var period in config.EmaList.Where(p => p > 0))
         {
             CalculateEMA(candles, period);
         }
-        
+
         // 确保基准EMA也被计算
         if (config.BaseEma > 0 && !config.EmaList.Contains(config.BaseEma))
         {
             CalculateEMA(candles, config.BaseEma);
         }
     }
-    
+
     /// <summary>
     /// 计算ATR (Average True Range) 使用Skender.Stock.Indicators
     /// </summary>
     private void CalculateATR(List<Candle> candles, int period)
     {
         if (candles.Count < period || period <= 0) return;
-        
+
         // 转换为Skender Quote格式
         var quotes = candles.Select(c => new Quote
         {
@@ -51,24 +57,24 @@ public class IndicatorCalculator
             Close = c.Close,
             Volume = c.TickVolume
         }).ToList();
-        
+
         // 调用Skender计算ATR
         var atrResults = quotes.GetAtr(period).ToList();
-        
+
         // 填充ATR值到原始candles
         for (int i = 0; i < candles.Count; i++)
         {
             candles[i].ATR = (decimal)(atrResults[i].Atr ?? 0);
         }
     }
-    
+
     /// <summary>
     /// 计算EMA (Exponential Moving Average) 使用Skender.Stock.Indicators
     /// </summary>
     private void CalculateEMA(List<Candle> candles, int period)
     {
         if (candles.Count < period || period <= 0) return;
-        
+
         // 转换为Skender Quote格式
         var quotes = candles.Select(c => new Quote
         {
@@ -79,17 +85,45 @@ public class IndicatorCalculator
             Close = c.Close,
             Volume = c.TickVolume
         }).ToList();
-        
+
         // 调用Skender计算EMA
         var emaResults = quotes.GetEma(period).ToList();
-        
+
         // 填充EMA值到原始candles
         for (int i = 0; i < candles.Count; i++)
         {
             candles[i].EMA[period] = (decimal)(emaResults[i].Ema ?? 0);
         }
     }
-    
+
+    /// <summary>
+    /// 计算ADX (Average Directional Index) 使用Skender.Stock.Indicators
+    /// </summary>
+    private void CalculateADX(List<Candle> candles, int period)
+    {
+        if (candles.Count < period * 2 || period <= 0) return;
+
+        // 转换为Skender Quote格式
+        var quotes = candles.Select(c => new Quote
+        {
+            Date = c.DateTime,
+            Open = c.Open,
+            High = c.High,
+            Low = c.Low,
+            Close = c.Close,
+            Volume = c.TickVolume
+        }).ToList();
+
+        // 调用Skender计算ADX
+        var adxResults = quotes.GetAdx(period).ToList();
+
+        // 填充ADX值到原始candles
+        for (int i = 0; i < candles.Count; i++)
+        {
+            candles[i].ADX = (decimal)(adxResults[i].Adx ?? 0);
+        }
+    }
+
     /// <summary>
     /// 获取指定周期的EMA值
     /// </summary>

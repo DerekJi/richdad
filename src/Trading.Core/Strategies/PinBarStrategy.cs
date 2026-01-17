@@ -26,11 +26,13 @@ public class PinBarStrategy : ITradingStrategy
     /// 4. 前一根K线靠近某个EMA
     /// 5. 当前K线收盘高于前一根K线的高点 (突破确认)
     /// 6. 在交易时间内
+    /// 7. ADX满足最小要求 (如果配置了MinAdx)
     /// </summary>
     public bool CanOpenLong(Candle current, Candle previous, bool hasOpenPosition)
     {
         if (hasOpenPosition) return false;
         if (!IsValidTradingTime(current)) return false;
+        if (!HasSufficientAdx(previous)) return false;
 
         var baseEma = IndicatorCalculator.GetEma(previous, _config.BaseEma);
         if (baseEma == 0) return false; // EMA未准备好
@@ -57,6 +59,7 @@ public class PinBarStrategy : ITradingStrategy
     {
         if (hasOpenPosition) return false;
         if (!IsValidTradingTime(current)) return false;
+        if (!HasSufficientAdx(previous)) return false;
 
         var baseEma = IndicatorCalculator.GetEma(previous, _config.BaseEma);
         if (baseEma == 0) return false;
@@ -158,6 +161,20 @@ public class PinBarStrategy : ITradingStrategy
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// 检查ADX是否满足最小要求
+    /// </summary>
+    /// <param name="candle">要检查的K线</param>
+    /// <returns>如果MinAdx=0或ADX>=MinAdx则返回true</returns>
+    private bool HasSufficientAdx(Candle candle)
+    {
+        // 如果未配置MinAdx，不进行过滤
+        if (_config.MinAdx <= 0) return true;
+
+        // ADX必须大于等于配置的最小值
+        return candle.ADX >= _config.MinAdx;
     }
 
     /// <summary>

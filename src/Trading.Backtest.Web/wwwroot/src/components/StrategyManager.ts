@@ -75,6 +75,10 @@ export class StrategyManager {
       this.setInputValue('emaList', (config.emaList || []).join(', '));
       this.setInputValue('nearEmaThreshold', config.nearEmaThreshold);
 
+      // ADX 参数
+      this.setInputValue('minAdx', config.minAdx || 0);
+      this.setInputValue('adxPeriod', config.adxPeriod || 14);
+
       // 风险管理
       this.setInputValue('atrPeriod', config.atrPeriod);
       this.setInputValue('stopLossAtrRatio', config.stopLossAtrRatio);

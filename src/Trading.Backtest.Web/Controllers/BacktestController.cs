@@ -116,7 +116,9 @@ public class BacktestController : ControllerBase
                 NoTradingHoursLimit = request.NoTradingHoursLimit,
                 NoTradeHours = request.NoTradeHours ?? new List<int>(),
                 RequirePinBarDirectionMatch = request.RequirePinBarDirectionMatch,
-                MinLowerWickAtrRatio = request.MinLowerWickAtrRatio
+                MinLowerWickAtrRatio = request.MinLowerWickAtrRatio,
+                MinAdx = request.MinAdx,
+                AdxPeriod = request.AdxPeriod
             };
 
             var accountSettings = new AccountSettings
@@ -381,6 +383,8 @@ public class BacktestRequest
     public List<int>? NoTradeHours { get; set; }
     public bool RequirePinBarDirectionMatch { get; set; }
     public decimal MinLowerWickAtrRatio { get; set; }
+    public decimal MinAdx { get; set; } = 0;
+    public int AdxPeriod { get; set; } = 14;
 
     // Account settings
     public double InitialCapital { get; set; } = 100000;

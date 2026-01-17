@@ -54,6 +54,7 @@ public class Performance2024Analyzer : IAnalyzer
             MaxDailyLossPercent = appSettings.Account.MaxDailyLossPercent
         };
 
+        Console.WriteLine($"策略配置：MinAdx={config.MinAdx}, AdxPeriod={config.AdxPeriod}");
         Console.WriteLine($"正在运行{startDate:yyyy-MM-dd}至{endDate:yyyy-MM-dd}回测...");
         var result = await _runner.RunAsync(config, accountSettings, _dataDirectory, startDate, endDate);
 
@@ -62,9 +63,6 @@ public class Performance2024Analyzer : IAnalyzer
         AnalyzeLosingTrades(result);
         AnalyzeTimingPatterns(result);
         AnalyzeMarketConditions(result);
-
-        Console.WriteLine("\n按任意键退出...");
-        Console.ReadKey();
     }
 
     private void AnalyzePerformance(BacktestResult result)
