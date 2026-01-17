@@ -7,6 +7,7 @@ body {
     background: #f5f5f5;
     margin: 0;
     padding: 0;
+    padding-top: 70px; /* 为固定顶栏预留空间 */
 }
 
 .top-nav {
@@ -17,8 +18,11 @@ body {
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
     z-index: 1000;
 }
 
