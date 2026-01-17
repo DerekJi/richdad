@@ -28,7 +28,7 @@ public class BacktestRunner
     /// <summary>
     /// 执行回测
     /// </summary>
-    public async Task<BacktestResult> RunAsync(StrategyConfig config, AccountSettings accountSettings, string dataDirectory)
+    public async Task<BacktestResult> RunAsync(StrategyConfig config, AccountSettings accountSettings, string dataDirectory, DateTime? startDate = null, DateTime? endDate = null)
     {
         Console.WriteLine($"数据目录: {dataDirectory}\n");
 
@@ -38,6 +38,24 @@ public class BacktestRunner
         // 加载数据
         Console.WriteLine($"正在加载 {config.Symbol} 的历史数据...");
         var candles = await dataProvider.GetCandlesAsync(config.Symbol, config.CsvFilter);
+
+        // 根据日期范围过滤数据
+        if (startDate.HasValue || endDate.HasValue)
+        {
+            var originalCount = candles.Count;
+            if (startDate.HasValue)
+            {
+                candles = candles.Where(c => c.DateTime >= startDate.Value).ToList();
+                Console.WriteLine($"应用开始日期过滤: {startDate.Value:yyyy-MM-dd}");
+            }
+            if (endDate.HasValue)
+            {
+                candles = candles.Where(c => c.DateTime <= endDate.Value.AddDays(1).AddSeconds(-1)).ToList();
+                Console.WriteLine($"应用结束日期过滤: {endDate.Value:yyyy-MM-dd}");
+            }
+            Console.WriteLine($"过滤后剩余 {candles.Count} 根K线 (原始: {originalCount})");
+        }
+
         LoadedCandles = candles; // 保存供诊断使用
         Console.WriteLine($"加载完成，共 {candles.Count} 根K线");
         Console.WriteLine($"数据范围: {candles.First().DateTime:yyyy-MM-dd HH:mm} 至 {candles.Last().DateTime:yyyy-MM-dd HH:mm}\n");

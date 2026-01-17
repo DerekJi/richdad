@@ -82,7 +82,9 @@ export class BacktestRunner {
       initialCapital: this.getInputNumber('initialCapital'),
       leverage: this.getInputNumber('leverage'),
       maxLossPerTradePercent: this.getInputNumber('maxLossPerTradePercent'),
-      maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent')
+      maxDailyLossPercent: this.getInputNumber('maxDailyLossPercent'),
+      startDate: this.getInputValue('startDate') || undefined,
+      endDate: this.getInputValue('endDate') || undefined
     };
 
     // 保存配置供K线图使用

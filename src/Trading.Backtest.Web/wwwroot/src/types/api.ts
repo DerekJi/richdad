@@ -192,4 +192,7 @@ export interface BacktestRequest {
   leverage: number;
   maxLossPerTradePercent: number;
   maxDailyLossPercent: number;
+  // Date range filter
+  startDate?: string;
+  endDate?: string;
 }

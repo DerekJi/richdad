@@ -127,8 +127,20 @@ public class BacktestController : ControllerBase
                 MaxDailyLossPercent = request.MaxDailyLossPercent
             };
 
+            // 解析日期范围
+            DateTime? startDate = null;
+            DateTime? endDate = null;
+            if (!string.IsNullOrEmpty(request.StartDate))
+            {
+                startDate = DateTime.Parse(request.StartDate);
+            }
+            if (!string.IsNullOrEmpty(request.EndDate))
+            {
+                endDate = DateTime.Parse(request.EndDate);
+            }
+
             // 运行回测
-            var result = await _runner.RunAsync(config, accountSettings, dataDirectory);
+            var result = await _runner.RunAsync(config, accountSettings, dataDirectory, startDate, endDate);
 
             // 获取CSV文件名
             var dataProvider = new Trading.Data.Providers.CsvDataProvider(dataDirectory);
@@ -375,6 +387,10 @@ public class BacktestRequest
     public double Leverage { get; set; } = 30;
     public double MaxLossPerTradePercent { get; set; } = 0.5;
     public double MaxDailyLossPercent { get; set; } = 3.0;
+
+    // Date range filter
+    public string? StartDate { get; set; }
+    public string? EndDate { get; set; }
 }
 
 /// <summary>
