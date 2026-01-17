@@ -187,9 +187,20 @@ public class BacktestController : ControllerBase
                         y.TradeCount,
                         y.WinningTrades,
                         y.WinRate,
-                        y.ProfitLoss
+                        y.ProfitLoss,
+                        y.ReturnRate
                     }),
-                    result.MonthlyMetrics,
+                    MonthlyMetrics = result.MonthlyMetrics.Select(m => new
+                    {
+                        m.Period,
+                        m.StartDate,
+                        m.EndDate,
+                        m.TradeCount,
+                        m.WinningTrades,
+                        m.WinRate,
+                        m.ProfitLoss,
+                        m.ReturnRate
+                    }),
                     result.WeeklyMetrics,
                     TopProfitSlots = topProfitSlots.Select(s => new
                     {

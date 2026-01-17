@@ -127,8 +127,9 @@ export class ChartManager {
                 const item = data[index];
                 return [
                   `收益: ${item.profitLoss.toFixed(2)}`,
+                  `收益率: ${item.returnRate.toFixed(2)}%`,
                   `交易数: ${item.tradeCount}`,
-                  `胜率: ${(item.winRate * 100).toFixed(2)}%`
+                  `胜率: ${item.winRate.toFixed(2)}%`
                 ];
               }
             }
@@ -201,7 +202,7 @@ export class ChartManager {
                 return [
                   `收益: ${item.profitLoss.toFixed(2)}`,
                   `交易数: ${item.tradeCount}`,
-                  `胜率: ${(item.winRate * 100).toFixed(2)}%`
+                  `胜率: ${item.winRate.toFixed(2)}%`
                 ];
               }
             }

@@ -74,6 +74,7 @@ export interface PeriodMetrics {
   winningTrades: number;
   winRate: number;
   profitLoss: number;
+  returnRate: number;
 }
 
 export interface EquityPoint {
