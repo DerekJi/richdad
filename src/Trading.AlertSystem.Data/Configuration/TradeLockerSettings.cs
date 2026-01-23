@@ -15,8 +15,8 @@ public class TradeLockerSettings
     /// demo: https://demo.tradelocker.com/backend-api/
     /// live: https://live.tradelocker.com/backend-api/
     /// </summary>
-    public string ApiBaseUrl => Environment.ToLower() == "live" 
-        ? "https://live.tradelocker.com/backend-api" 
+    public string ApiBaseUrl => Environment.ToLower() == "live"
+        ? "https://live.tradelocker.com/backend-api"
         : "https://demo.tradelocker.com/backend-api";
 
     /// <summary>
