@@ -144,6 +144,8 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var content = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("价格API返回: {Content}", content);
+
             var result = JsonSerializer.Deserialize<JsonElement>(content);
 
             if (!result.TryGetProperty("s", out var status) || status.GetString() != "ok")
@@ -153,8 +155,9 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var quotes = result.GetProperty("d");
-            var bid = quotes.GetProperty("bid").GetDecimal();
-            var ask = quotes.GetProperty("ask").GetDecimal();
+            // bp = bid price, ap = ask price
+            var bid = quotes.GetProperty("bp").GetDecimal();
+            var ask = quotes.GetProperty("ap").GetDecimal();
 
             return new SymbolPrice
             {
@@ -190,6 +193,8 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var content = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("品种列表API返回: {Content}", content.Length > 1000 ? content.Substring(0, 1000) + "..." : content);
+
             var result = JsonSerializer.Deserialize<JsonElement>(content);
 
             if (!result.TryGetProperty("d", out var data))
@@ -197,27 +202,52 @@ public class TradeLockerService : ITradeLockerService
                 return null;
             }
 
-            // 查找匹配的交易品种
-            foreach (var instrument in data.EnumerateArray())
+            // TradeLocker API 返回格式: {"s":"ok","d":{"instruments":[...]}}
+            if (!data.TryGetProperty("instruments", out var instruments))
             {
-                if (instrument.TryGetProperty("name", out var nameElement) &&
-                    nameElement.GetString() == symbol)
+                _logger.LogWarning("API响应中未找到instruments字段");
+                return null;
+            }
+
+            // 记录所有可用的品种名称
+            var availableSymbols = new List<string>();
+
+            // 查找匹配的交易品种
+            foreach (var instrument in instruments.EnumerateArray())
+            {
+                if (instrument.TryGetProperty("name", out var nameElement))
                 {
-                    var tradableInstrumentId = instrument.GetProperty("tradableInstrumentId").GetInt64();
-                    var routes = instrument.GetProperty("routes").EnumerateArray().ToList();
+                    var instrumentName = nameElement.GetString();
+                    availableSymbols.Add(instrumentName ?? "");
 
-                    var infoRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "INFO");
-                    var tradeRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "TRADE");
-
-                    return new InstrumentInfo
+                    if (instrumentName == symbol)
                     {
-                        Symbol = symbol,
-                        TradableInstrumentId = tradableInstrumentId,
-                        InfoRouteId = infoRoute.GetProperty("routeId").GetInt32(),
-                        TradeRouteId = tradeRoute.GetProperty("routeId").GetInt32()
-                    };
+                        var tradableInstrumentId = instrument.GetProperty("tradableInstrumentId").GetInt64();
+                        var routes = instrument.GetProperty("routes").EnumerateArray().ToList();
+
+                        // routes 结构: [{"id": 795894, "type": "TRADE"}, {"id": 791554, "type": "INFO"}]
+                        var infoRoute = routes.FirstOrDefault(r => r.GetProperty("type").GetString() == "INFO");
+                        var tradeRoute = routes.FirstOrDefault(r => r.GetProperty("type").GetString() == "TRADE");
+
+                        if (infoRoute.ValueKind == JsonValueKind.Undefined || tradeRoute.ValueKind == JsonValueKind.Undefined)
+                        {
+                            _logger.LogWarning("品种 {Symbol} 缺少必要的路由信息", symbol);
+                            continue;
+                        }
+
+                        return new InstrumentInfo
+                        {
+                            Symbol = symbol,
+                            TradableInstrumentId = tradableInstrumentId,
+                            InfoRouteId = infoRoute.GetProperty("id").GetInt32(),
+                            TradeRouteId = tradeRoute.GetProperty("id").GetInt32()
+                        };
+                    }
                 }
             }
+
+            _logger.LogWarning("未找到品种 {Symbol}，可用品种数量: {Count}，品种列表: {AvailableSymbols}",
+                symbol, availableSymbols.Count, string.Join(", ", availableSymbols));
 
             return null;
         }

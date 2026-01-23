@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace Trading.AlertSystem.Data.Models;
 
 /// <summary>
@@ -8,6 +11,8 @@ public class PriceAlert
     /// <summary>
     /// 告警ID
     /// </summary>
+    [JsonPropertyName("id")]  // For System.Text.Json
+    [JsonProperty("id")]      // For Newtonsoft.Json (CosmosDB)
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>

@@ -15,15 +15,27 @@ const UI = {
         try {
             const alert = await AlertAPI.getById(id);
 
+            // 处理枚举字符串转数字
+            let alertType = alert.type;
+            if (typeof alertType === 'string') {
+                const typeMap = { 'FixedPrice': 0, 'EMA': 1, 'MA': 2 };
+                alertType = typeMap[alertType] ?? 0;
+            }
+
+            let direction = alert.direction;
+            if (typeof direction === 'string') {
+                direction = direction === 'Above' ? 0 : 1;
+            }
+
             document.getElementById('modalTitle').textContent = '编辑告警';
             document.getElementById('alertId').value = alert.id;
             document.getElementById('alertName').value = alert.name;
             document.getElementById('alertSymbol').value = alert.symbol;
-            document.getElementById('alertType').value = alert.type;
+            document.getElementById('alertType').value = alertType;
             document.getElementById('targetPrice').value = alert.targetPrice || '';
             document.getElementById('emaPeriod').value = alert.emaPeriod || 20;
             document.getElementById('maPeriod').value = alert.maPeriod || 20;
-            document.getElementById('direction').value = alert.direction;
+            document.getElementById('direction').value = direction;
             document.getElementById('timeFrame').value = alert.timeFrame;
             document.getElementById('messageTemplate').value = alert.messageTemplate || '';
             document.getElementById('telegramChatId').value = alert.telegramChatId || '';
@@ -43,6 +55,8 @@ const UI = {
         document.getElementById('targetPriceGroup').style.display = type === 0 ? 'block' : 'none';
         document.getElementById('emaPeriodGroup').style.display = type === 1 ? 'block' : 'none';
         document.getElementById('maPeriodGroup').style.display = type === 2 ? 'block' : 'none';
+        // 固定价格时不需要K线周期（只有EMA/MA需要）
+        document.getElementById('timeFrameGroup').style.display = type === 0 ? 'none' : 'block';
     },
 
     // 自动生成告警名称和消息模板
