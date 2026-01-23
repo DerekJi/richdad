@@ -26,8 +26,26 @@ const AlertManager = {
 
     // 创建告警卡片HTML
     createAlertCard(alert) {
-        const typeText = ['固定价格', 'EMA', 'MA'][alert.type];
-        const directionText = alert.direction === 0 ? '上穿' : '下穿';
+        // 处理枚举字符串转数字
+        let alertType = alert.type;
+        if (typeof alertType === 'string') {
+            // 枚举字符串映射: FixedPrice=0, EMA=1, MA=2
+            const typeMap = { 'FixedPrice': 0, 'EMA': 1, 'MA': 2 };
+            alertType = typeMap[alertType] ?? 0;
+        } else {
+            alertType = parseInt(alertType ?? 0);
+        }
+
+        let direction = alert.direction;
+        if (typeof direction === 'string') {
+            // 枚举字符串映射: Above=0, Below=1
+            direction = direction === 'Above' ? 0 : 1;
+        } else {
+            direction = parseInt(direction ?? 0);
+        }
+
+        const typeText = ['固定价格', 'EMA', 'MA'][alertType] || '未知';
+        const directionText = direction === 0 ? '上穿' : '下穿';
         const statusClass = alert.isTriggered ? 'triggered' : (alert.enabled ? '' : 'disabled');
         const statusBadge = alert.isTriggered
             ? '<span class="status-badge status-triggered">已触发</span>'
@@ -36,12 +54,14 @@ const AlertManager = {
                 : '<span class="status-badge status-disabled">禁用</span>');
 
         let targetText = '';
-        if (alert.type === 0) {
-            targetText = alert.targetPrice;
-        } else if (alert.type === 1) {
+        if (alertType === 0 && alert.targetPrice) {
+            targetText = alert.targetPrice.toString();
+        } else if (alertType === 1 && alert.emaPeriod) {
             targetText = `EMA(${alert.emaPeriod})`;
-        } else if (alert.type === 2) {
+        } else if (alertType === 2 && alert.maPeriod) {
             targetText = `MA(${alert.maPeriod})`;
+        } else {
+            targetText = '-';
         }
 
         return `
@@ -69,7 +89,7 @@ const AlertManager = {
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">时间周期</span>
-                        <span class="detail-value">${alert.timeFrame}</span>
+                        <span class="detail-value">${alert.timeFrame || 'M5'}</span>
                     </div>
                 </div>
 

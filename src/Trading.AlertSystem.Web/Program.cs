@@ -194,6 +194,22 @@ public class TradeLockerStartupTestService : IHostedService
                     _logger.LogInformation("  净值: {Equity} {Currency}", accountInfo.Equity, accountInfo.Currency);
                     _logger.LogInformation("  已用保证金: {Margin} {Currency}", accountInfo.Margin, accountInfo.Currency);
                     _logger.LogInformation("  可用保证金: {FreeMargin} {Currency}", accountInfo.FreeMargin, accountInfo.Currency);
+
+                    // 测试常用品种
+                    _logger.LogInformation("\n=== 测试交易品种 ===");
+                    var testSymbols = new[] { "XAGUSD", "XAUUSD", "EURUSD", "GBPUSD", "BTCUSD", "ETHUSD", "SOLUSD", "AAVEUSD", "BNBUSD" };
+                    foreach (var symbol in testSymbols)
+                    {
+                        var price = await _tradeLockerService.GetSymbolPriceAsync(symbol);
+                        if (price != null)
+                        {
+                            _logger.LogInformation("✅ {Symbol,-10} Bid: {Bid,10:F4}  Ask: {Ask,10:F4}", symbol, price.Bid, price.Ask);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("❌ {Symbol,-10} 不可用", symbol);
+                        }
+                    }
                 }
                 else
                 {

@@ -85,8 +85,8 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">时间周期</label>
+                <div class="form-group" id="timeFrameGroup">
+                    <label class="form-label">K线周期</label>
                     <select class="form-control" id="timeFrame" onchange="UI.autoGenerateNameAndMessage()">
                         <option value="M1">M1 (1分钟)</option>
                         <option value="M5" selected>M5 (5分钟)</option>
@@ -96,6 +96,9 @@
                         <option value="H4">H4 (4小时)</option>
                         <option value="D1">D1 (日线)</option>
                     </select>
+                    <small class="form-text">
+                        💡 用于计算EMA/MA指标和获取价格的K线时间周期。系统每60秒自动检查一次所有告警。
+                    </small>
                 </div>
 
                 <div class="form-group">
