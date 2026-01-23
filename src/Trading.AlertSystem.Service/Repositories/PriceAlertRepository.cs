@@ -1,7 +1,7 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
+using Trading.AlertSystem.Data.Infrastructure;
 using Trading.AlertSystem.Data.Models;
-using Trading.Data.Infrastructure;
 
 namespace Trading.AlertSystem.Service.Repositories;
 
@@ -12,7 +12,7 @@ public class PriceAlertRepository : IPriceAlertRepository
 {
     private readonly CosmosDbContext _cosmosDb;
     private readonly ILogger<PriceAlertRepository> _logger;
-    private Container? _container;
+    private bool _initialized;
 
     public PriceAlertRepository(CosmosDbContext cosmosDb, ILogger<PriceAlertRepository> logger)
     {
@@ -20,23 +20,21 @@ public class PriceAlertRepository : IPriceAlertRepository
         _logger = logger;
     }
 
-    private async Task<Container> GetContainerAsync()
+    private async Task EnsureInitializedAsync()
     {
-        if (_container == null)
+        if (!_initialized)
         {
             await _cosmosDb.InitializeAsync();
-            // 获取或创建PriceAlerts容器
-            var database = _cosmosDb.BacktestContainer.Database;
-            _container = await database.CreateContainerIfNotExistsAsync("PriceAlerts", "/id");
+            _initialized = true;
         }
-        return _container;
     }
 
     public async Task<IEnumerable<PriceAlert>> GetAllAsync()
     {
         try
         {
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             var query = new QueryDefinition("SELECT * FROM c");
             var iterator = container.GetItemQueryIterator<PriceAlert>(query);
 
@@ -60,7 +58,8 @@ public class PriceAlertRepository : IPriceAlertRepository
     {
         try
         {
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             var query = new QueryDefinition("SELECT * FROM c WHERE c.Enabled = true AND c.IsTriggered = false");
             var iterator = container.GetItemQueryIterator<PriceAlert>(query);
 
@@ -84,7 +83,8 @@ public class PriceAlertRepository : IPriceAlertRepository
     {
         try
         {
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             var response = await container.ReadItemAsync<PriceAlert>(id, new PartitionKey(id));
             return response.Resource;
         }
@@ -106,7 +106,8 @@ public class PriceAlertRepository : IPriceAlertRepository
             alert.CreatedAt = DateTime.UtcNow;
             alert.UpdatedAt = DateTime.UtcNow;
 
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             var response = await container.CreateItemAsync(alert, new PartitionKey(alert.Id));
             return response.Resource;
         }
@@ -123,7 +124,8 @@ public class PriceAlertRepository : IPriceAlertRepository
         {
             alert.UpdatedAt = DateTime.UtcNow;
 
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             var response = await container.ReplaceItemAsync(alert, alert.Id, new PartitionKey(alert.Id));
             return response.Resource;
         }
@@ -138,7 +140,8 @@ public class PriceAlertRepository : IPriceAlertRepository
     {
         try
         {
-            var container = await GetContainerAsync();
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
             await container.DeleteItemAsync<PriceAlert>(id, new PartitionKey(id));
             return true;
         }

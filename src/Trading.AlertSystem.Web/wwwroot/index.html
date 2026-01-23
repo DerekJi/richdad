@@ -656,7 +656,20 @@
                     method: 'POST'
                 });
                 const result = await response.json();
-                alert(result.message);
+
+                if (result.success && result.account) {
+                    const account = result.account;
+                    const message = `✅ TradeLocker连接成功！\n\n` +
+                        `账户ID: ${account.accountId}\n` +
+                        `账户名: ${account.accountName}\n` +
+                        `余额: ${account.balance.toFixed(2)} ${account.currency}\n` +
+                        `净值: ${account.equity.toFixed(2)} ${account.currency}\n` +
+                        `已用保证金: ${account.margin.toFixed(2)} ${account.currency}\n` +
+                        `可用保证金: ${account.freeMargin.toFixed(2)} ${account.currency}`;
+                    alert(message);
+                } else {
+                    alert(result.message);
+                }
             } catch (error) {
                 alert('测试失败: ' + error.message);
             }

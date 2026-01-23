@@ -4,10 +4,12 @@ using Trading.AlertSystem.Data.Services;
 using Trading.AlertSystem.Service.Configuration;
 using Trading.AlertSystem.Service.Repositories;
 using Trading.AlertSystem.Service.Services;
-using Trading.Data.Configuration;
-using Trading.Data.Infrastructure;
+using Trading.AlertSystem.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 添加 User Secrets 支持（开发和测试环境）
+builder.Configuration.AddUserSecrets<Program>(optional: true);
 
 // 配置设置
 builder.Services.Configure<TradeLockerSettings>(builder.Configuration.GetSection("TradeLocker"));
@@ -19,24 +21,58 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TelegramSetti
 builder.Services.Configure<MonitoringSettings>(builder.Configuration.GetSection("Monitoring"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<MonitoringSettings>>().Value);
 
-builder.Services.Configure<CosmosDbSettings>(builder.Configuration.GetSection("CosmosDb"));
-builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<CosmosDbSettings>>().Value);
+// 注册数据库服务（如果配置了CosmosDB）
+var cosmosConfig = builder.Configuration.GetSection("CosmosDb");
+var connectionString = cosmosConfig["ConnectionString"];
 
-// 注册数据库服务
-builder.Services.AddSingleton<CosmosDbContext>();
+if (!string.IsNullOrEmpty(connectionString))
+{
+    var cosmosSettings = new Trading.AlertSystem.Data.Configuration.CosmosDbSettings
+    {
+        ConnectionString = connectionString,
+        DatabaseName = cosmosConfig["DatabaseName"] ?? "TradingSystem",
+        AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts"
+    };
+
+    builder.Services.AddSingleton(cosmosSettings);
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
+    builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
+}
+else
+{
+    // 使用内存存储作为后备方案
+    builder.Services.AddSingleton<IPriceAlertRepository, InMemoryPriceAlertRepository>();
+}
 
 // 注册数据层服务
-builder.Services.AddHttpClient<ITradeLockerService, TradeLockerService>();
-builder.Services.AddSingleton<ITelegramService, TelegramService>();
+var tradeLockerConfig = builder.Configuration.GetSection("TradeLocker");
+if (!string.IsNullOrEmpty(tradeLockerConfig["Email"]) && !string.IsNullOrEmpty(tradeLockerConfig["Password"]))
+{
+    builder.Services.AddHttpClient<ITradeLockerService, TradeLockerService>();
+}
+else
+{
+    builder.Services.AddSingleton<ITradeLockerService, DemoTradeLockerService>();
+}
 
-// 注册仓储
-builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
+var telegramConfig = builder.Configuration.GetSection("Telegram");
+if (!string.IsNullOrEmpty(telegramConfig["BotToken"]))
+{
+    builder.Services.AddSingleton<ITelegramService, TelegramService>();
+}
+else
+{
+    builder.Services.AddSingleton<ITelegramService, DemoTelegramService>();
+}
 
 // 注册业务服务
 builder.Services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
 
 // 添加后台服务（自动启动价格监控）
 builder.Services.AddHostedService<PriceMonitorHostedService>();
+
+// 添加TradeLocker启动测试服务
+builder.Services.AddHostedService<TradeLockerStartupTestService>();
 
 // 添加控制器
 builder.Services.AddControllers()
@@ -114,5 +150,71 @@ public class PriceMonitorHostedService : IHostedService
     {
         _logger.LogInformation("停止价格监控后台服务");
         await _monitorService.StopAsync();
+    }
+}
+
+/// <summary>
+/// TradeLocker启动测试服务
+/// </summary>
+public class TradeLockerStartupTestService : IHostedService
+{
+    private readonly ITradeLockerService _tradeLockerService;
+    private readonly ILogger<TradeLockerStartupTestService> _logger;
+
+    public TradeLockerStartupTestService(
+        ITradeLockerService tradeLockerService,
+        ILogger<TradeLockerStartupTestService> logger)
+    {
+        _tradeLockerService = tradeLockerService;
+        _logger = logger;
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("=== 开始测试TradeLocker连接 ===");
+
+        try
+        {
+            // 测试连接
+            var connected = await _tradeLockerService.ConnectAsync();
+            _logger.LogInformation("TradeLocker连接状态: {Connected}", connected);
+
+            if (connected)
+            {
+                // 测试获取账户信息
+                _logger.LogInformation("正在获取账户信息...");
+                var accountInfo = await _tradeLockerService.GetAccountInfoAsync();
+
+                if (accountInfo != null)
+                {
+                    _logger.LogInformation("✅ 账户信息获取成功:");
+                    _logger.LogInformation("  账户ID: {AccountId}", accountInfo.AccountId);
+                    _logger.LogInformation("  账户名称: {AccountName}", accountInfo.AccountName);
+                    _logger.LogInformation("  余额: {Balance} {Currency}", accountInfo.Balance, accountInfo.Currency);
+                    _logger.LogInformation("  净值: {Equity} {Currency}", accountInfo.Equity, accountInfo.Currency);
+                    _logger.LogInformation("  已用保证金: {Margin} {Currency}", accountInfo.Margin, accountInfo.Currency);
+                    _logger.LogInformation("  可用保证金: {FreeMargin} {Currency}", accountInfo.FreeMargin, accountInfo.Currency);
+                }
+                else
+                {
+                    _logger.LogWarning("❌ 未能获取账户信息");
+                }
+            }
+            else
+            {
+                _logger.LogWarning("❌ TradeLocker连接失败");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ 测试TradeLocker时发生异常");
+        }
+
+        _logger.LogInformation("=== TradeLocker连接测试完成 ===");
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
     }
 }

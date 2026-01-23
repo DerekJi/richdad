@@ -11,13 +11,20 @@ public class TradeLockerSettings
     public string Environment { get; set; } = "demo";
 
     /// <summary>
-    /// API基础URL（自动根据环境设置）
-    /// demo: https://demo.tradelocker.com/backend-api/
-    /// live: https://live.tradelocker.com/backend-api/
+    /// API基础URL（根据环境自动设置）
+    /// demo环境用于测试，live环境用于实盘交易
     /// </summary>
-    public string ApiBaseUrl => Environment.ToLower() == "live"
-        ? "https://live.tradelocker.com/backend-api"
-        : "https://demo.tradelocker.com/backend-api";
+    public string ApiBaseUrl
+    {
+        get
+        {
+            var env = Environment.ToLower();
+            if (env == "live")
+                return "https://live.tradelocker.com";
+            else
+                return "https://demo.tradelocker.com";
+        }
+    }
 
     /// <summary>
     /// 账户邮箱

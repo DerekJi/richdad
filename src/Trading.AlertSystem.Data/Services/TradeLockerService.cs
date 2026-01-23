@@ -70,8 +70,8 @@ public class TradeLockerService : ITradeLockerService
                 Encoding.UTF8,
                 "application/json");
 
-            // 发送认证请求
-            var response = await _httpClient.PostAsync("/auth/jwt/token", content);
+            // 使用正确的认证端点：backend-api
+            var response = await _httpClient.PostAsync("/backend-api/auth/jwt/token", content);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -81,6 +81,10 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var result = await response.Content.ReadAsStringAsync();
+
+            // 记录响应内容用于调试
+            _logger.LogDebug("TradeLocker响应: {Response}", result.Length > 200 ? result.Substring(0, 200) : result);
+
             var tokenData = JsonSerializer.Deserialize<JsonElement>(result);
 
             _accessToken = tokenData.GetProperty("accessToken").GetString();
@@ -128,7 +132,7 @@ public class TradeLockerService : ITradeLockerService
 
             // 添加accNum到请求头
             var request = new HttpRequestMessage(HttpMethod.Get,
-                $"/trade/quotes?routeId={instrumentInfo.InfoRouteId}&tradableInstrumentId={instrumentInfo.TradableInstrumentId}");
+                $"/backend-api/trade/quotes?routeId={instrumentInfo.InfoRouteId}&tradableInstrumentId={instrumentInfo.TradableInstrumentId}");
             request.Headers.Add("accNum", _settings.AccountNumber.ToString());
 
             var response = await _httpClient.SendAsync(request);
@@ -176,7 +180,7 @@ public class TradeLockerService : ITradeLockerService
         try
         {
             var request = new HttpRequestMessage(HttpMethod.Get,
-                $"/trade/accounts/{_settings.AccountId}/instruments");
+                $"/backend-api/trade/accounts/{_settings.AccountId}/instruments");
             request.Headers.Add("accNum", _settings.AccountNumber.ToString());
 
             var response = await _httpClient.SendAsync(request);
@@ -263,7 +267,7 @@ public class TradeLockerService : ITradeLockerService
 
             // 构建历史数据请求
             var request = new HttpRequestMessage(HttpMethod.Get,
-                $"/trade/history?routeId={instrumentInfo.InfoRouteId}" +
+                $"/backend-api/trade/history?routeId={instrumentInfo.InfoRouteId}" +
                 $"&tradableInstrumentId={instrumentInfo.TradableInstrumentId}" +
                 $"&resolution={resolution}" +
                 $"&startTimestamp={startTimestamp}" +
@@ -316,6 +320,109 @@ public class TradeLockerService : ITradeLockerService
         {
             _logger.LogError(ex, "获取{Symbol}历史数据时发生错误", symbol);
             return Array.Empty<Candle>();
+        }
+    }
+
+    public async Task<AccountInfo?> GetAccountInfoAsync()
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(_accessToken))
+            {
+                await ConnectAsync();
+            }
+
+            // 获取账户列表
+            var request = new HttpRequestMessage(HttpMethod.Get, $"/backend-api/trade/accounts");
+            request.Headers.Add("accNum", _settings.AccountNumber.ToString());
+
+            var response = await _httpClient.SendAsync(request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("获取账户信息失败: {StatusCode}", response.StatusCode);
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            _logger.LogDebug("账户API返回的原始数据: {Content}", content);
+
+            var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+            // API返回格式: {"s":"ok","d":[...]}
+            if (!result.TryGetProperty("d", out var accountsData) ||
+                accountsData.ValueKind != JsonValueKind.Array ||
+                accountsData.GetArrayLength() == 0)
+            {
+                _logger.LogWarning("账户信息为空");
+                return null;
+            }
+
+            _logger.LogDebug("找到 {Count} 个账户，正在查找账户ID: {AccountId}", accountsData.GetArrayLength(), _settings.AccountId);
+
+            // 找到匹配的账户
+            var accountElement = accountsData.EnumerateArray()
+                .FirstOrDefault(a => a.GetProperty("id").GetString() == _settings.AccountId.ToString());
+
+            if (accountElement.ValueKind == JsonValueKind.Undefined)
+            {
+                _logger.LogWarning("未找到账户ID: {AccountId}", _settings.AccountId);
+                return null;
+            }
+
+            var accountId = accountElement.GetProperty("id").GetString() ?? "0";
+            var accountName = accountElement.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "";
+            var currency = accountElement.TryGetProperty("currency", out var curr) ? curr.GetString() ?? "USD" : "USD";
+
+            // 获取账户状态（余额、净值等信息）
+            var stateRequest = new HttpRequestMessage(HttpMethod.Get, $"/backend-api/trade/accounts/{accountId}/state");
+            stateRequest.Headers.Add("accNum", _settings.AccountNumber.ToString());
+
+            var stateResponse = await _httpClient.SendAsync(stateRequest);
+
+            decimal balance = 0, equity = 0, margin = 0, freeMargin = 0;
+
+            if (stateResponse.IsSuccessStatusCode)
+            {
+                var stateContent = await stateResponse.Content.ReadAsStringAsync();
+                _logger.LogDebug("账户状态API返回: {Content}", stateContent);
+
+                var stateResult = JsonSerializer.Deserialize<JsonElement>(stateContent);
+                if (stateResult.TryGetProperty("d", out var stateData) &&
+                    stateData.TryGetProperty("accountDetailsData", out var detailsArray) &&
+                    detailsArray.ValueKind == JsonValueKind.Array &&
+                    detailsArray.GetArrayLength() >= 5)
+                {
+                    // accountDetailsData数组格式: [balance, equity, equity, ?, freeMargin, ?, usedMargin, ...]
+                    // 根据日志: [5041.03, 5041.03, 5041.03, 0, 5041.03, 0, 5041.03, 0, 0, ...]
+                    balance = detailsArray[0].GetDecimal();
+                    equity = detailsArray[1].GetDecimal();
+                    freeMargin = detailsArray[4].GetDecimal();
+                    margin = detailsArray[6].GetDecimal();
+                }
+            }
+            else
+            {
+                _logger.LogWarning("获取账户状态失败: {StatusCode}", stateResponse.StatusCode);
+            }
+
+            var accountInfo = new AccountInfo
+            {
+                AccountId = long.Parse(accountId),
+                AccountName = accountName,
+                Balance = balance,
+                Equity = equity,
+                Margin = margin,
+                FreeMargin = freeMargin,
+                Currency = currency
+            };
+
+            return accountInfo;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取账户信息时发生错误");
+            return null;
         }
     }
 
