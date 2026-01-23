@@ -4,290 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>交易告警系统</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-
-        .controls {
-            padding: 20px 30px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5568d3;
-        }
-
-        .btn-success {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #218838;
-        }
-
-        .btn-info {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .btn-info:hover {
-            background: #138496;
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .alert-list {
-            display: grid;
-            gap: 20px;
-        }
-
-        .alert-card {
-            border: 1px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-            background: white;
-            transition: all 0.3s;
-        }
-
-        .alert-card:hover {
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-
-        .alert-card.disabled {
-            opacity: 0.6;
-            background: #f8f9fa;
-        }
-
-        .alert-card.triggered {
-            border-left: 5px solid #28a745;
-        }
-
-        .alert-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .alert-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .alert-symbol {
-            background: #667eea;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        .alert-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin: 15px 0;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .detail-label {
-            font-size: 0.85em;
-            color: #6c757d;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            font-size: 1.1em;
-            color: #333;
-            font-weight: 600;
-        }
-
-        .alert-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #dee2e6;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-disabled {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-triggered {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 1.8em;
-            color: #333;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        select.form-control {
-            cursor: pointer;
-        }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px;
-            color: #6c757d;
-        }
-
-        .empty-state-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-        }
-    </style>
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/alert-card.css">
+    <link rel="stylesheet" href="css/modal.css">
 </head>
 <body>
     <div class="container">
@@ -297,11 +18,11 @@
         </header>
 
         <div class="controls">
-            <button class="btn btn-primary" onclick="showCreateModal()">➕ 创建新告警</button>
-            <button class="btn btn-success" onclick="testTelegram()">📱 测试Telegram</button>
-            <button class="btn btn-info" onclick="testTradeLocker()">🔌 测试TradeLocker</button>
-            <button class="btn btn-info" onclick="checkNow()">🔄 立即检查</button>
-            <button class="btn btn-success" onclick="loadAlerts()">♻️ 刷新列表</button>
+            <button class="btn btn-primary" onclick="UI.showCreateModal()">➕ 创建新告警</button>
+            <button class="btn btn-success" onclick="UI.testTelegram()">📱 测试Telegram</button>
+            <button class="btn btn-info" onclick="UI.testTradeLocker()">🔌 测试TradeLocker</button>
+            <button class="btn btn-info" onclick="UI.checkNow()">🔄 立即检查</button>
+            <button class="btn btn-success" onclick="AlertManager.loadAlerts()">♻️ 刷新列表</button>
         </div>
 
         <div class="content">
@@ -322,19 +43,19 @@
             <form id="alertForm">
                 <input type="hidden" id="alertId">
 
-                <div class="form-group">
-                    <label class="form-label">告警名称</label>
-                    <input type="text" class="form-control" id="alertName" required>
+                <div class="form-group" style="display: none;">
+                    <label class="form-label">告警名称（自动生成）</label>
+                    <input type="text" class="form-control" id="alertName" required readonly>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">交易品种</label>
-                    <input type="text" class="form-control" id="alertSymbol" placeholder="例如: XAUUSD" required>
+                    <input type="text" class="form-control" id="alertSymbol" placeholder="例如: XAUUSD" required onchange="UI.autoGenerateNameAndMessage()">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">告警类型</label>
-                    <select class="form-control" id="alertType" onchange="updateFormFields()" required>
+                    <select class="form-control" id="alertType" onchange="UI.updateFormFields(); UI.autoGenerateNameAndMessage();" required>
                         <option value="0">固定价格</option>
                         <option value="1">EMA (指数移动平均线)</option>
                         <option value="2">MA (简单移动平均线)</option>
@@ -343,22 +64,22 @@
 
                 <div class="form-group" id="targetPriceGroup">
                     <label class="form-label">目标价格</label>
-                    <input type="number" class="form-control" id="targetPrice" step="0.00001">
+                    <input type="number" class="form-control" id="targetPrice" step="0.00001" onchange="UI.autoGenerateNameAndMessage()">
                 </div>
 
                 <div class="form-group" id="emaPeriodGroup" style="display: none;">
                     <label class="form-label">EMA周期</label>
-                    <input type="number" class="form-control" id="emaPeriod" min="1" value="20">
+                    <input type="number" class="form-control" id="emaPeriod" min="1" value="20" onchange="UI.autoGenerateNameAndMessage()">
                 </div>
 
                 <div class="form-group" id="maPeriodGroup" style="display: none;">
                     <label class="form-label">MA周期</label>
-                    <input type="number" class="form-control" id="maPeriod" min="1" value="20">
+                    <input type="number" class="form-control" id="maPeriod" min="1" value="20" onchange="UI.autoGenerateNameAndMessage()">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">价格方向</label>
-                    <select class="form-control" id="direction" required>
+                    <select class="form-control" id="direction" required onchange="UI.autoGenerateNameAndMessage()">
                         <option value="0">上穿（价格突破目标）</option>
                         <option value="1">下穿（价格跌破目标）</option>
                     </select>
@@ -366,7 +87,7 @@
 
                 <div class="form-group">
                     <label class="form-label">时间周期</label>
-                    <select class="form-control" id="timeFrame">
+                    <select class="form-control" id="timeFrame" onchange="UI.autoGenerateNameAndMessage()">
                         <option value="M1">M1 (1分钟)</option>
                         <option value="M5" selected>M5 (5分钟)</option>
                         <option value="M15">M15 (15分钟)</option>
@@ -378,9 +99,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">消息模板（可选）</label>
+                    <label class="form-label">消息模板</label>
                     <textarea class="form-control" id="messageTemplate" rows="3"
-                        placeholder="可用变量: {Symbol}, {Name}, {Price}, {Target}, {Direction}, {Time}"></textarea>
+                        placeholder="消息模板将自动生成，您可以根据需要修改"></textarea>
+                    <small class="form-text">
+                        📝 <strong>可用变量：</strong>
+                        <code>{Symbol}</code> 品种 ·
+                        <code>{Name}</code> 告警名称 ·
+                        <code>{Price}</code> 当前价格 ·
+                        <code>{Target}</code> 目标值 ·
+                        <code>{Direction}</code> 方向 ·
+                        <code>{Time}</code> 时间
+                    </small>
                 </div>
 
                 <div class="form-group">
@@ -396,300 +126,18 @@
                 </div>
 
                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                    <button type="button" class="btn btn-danger" onclick="closeModal()">取消</button>
+                    <button type="button" class="btn btn-danger" onclick="UI.closeModal()">取消</button>
                     <button type="submit" class="btn btn-success">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <script>
-        const API_BASE = '/api';
-
-        // 加载所有告警
-        async function loadAlerts() {
-            try {
-                const response = await fetch(`${API_BASE}/alerts`);
-                const alerts = await response.json();
-
-                const alertList = document.getElementById('alertList');
-
-                if (alerts.length === 0) {
-                    alertList.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-state-icon">📭</div>
-                            <h3>还没有告警</h3>
-                            <p>点击"创建新告警"按钮开始设置价格监控</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                alertList.innerHTML = alerts.map(alert => createAlertCard(alert)).join('');
-            } catch (error) {
-                console.error('加载告警失败:', error);
-                alert('加载告警失败: ' + error.message);
-            }
-        }
-
-        // 创建告警卡片HTML
-        function createAlertCard(alert) {
-            const typeText = ['固定价格', 'EMA', 'MA'][alert.type];
-            const directionText = alert.direction === 0 ? '上穿' : '下穿';
-            const statusClass = alert.isTriggered ? 'triggered' : (alert.enabled ? '' : 'disabled');
-            const statusBadge = alert.isTriggered
-                ? '<span class="status-badge status-triggered">已触发</span>'
-                : (alert.enabled
-                    ? '<span class="status-badge status-active">启用</span>'
-                    : '<span class="status-badge status-disabled">禁用</span>');
-
-            let targetText = '';
-            if (alert.type === 0) {
-                targetText = alert.targetPrice;
-            } else if (alert.type === 1) {
-                targetText = `EMA(${alert.emaPeriod})`;
-            } else if (alert.type === 2) {
-                targetText = `MA(${alert.maPeriod})`;
-            }
-
-            return `
-                <div class="alert-card ${statusClass}">
-                    <div class="alert-header">
-                        <div>
-                            <div class="alert-title">${alert.name}</div>
-                            <div style="margin-top: 5px;">${statusBadge}</div>
-                        </div>
-                        <div class="alert-symbol">${alert.symbol}</div>
-                    </div>
-
-                    <div class="alert-details">
-                        <div class="detail-item">
-                            <span class="detail-label">告警类型</span>
-                            <span class="detail-value">${typeText}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">目标值</span>
-                            <span class="detail-value">${targetText}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">方向</span>
-                            <span class="detail-value">${directionText}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">时间周期</span>
-                            <span class="detail-value">${alert.timeFrame}</span>
-                        </div>
-                    </div>
-
-                    ${alert.lastTriggeredAt ? `
-                        <div style="margin-top: 10px; color: #6c757d; font-size: 0.9em;">
-                            最后触发: ${new Date(alert.lastTriggeredAt).toLocaleString('zh-CN')}
-                        </div>
-                    ` : ''}
-
-                    <div class="alert-actions">
-                        <button class="btn btn-primary" onclick="editAlert('${alert.id}')">编辑</button>
-                        ${alert.isTriggered ? `
-                            <button class="btn btn-success" onclick="resetAlert('${alert.id}')">重置</button>
-                        ` : ''}
-                        <button class="btn btn-danger" onclick="deleteAlert('${alert.id}')">删除</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 显示创建模态框
-        function showCreateModal() {
-            document.getElementById('modalTitle').textContent = '创建新告警';
-            document.getElementById('alertForm').reset();
-            document.getElementById('alertId').value = '';
-            updateFormFields();
-            document.getElementById('alertModal').classList.add('show');
-        }
-
-        // 编辑告警
-        async function editAlert(id) {
-            try {
-                const response = await fetch(`${API_BASE}/alerts/${id}`);
-                const alert = await response.json();
-
-                document.getElementById('modalTitle').textContent = '编辑告警';
-                document.getElementById('alertId').value = alert.id;
-                document.getElementById('alertName').value = alert.name;
-                document.getElementById('alertSymbol').value = alert.symbol;
-                document.getElementById('alertType').value = alert.type;
-                document.getElementById('targetPrice').value = alert.targetPrice || '';
-                document.getElementById('emaPeriod').value = alert.emaPeriod || 20;
-                document.getElementById('maPeriod').value = alert.maPeriod || 20;
-                document.getElementById('direction').value = alert.direction;
-                document.getElementById('timeFrame').value = alert.timeFrame;
-                document.getElementById('messageTemplate').value = alert.messageTemplate || '';
-                document.getElementById('telegramChatId').value = alert.telegramChatId || '';
-                document.getElementById('enabled').checked = alert.enabled;
-
-                updateFormFields();
-                document.getElementById('alertModal').classList.add('show');
-            } catch (error) {
-                alert('加载告警数据失败: ' + error.message);
-            }
-        }
-
-        // 更新表单字段显示
-        function updateFormFields() {
-            const type = parseInt(document.getElementById('alertType').value);
-
-            document.getElementById('targetPriceGroup').style.display = type === 0 ? 'block' : 'none';
-            document.getElementById('emaPeriodGroup').style.display = type === 1 ? 'block' : 'none';
-            document.getElementById('maPeriodGroup').style.display = type === 2 ? 'block' : 'none';
-        }
-
-        // 关闭模态框
-        function closeModal() {
-            document.getElementById('alertModal').classList.remove('show');
-        }
-
-        // 提交表单
-        document.getElementById('alertForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const id = document.getElementById('alertId').value;
-            const type = parseInt(document.getElementById('alertType').value);
-
-            const data = {
-                name: document.getElementById('alertName').value,
-                symbol: document.getElementById('alertSymbol').value,
-                type: type,
-                direction: parseInt(document.getElementById('direction').value),
-                timeFrame: document.getElementById('timeFrame').value,
-                messageTemplate: document.getElementById('messageTemplate').value || null,
-                telegramChatId: document.getElementById('telegramChatId').value ?
-                    parseInt(document.getElementById('telegramChatId').value) : null,
-                enabled: document.getElementById('enabled').checked
-            };
-
-            if (type === 0) {
-                data.targetPrice = parseFloat(document.getElementById('targetPrice').value);
-            } else if (type === 1) {
-                data.emaPeriod = parseInt(document.getElementById('emaPeriod').value);
-            } else if (type === 2) {
-                data.maPeriod = parseInt(document.getElementById('maPeriod').value);
-            }
-
-            try {
-                const url = id ? `${API_BASE}/alerts/${id}` : `${API_BASE}/alerts`;
-                const method = id ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-
-                if (response.ok) {
-                    closeModal();
-                    loadAlerts();
-                    alert(id ? '告警更新成功' : '告警创建成功');
-                } else {
-                    const error = await response.text();
-                    alert('操作失败: ' + error);
-                }
-            } catch (error) {
-                alert('操作失败: ' + error.message);
-            }
-        });
-
-        // 删除告警
-        async function deleteAlert(id) {
-            if (!confirm('确定要删除这个告警吗？')) return;
-
-            try {
-                const response = await fetch(`${API_BASE}/alerts/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.ok) {
-                    loadAlerts();
-                    alert('告警删除成功');
-                } else {
-                    alert('删除失败');
-                }
-            } catch (error) {
-                alert('删除失败: ' + error.message);
-            }
-        }
-
-        // 重置告警
-        async function resetAlert(id) {
-            try {
-                const response = await fetch(`${API_BASE}/alerts/${id}/reset`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    loadAlerts();
-                    alert('告警已重置');
-                } else {
-                    alert('重置失败');
-                }
-            } catch (error) {
-                alert('重置失败: ' + error.message);
-            }
-        }
-
-        // 测试Telegram
-        async function testTelegram() {
-            try {
-                const response = await fetch(`${API_BASE}/system/test-telegram`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
-                alert(result.message);
-            } catch (error) {
-                alert('测试失败: ' + error.message);
-            }
-        }
-
-        // 测试TradeLocker
-        async function testTradeLocker() {
-            try {
-                const response = await fetch(`${API_BASE}/system/test-tradelocker`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
-
-                if (result.success && result.account) {
-                    const account = result.account;
-                    const message = `✅ TradeLocker连接成功！\n\n` +
-                        `账户ID: ${account.accountId}\n` +
-                        `账户名: ${account.accountName}\n` +
-                        `余额: ${account.balance.toFixed(2)} ${account.currency}\n` +
-                        `净值: ${account.equity.toFixed(2)} ${account.currency}\n` +
-                        `已用保证金: ${account.margin.toFixed(2)} ${account.currency}\n` +
-                        `可用保证金: ${account.freeMargin.toFixed(2)} ${account.currency}`;
-                    alert(message);
-                } else {
-                    alert(result.message);
-                }
-            } catch (error) {
-                alert('测试失败: ' + error.message);
-            }
-        }
-
-        // 立即检查
-        async function checkNow() {
-            try {
-                const response = await fetch(`${API_BASE}/system/check-now`, {
-                    method: 'POST'
-                });
-                const result = await response.json();
-                alert(result.message);
-            } catch (error) {
-                alert('检查失败: ' + error.message);
-            }
-        }
-
-        // 页面加载时自动加载告警
-        loadAlerts();
-    </script>
+    <!-- JavaScript 文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/alert-manager.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
 </body>
 </html>
