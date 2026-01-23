@@ -1,0 +1,103 @@
+/* 告警卡片样式 */
+.alert-list {
+    display: grid;
+    gap: 20px;
+}
+
+.alert-card {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    background: white;
+    transition: all 0.3s;
+}
+
+.alert-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.alert-card.disabled {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.alert-card.triggered {
+    border-left: 5px solid #28a745;
+}
+
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.alert-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #333;
+}
+
+.alert-symbol {
+    background: #667eea;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.alert-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 1.1em;
+    color: #333;
+    font-weight: 600;
+}
+
+.alert-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #dee2e6;
+}
+
+/* 状态徽章 */
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.85em;
+    font-weight: 600;
+}
+
+.status-active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-disabled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-triggered {
+    background: #d1ecf1;
+    color: #0c5460;
+}
