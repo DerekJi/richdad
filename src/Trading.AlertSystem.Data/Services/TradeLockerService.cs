@@ -29,7 +29,7 @@ public class TradeLockerService : ITradeLockerService
         _settings = settings;
         _logger = logger;
         _httpClient.BaseAddress = new Uri(_settings.ApiBaseUrl);
-        
+
         // 如果配置了开发者API密钥，添加到请求头
         if (!string.IsNullOrEmpty(_settings.DeveloperApiKey))
         {
@@ -49,7 +49,7 @@ public class TradeLockerService : ITradeLockerService
             }
 
             // 检查配置
-            if (string.IsNullOrEmpty(_settings.Email) || 
+            if (string.IsNullOrEmpty(_settings.Email) ||
                 string.IsNullOrEmpty(_settings.Password) ||
                 string.IsNullOrEmpty(_settings.Server))
             {
@@ -72,7 +72,7 @@ public class TradeLockerService : ITradeLockerService
 
             // 发送认证请求
             var response = await _httpClient.PostAsync("/auth/jwt/token", content);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
@@ -82,10 +82,10 @@ public class TradeLockerService : ITradeLockerService
 
             var result = await response.Content.ReadAsStringAsync();
             var tokenData = JsonSerializer.Deserialize<JsonElement>(result);
-            
+
             _accessToken = tokenData.GetProperty("accessToken").GetString();
             _refreshToken = tokenData.GetProperty("refreshToken").GetString();
-            
+
             // 设置Token过期时间（通常是1小时，这里设置为55分钟以提前刷新）
             if (tokenData.TryGetProperty("accessTokenExpiresAt", out var expiryElement))
             {
@@ -95,8 +95,8 @@ public class TradeLockerService : ITradeLockerService
             {
                 _tokenExpiry = DateTime.UtcNow.AddMinutes(55);
             }
-            
-            _httpClient.DefaultRequestHeaders.Authorization = 
+
+            _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", _accessToken);
 
             _logger.LogInformation("成功连接到TradeLocker ({Environment}环境)", _settings.Environment);
@@ -127,12 +127,12 @@ public class TradeLockerService : ITradeLockerService
             }
 
             // 添加accNum到请求头
-            var request = new HttpRequestMessage(HttpMethod.Get, 
+            var request = new HttpRequestMessage(HttpMethod.Get,
                 $"/trade/quotes?routeId={instrumentInfo.InfoRouteId}&tradableInstrumentId={instrumentInfo.TradableInstrumentId}");
             request.Headers.Add("accNum", _settings.AccountNumber.ToString());
 
             var response = await _httpClient.SendAsync(request);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("获取{Symbol}价格失败: {StatusCode}", symbol, response.StatusCode);
@@ -175,7 +175,7 @@ public class TradeLockerService : ITradeLockerService
     {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, 
+            var request = new HttpRequestMessage(HttpMethod.Get,
                 $"/trade/accounts/{_settings.AccountId}/instruments");
             request.Headers.Add("accNum", _settings.AccountNumber.ToString());
 
@@ -196,12 +196,12 @@ public class TradeLockerService : ITradeLockerService
             // 查找匹配的交易品种
             foreach (var instrument in data.EnumerateArray())
             {
-                if (instrument.TryGetProperty("name", out var nameElement) && 
+                if (instrument.TryGetProperty("name", out var nameElement) &&
                     nameElement.GetString() == symbol)
                 {
                     var tradableInstrumentId = instrument.GetProperty("tradableInstrumentId").GetInt64();
                     var routes = instrument.GetProperty("routes").EnumerateArray().ToList();
-                    
+
                     var infoRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "INFO");
                     var tradeRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "TRADE");
 
@@ -273,7 +273,7 @@ public class TradeLockerService : ITradeLockerService
             request.Headers.Add("accNum", _settings.AccountNumber.ToString());
 
             var response = await _httpClient.SendAsync(request);
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("获取{Symbol}历史数据失败: {StatusCode}", symbol, response.StatusCode);
