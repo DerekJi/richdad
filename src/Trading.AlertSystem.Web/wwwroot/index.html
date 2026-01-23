@@ -321,7 +321,7 @@
             </div>
             <form id="alertForm">
                 <input type="hidden" id="alertId">
-                
+
                 <div class="form-group">
                     <label class="form-label">告警名称</label>
                     <input type="text" class="form-control" id="alertName" required>
@@ -379,7 +379,7 @@
 
                 <div class="form-group">
                     <label class="form-label">消息模板（可选）</label>
-                    <textarea class="form-control" id="messageTemplate" rows="3" 
+                    <textarea class="form-control" id="messageTemplate" rows="3"
                         placeholder="可用变量: {Symbol}, {Name}, {Price}, {Target}, {Direction}, {Time}"></textarea>
                 </div>
 
@@ -411,9 +411,9 @@
             try {
                 const response = await fetch(`${API_BASE}/alerts`);
                 const alerts = await response.json();
-                
+
                 const alertList = document.getElementById('alertList');
-                
+
                 if (alerts.length === 0) {
                     alertList.innerHTML = `
                         <div class="empty-state">
@@ -437,10 +437,10 @@
             const typeText = ['固定价格', 'EMA', 'MA'][alert.type];
             const directionText = alert.direction === 0 ? '上穿' : '下穿';
             const statusClass = alert.isTriggered ? 'triggered' : (alert.enabled ? '' : 'disabled');
-            const statusBadge = alert.isTriggered 
+            const statusBadge = alert.isTriggered
                 ? '<span class="status-badge status-triggered">已触发</span>'
-                : (alert.enabled 
-                    ? '<span class="status-badge status-active">启用</span>' 
+                : (alert.enabled
+                    ? '<span class="status-badge status-active">启用</span>'
                     : '<span class="status-badge status-disabled">禁用</span>');
 
             let targetText = '';
@@ -461,7 +461,7 @@
                         </div>
                         <div class="alert-symbol">${alert.symbol}</div>
                     </div>
-                    
+
                     <div class="alert-details">
                         <div class="detail-item">
                             <span class="detail-label">告警类型</span>
@@ -537,7 +537,7 @@
         // 更新表单字段显示
         function updateFormFields() {
             const type = parseInt(document.getElementById('alertType').value);
-            
+
             document.getElementById('targetPriceGroup').style.display = type === 0 ? 'block' : 'none';
             document.getElementById('emaPeriodGroup').style.display = type === 1 ? 'block' : 'none';
             document.getElementById('maPeriodGroup').style.display = type === 2 ? 'block' : 'none';
@@ -562,7 +562,7 @@
                 direction: parseInt(document.getElementById('direction').value),
                 timeFrame: document.getElementById('timeFrame').value,
                 messageTemplate: document.getElementById('messageTemplate').value || null,
-                telegramChatId: document.getElementById('telegramChatId').value ? 
+                telegramChatId: document.getElementById('telegramChatId').value ?
                     parseInt(document.getElementById('telegramChatId').value) : null,
                 enabled: document.getElementById('enabled').checked
             };

@@ -9,6 +9,7 @@ namespace Trading.AlertSystem.Data.Services;
 
 /// <summary>
 /// TradeLocker API服务实现
+/// 基于官方文档: https://public-api.tradelocker.com/docs/getting-started
 /// </summary>
 public class TradeLockerService : ITradeLockerService
 {
@@ -16,6 +17,8 @@ public class TradeLockerService : ITradeLockerService
     private readonly TradeLockerSettings _settings;
     private readonly ILogger<TradeLockerService> _logger;
     private string? _accessToken;
+    private string? _refreshToken;
+    private DateTime _tokenExpiry = DateTime.MinValue;
 
     public TradeLockerService(
         HttpClient httpClient,
@@ -26,34 +29,38 @@ public class TradeLockerService : ITradeLockerService
         _settings = settings;
         _logger = logger;
         _httpClient.BaseAddress = new Uri(_settings.ApiBaseUrl);
+        
+        // 如果配置了开发者API密钥，添加到请求头
+        if (!string.IsNullOrEmpty(_settings.DeveloperApiKey))
+        {
+            _httpClient.DefaultRequestHeaders.Add("tl-developer-api-key", _settings.DeveloperApiKey);
+        }
     }
 
     public async Task<bool> ConnectAsync()
     {
         try
         {
-            // 如果已经配置了AccessToken，直接使用
-            if (!string.IsNullOrEmpty(_settings.AccessToken))
+            // 检查Token是否仍然有效
+            if (!string.IsNullOrEmpty(_accessToken) && DateTime.UtcNow < _tokenExpiry)
             {
-                _accessToken = _settings.AccessToken;
-                _httpClient.DefaultRequestHeaders.Authorization = 
-                    new AuthenticationHeaderValue("Bearer", _accessToken);
-                _logger.LogInformation("使用配置的AccessToken连接TradeLocker");
+                _logger.LogDebug("使用现有的AccessToken");
                 return true;
             }
 
-            // 否则使用用户名密码登录
-            if (string.IsNullOrEmpty(_settings.Username) || 
+            // 检查配置
+            if (string.IsNullOrEmpty(_settings.Email) || 
                 string.IsNullOrEmpty(_settings.Password) ||
                 string.IsNullOrEmpty(_settings.Server))
             {
-                _logger.LogError("TradeLocker配置不完整，需要AccessToken或用户名/密码/服务器");
+                _logger.LogError("TradeLocker配置不完整，需要Email、Password和Server");
                 return false;
             }
 
+            // 构建JWT Token请求
             var loginRequest = new
             {
-                email = _settings.Username,
+                email = _settings.Email,
                 password = _settings.Password,
                 server = _settings.Server
             };
@@ -63,11 +70,13 @@ public class TradeLockerService : ITradeLockerService
                 Encoding.UTF8,
                 "application/json");
 
+            // 发送认证请求
             var response = await _httpClient.PostAsync("/auth/jwt/token", content);
             
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError("TradeLocker登录失败: {StatusCode}", response.StatusCode);
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError("TradeLocker登录失败: {StatusCode}, {Error}", response.StatusCode, errorContent);
                 return false;
             }
 
@@ -75,10 +84,22 @@ public class TradeLockerService : ITradeLockerService
             var tokenData = JsonSerializer.Deserialize<JsonElement>(result);
             
             _accessToken = tokenData.GetProperty("accessToken").GetString();
+            _refreshToken = tokenData.GetProperty("refreshToken").GetString();
+            
+            // 设置Token过期时间（通常是1小时，这里设置为55分钟以提前刷新）
+            if (tokenData.TryGetProperty("accessTokenExpiresAt", out var expiryElement))
+            {
+                _tokenExpiry = DateTime.Parse(expiryElement.GetString()!);
+            }
+            else
+            {
+                _tokenExpiry = DateTime.UtcNow.AddMinutes(55);
+            }
+            
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", _accessToken);
 
-            _logger.LogInformation("成功连接到TradeLocker");
+            _logger.LogInformation("成功连接到TradeLocker ({Environment}环境)", _settings.Environment);
             return true;
         }
         catch (Exception ex)
@@ -97,8 +118,20 @@ public class TradeLockerService : ITradeLockerService
                 await ConnectAsync();
             }
 
-            // TradeLocker API端点可能需要根据实际文档调整
-            var response = await _httpClient.GetAsync($"/trade/accounts/{_settings.AccountId}/quotes?symbol={symbol}");
+            // 需要先获取tradableInstrumentId和routeId
+            var instrumentInfo = await GetInstrumentInfoAsync(symbol);
+            if (instrumentInfo == null)
+            {
+                _logger.LogWarning("无法获取{Symbol}的交易品种信息", symbol);
+                return null;
+            }
+
+            // 添加accNum到请求头
+            var request = new HttpRequestMessage(HttpMethod.Get, 
+                $"/trade/quotes?routeId={instrumentInfo.InfoRouteId}&tradableInstrumentId={instrumentInfo.TradableInstrumentId}");
+            request.Headers.Add("accNum", _settings.AccountNumber.ToString());
+
+            var response = await _httpClient.SendAsync(request);
             
             if (!response.IsSuccessStatusCode)
             {
@@ -107,15 +140,24 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<JsonElement>(content);
+            var result = JsonSerializer.Deserialize<JsonElement>(content);
 
-            // 根据实际API响应格式解析
+            if (!result.TryGetProperty("s", out var status) || status.GetString() != "ok")
+            {
+                _logger.LogWarning("获取{Symbol}价格返回状态异常", symbol);
+                return null;
+            }
+
+            var quotes = result.GetProperty("d");
+            var bid = quotes.GetProperty("bid").GetDecimal();
+            var ask = quotes.GetProperty("ask").GetDecimal();
+
             return new SymbolPrice
             {
                 Symbol = symbol,
-                Bid = data.GetProperty("bid").GetDecimal(),
-                Ask = data.GetProperty("ask").GetDecimal(),
-                LastPrice = data.GetProperty("last").GetDecimal(),
+                Bid = bid,
+                Ask = ask,
+                LastPrice = (bid + ask) / 2, // 使用中间价
                 Timestamp = DateTime.UtcNow
             };
         }
@@ -124,6 +166,70 @@ public class TradeLockerService : ITradeLockerService
             _logger.LogError(ex, "获取{Symbol}价格时发生错误", symbol);
             return null;
         }
+    }
+
+    /// <summary>
+    /// 获取交易品种信息（包含tradableInstrumentId和routeId）
+    /// </summary>
+    private async Task<InstrumentInfo?> GetInstrumentInfoAsync(string symbol)
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, 
+                $"/trade/accounts/{_settings.AccountId}/instruments");
+            request.Headers.Add("accNum", _settings.AccountNumber.ToString());
+
+            var response = await _httpClient.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+            if (!result.TryGetProperty("d", out var data))
+            {
+                return null;
+            }
+
+            // 查找匹配的交易品种
+            foreach (var instrument in data.EnumerateArray())
+            {
+                if (instrument.TryGetProperty("name", out var nameElement) && 
+                    nameElement.GetString() == symbol)
+                {
+                    var tradableInstrumentId = instrument.GetProperty("tradableInstrumentId").GetInt64();
+                    var routes = instrument.GetProperty("routes").EnumerateArray().ToList();
+                    
+                    var infoRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "INFO");
+                    var tradeRoute = routes.FirstOrDefault(r => r.GetProperty("route").GetString() == "TRADE");
+
+                    return new InstrumentInfo
+                    {
+                        Symbol = symbol,
+                        TradableInstrumentId = tradableInstrumentId,
+                        InfoRouteId = infoRoute.GetProperty("routeId").GetInt32(),
+                        TradeRouteId = tradeRoute.GetProperty("routeId").GetInt32()
+                    };
+                }
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取{Symbol}交易品种信息时发生错误", symbol);
+            return null;
+        }
+    }
+
+    private class InstrumentInfo
+    {
+        public string Symbol { get; set; } = string.Empty;
+        public long TradableInstrumentId { get; set; }
+        public int InfoRouteId { get; set; }
+        public int TradeRouteId { get; set; }
     }
 
     public async Task<IEnumerable<SymbolPrice>> GetSymbolPricesAsync(IEnumerable<string> symbols)
@@ -142,9 +248,31 @@ public class TradeLockerService : ITradeLockerService
                 await ConnectAsync();
             }
 
-            // 根据TradeLocker实际API调整端点
-            var response = await _httpClient.GetAsync(
-                $"/trade/accounts/{_settings.AccountId}/history?symbol={symbol}&timeframe={timeFrame}&bars={bars}");
+            // 获取交易品种信息
+            var instrumentInfo = await GetInstrumentInfoAsync(symbol);
+            if (instrumentInfo == null)
+            {
+                _logger.LogWarning("无法获取{Symbol}的交易品种信息", symbol);
+                return Array.Empty<Candle>();
+            }
+
+            // 转换时间周期格式 (M5 -> 5, H1 -> 60, D1 -> 1440)
+            var resolution = ConvertTimeFrameToResolution(timeFrame);
+            var endTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var startTimestamp = endTimestamp - (bars * resolution * 60); // resolution是分钟数
+
+            // 构建历史数据请求
+            var request = new HttpRequestMessage(HttpMethod.Get,
+                $"/trade/history?routeId={instrumentInfo.InfoRouteId}" +
+                $"&tradableInstrumentId={instrumentInfo.TradableInstrumentId}" +
+                $"&resolution={resolution}" +
+                $"&startTimestamp={startTimestamp}" +
+                $"&endTimestamp={endTimestamp}" +
+                $"&barType=BID"); // 使用BID价格
+
+            request.Headers.Add("accNum", _settings.AccountNumber.ToString());
+
+            var response = await _httpClient.SendAsync(request);
             
             if (!response.IsSuccessStatusCode)
             {
@@ -153,24 +281,33 @@ public class TradeLockerService : ITradeLockerService
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<JsonElement>(content);
+            var result = JsonSerializer.Deserialize<JsonElement>(content);
 
-            // 根据实际API响应格式解析
-            var candles = new List<Candle>();
-            if (data.TryGetProperty("bars", out var bars_data))
+            if (!result.TryGetProperty("s", out var status) || status.GetString() != "ok")
             {
-                foreach (var bar in bars_data.EnumerateArray())
+                return Array.Empty<Candle>();
+            }
+
+            var data = result.GetProperty("d");
+            var times = data.GetProperty("t").EnumerateArray().Select(t => t.GetInt64()).ToList();
+            var opens = data.GetProperty("o").EnumerateArray().Select(o => o.GetDecimal()).ToList();
+            var highs = data.GetProperty("h").EnumerateArray().Select(h => h.GetDecimal()).ToList();
+            var lows = data.GetProperty("l").EnumerateArray().Select(l => l.GetDecimal()).ToList();
+            var closes = data.GetProperty("c").EnumerateArray().Select(c => c.GetDecimal()).ToList();
+            var volumes = data.GetProperty("v").EnumerateArray().Select(v => v.GetDecimal()).ToList();
+
+            var candles = new List<Candle>();
+            for (int i = 0; i < times.Count; i++)
+            {
+                candles.Add(new Candle
                 {
-                    candles.Add(new Candle
-                    {
-                        Time = DateTime.Parse(bar.GetProperty("time").GetString()!),
-                        Open = bar.GetProperty("open").GetDecimal(),
-                        High = bar.GetProperty("high").GetDecimal(),
-                        Low = bar.GetProperty("low").GetDecimal(),
-                        Close = bar.GetProperty("close").GetDecimal(),
-                        Volume = bar.GetProperty("volume").GetDecimal()
-                    });
-                }
+                    Time = DateTimeOffset.FromUnixTimeSeconds(times[i]).DateTime,
+                    Open = opens[i],
+                    High = highs[i],
+                    Low = lows[i],
+                    Close = closes[i],
+                    Volume = volumes[i]
+                });
             }
 
             return candles;
@@ -180,5 +317,24 @@ public class TradeLockerService : ITradeLockerService
             _logger.LogError(ex, "获取{Symbol}历史数据时发生错误", symbol);
             return Array.Empty<Candle>();
         }
+    }
+
+    /// <summary>
+    /// 转换时间周期格式为分钟数
+    /// </summary>
+    private int ConvertTimeFrameToResolution(string timeFrame)
+    {
+        return timeFrame.ToUpper() switch
+        {
+            "M1" => 1,
+            "M5" => 5,
+            "M15" => 15,
+            "M30" => 30,
+            "H1" => 60,
+            "H4" => 240,
+            "D1" => 1440,
+            "W1" => 10080,
+            _ => 5 // 默认5分钟
+        };
     }
 }

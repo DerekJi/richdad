@@ -37,7 +37,7 @@ public class SystemController : ControllerBase
         var connected = await _tradeLockerService.ConnectAsync();
         if (connected)
             return Ok(new { success = true, message = "TradeLocker连接成功" });
-        
+
         return BadRequest(new { success = false, message = "TradeLocker连接失败" });
     }
 
@@ -53,7 +53,7 @@ public class SystemController : ControllerBase
             await _telegramService.SendMessageAsync("✅ Telegram连接测试成功！");
             return Ok(new { success = true, message = "Telegram连接成功，已发送测试消息" });
         }
-        
+
         return BadRequest(new { success = false, message = "Telegram连接失败" });
     }
 
@@ -94,9 +94,9 @@ public class SystemController : ControllerBase
     [HttpGet("health")]
     public ActionResult Health()
     {
-        return Ok(new 
-        { 
-            status = "healthy", 
+        return Ok(new
+        {
+            status = "healthy",
             timestamp = DateTime.UtcNow,
             service = "Trading Alert System"
         });

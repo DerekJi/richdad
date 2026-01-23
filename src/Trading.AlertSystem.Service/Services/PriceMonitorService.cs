@@ -99,7 +99,7 @@ public class PriceMonitorService : IPriceMonitorService
 
             // 按品种分组，批量获取价格
             var symbols = alertList.Select(a => a.Symbol).Distinct().ToList();
-            
+
             // 并行检查告警（限制并发数）
             var semaphore = new SemaphoreSlim(_settings.MaxConcurrency);
             var tasks = alertList.Select(async alert =>
@@ -191,8 +191,8 @@ public class PriceMonitorService : IPriceMonitorService
             if (isTriggered)
             {
                 _logger.LogInformation("告警触发: {AlertName} - 当前价格 {Price} {Direction} {Target}",
-                    alert.Name, currentPrice.LastPrice, 
-                    alert.Direction == PriceDirection.Above ? "上穿" : "下穿", 
+                    alert.Name, currentPrice.LastPrice,
+                    alert.Direction == PriceDirection.Above ? "上穿" : "下穿",
                     targetDescription);
 
                 // 发送通知
@@ -273,7 +273,7 @@ public class PriceMonitorService : IPriceMonitorService
     private string FormatMessage(PriceAlert alert, decimal currentPrice, decimal targetValue, string targetDescription)
     {
         var directionText = alert.Direction == PriceDirection.Above ? "上穿" : "下穿";
-        
+
         // 如果有自定义模板，使用模板
         if (!string.IsNullOrEmpty(alert.MessageTemplate))
         {

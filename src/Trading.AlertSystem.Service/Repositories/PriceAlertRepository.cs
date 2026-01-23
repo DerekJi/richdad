@@ -39,14 +39,14 @@ public class PriceAlertRepository : IPriceAlertRepository
             var container = await GetContainerAsync();
             var query = new QueryDefinition("SELECT * FROM c");
             var iterator = container.GetItemQueryIterator<PriceAlert>(query);
-            
+
             var results = new List<PriceAlert>();
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync();
                 results.AddRange(response);
             }
-            
+
             return results;
         }
         catch (Exception ex)
@@ -63,14 +63,14 @@ public class PriceAlertRepository : IPriceAlertRepository
             var container = await GetContainerAsync();
             var query = new QueryDefinition("SELECT * FROM c WHERE c.Enabled = true AND c.IsTriggered = false");
             var iterator = container.GetItemQueryIterator<PriceAlert>(query);
-            
+
             var results = new List<PriceAlert>();
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync();
                 results.AddRange(response);
             }
-            
+
             return results;
         }
         catch (Exception ex)
@@ -105,7 +105,7 @@ public class PriceAlertRepository : IPriceAlertRepository
         {
             alert.CreatedAt = DateTime.UtcNow;
             alert.UpdatedAt = DateTime.UtcNow;
-            
+
             var container = await GetContainerAsync();
             var response = await container.CreateItemAsync(alert, new PartitionKey(alert.Id));
             return response.Resource;
@@ -122,7 +122,7 @@ public class PriceAlertRepository : IPriceAlertRepository
         try
         {
             alert.UpdatedAt = DateTime.UtcNow;
-            
+
             var container = await GetContainerAsync();
             var response = await container.ReplaceItemAsync(alert, alert.Id, new PartitionKey(alert.Id));
             return response.Resource;
