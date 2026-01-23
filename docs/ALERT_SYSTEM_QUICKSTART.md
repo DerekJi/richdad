@@ -21,35 +21,41 @@
 
 ### 2. 配置应用
 
-编辑 `src/Trading.AlertSystem.Web/appsettings.json`:
+**推荐使用 User Secrets 存储敏感信息：**
+
+```bash
+cd src/Trading.AlertSystem.Web
+dotnet user-secrets init
+dotnet user-secrets set "TradeLocker:Environment" "demo"
+dotnet user-secrets set "TradeLocker:Email" "你的TradeLocker邮箱"
+dotnet user-secrets set "TradeLocker:Password" "你的密码"
+dotnet user-secrets set "TradeLocker:Server" "你的服务器名称"
+dotnet user-secrets set "TradeLocker:AccountId" "123456"
+dotnet user-secrets set "TradeLocker:AccountNumber" "1"
+dotnet user-secrets set "Telegram:BotToken" "你的Bot Token"
+dotnet user-secrets set "Telegram:DefaultChatId" "你的Chat ID"
+dotnet user-secrets set "CosmosDb:ConnectionString" "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5..."
+```
+
+**或者编辑 `appsettings.json`（不推荐，仅用于开发测试）:**
 
 ```json
 {
-  "TradeLocker": {
-    "Environment": "demo",              // 或 "live" 用于实盘
-    "Email": "你的TradeLocker邮箱",
-    "Password": "你的密码",
-    "Server": "你的服务器名称",          // 登录时选择的服务器
-    "AccountId": 123456,                // 账户ID (从TradeLocker获取)
-    "AccountNumber": 1,                 // 通常是1或2
-    "DeveloperApiKey": ""               // 可选，提高速率限制
-  },
-  "Telegram": {
-    "BotToken": "你的Bot Token",
-    "DefaultChatId": 你的Chat ID,
-    "Enabled": true
-  },
   "Monitoring": {
-    "IntervalSeconds": 60,               // 每60秒检查一次
-    "Enabled": true
+    "IntervalSeconds": 60,
+    "Enabled": true,
+    "RunOnStartup": true,
+    "MaxConcurrency": 10
   },
   "CosmosDb": {
-    "EndpointUrl": "你的CosmosDB端点",
-    "PrimaryKey": "你的CosmosDB密钥",
-    "DatabaseName": "TradingSystem"
+    "ConnectionString": "",              // 使用 User Secrets 配置
+    "DatabaseName": "TradingSystem",
+    "AlertContainerName": "PriceAlerts"
   }
 }
 ```
+
+**注意：** TradeLocker和Telegram的配置必须通过User Secrets配置，不要直接写在appsettings.json中！
 
 **获取TradeLocker信息：**
 - Environment: demo（测试环境）或 live（实盘环境）
@@ -57,6 +63,11 @@
 - Password: 你的TradeLocker密码
 - Server: 登录TradeLocker时选择的服务器名称
 - AccountId: 在TradeLocker平台点击账户切换器（圆形图标），找到#后面的数字
+
+**CosmosDB配置（可选）：**
+- 本地开发可使用 Cosmos DB Emulator
+- ConnectionString示例：`AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==`
+- 不配置CosmosDB会自动使用内存存储（重启后数据丢失）
 
 ### 3. 运行应用
 

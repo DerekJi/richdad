@@ -31,36 +31,51 @@ src/
 
 ### 1. 配置说明
 
-编辑 `src/Trading.AlertSystem.Web/appsettings.json`：
+**推荐使用 User Secrets 存储敏感配置（详见 [USER_SECRETS_SETUP.md](../../../docs/USER_SECRETS_SETUP.md)）**
+
+```bash
+cd src/Trading.AlertSystem.Web
+dotnet user-secrets init
+
+# 配置 TradeLocker
+dotnet user-secrets set "TradeLocker:Environment" "demo"
+dotnet user-secrets set "TradeLocker:Email" "your-email@example.com"
+dotnet user-secrets set "TradeLocker:Password" "your-password"
+dotnet user-secrets set "TradeLocker:Server" "your-server"
+dotnet user-secrets set "TradeLocker:AccountId" "123456"
+dotnet user-secrets set "TradeLocker:AccountNumber" "1"
+
+# 配置 Telegram
+dotnet user-secrets set "Telegram:BotToken" "YOUR_BOT_TOKEN"
+dotnet user-secrets set "Telegram:DefaultChatId" "YOUR_CHAT_ID"
+dotnet user-secrets set "Telegram:Enabled" "true"
+
+# 配置 CosmosDB（可选，不配置则使用内存存储）
+dotnet user-secrets set "CosmosDb:ConnectionString" "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5..."
+```
+
+`appsettings.json` 只需配置非敏感信息：
 
 ```json
 {
-  "TradeLocker": {
-    "ApiBaseUrl": "https://api.tradelocker.com",
-    "AccessToken": "",           // 方式1: 直接使用AccessToken
-    "Username": "",              // 方式2: 或使用用户名/密码登录
-    "Password": "",
-    "Server": "",
-    "AccountId": null
-  },
-  "Telegram": {
-    "BotToken": "YOUR_BOT_TOKEN",      // 从 @BotFather 获取
-    "DefaultChatId": YOUR_CHAT_ID,     // 你的Telegram Chat ID
-    "Enabled": true
-  },
   "Monitoring": {
-    "IntervalSeconds": 60,             // 监控间隔（秒）
+    "IntervalSeconds": 60,
     "Enabled": true,
     "RunOnStartup": true,
     "MaxConcurrency": 10
   },
   "CosmosDb": {
-    "EndpointUrl": "YOUR_COSMOS_ENDPOINT",
-    "PrimaryKey": "YOUR_COSMOS_KEY",
-    "DatabaseName": "TradingSystem"
+    "ConnectionString": "",              // 使用 User Secrets 配置
+    "DatabaseName": "TradingSystem",
+    "AlertContainerName": "PriceAlerts"
   }
 }
 ```
+
+**注意**：
+- TradeLocker和Telegram配置必须通过User Secrets，不要写在appsettings.json中
+- CosmosDB使用ConnectionString格式（参照其他项目配置）
+- 不配置CosmosDB会自动使用内存存储（重启后数据丢失）
 
 ### 2. 获取Telegram Bot Token
 

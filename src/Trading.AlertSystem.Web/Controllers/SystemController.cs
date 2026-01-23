@@ -35,10 +35,33 @@ public class SystemController : ControllerBase
     public async Task<ActionResult> TestTradeLocker()
     {
         var connected = await _tradeLockerService.ConnectAsync();
-        if (connected)
-            return Ok(new { success = true, message = "TradeLocker连接成功" });
+        if (!connected)
+        {
+            return BadRequest(new { success = false, message = "TradeLocker连接失败" });
+        }
 
-        return BadRequest(new { success = false, message = "TradeLocker连接失败" });
+        // 获取账户信息
+        var accountInfo = await _tradeLockerService.GetAccountInfoAsync();
+        if (accountInfo == null)
+        {
+            return Ok(new { success = true, message = "TradeLocker连接成功，但无法获取账户信息" });
+        }
+
+        return Ok(new
+        {
+            success = true,
+            message = "TradeLocker连接成功",
+            account = new
+            {
+                accountId = accountInfo.AccountId,
+                accountName = accountInfo.AccountName,
+                balance = accountInfo.Balance,
+                equity = accountInfo.Equity,
+                margin = accountInfo.Margin,
+                freeMargin = accountInfo.FreeMargin,
+                currency = accountInfo.Currency
+            }
+        });
     }
 
     /// <summary>

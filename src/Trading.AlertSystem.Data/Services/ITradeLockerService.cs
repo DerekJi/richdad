@@ -26,6 +26,25 @@ public interface ITradeLockerService
     /// 获取历史K线数据（用于计算指标）
     /// </summary>
     Task<IEnumerable<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars);
+
+    /// <summary>
+    /// 获取账户信息
+    /// </summary>
+    Task<AccountInfo?> GetAccountInfoAsync();
+}
+
+/// <summary>
+/// 账户信息
+/// </summary>
+public class AccountInfo
+{
+    public long AccountId { get; set; }
+    public string AccountName { get; set; } = string.Empty;
+    public decimal Balance { get; set; }
+    public decimal Equity { get; set; }
+    public decimal Margin { get; set; }
+    public decimal FreeMargin { get; set; }
+    public string Currency { get; set; } = "USD";
 }
 
 /// <summary>
