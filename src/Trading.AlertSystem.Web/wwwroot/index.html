@@ -15,13 +15,15 @@
         <header>
             <h1>📊 交易告警系统</h1>
             <p>实时监控价格变化，及时收到Telegram通知</p>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab active">告警管理</a>
+                <a href="history.html" class="nav-tab">告警历史</a>
+                <a href="management.html" class="nav-tab">系统管理</a>
+            </nav>
         </header>
 
         <div class="controls">
             <button class="btn btn-primary" onclick="UI.showCreateModal()">➕ 创建新告警</button>
-            <button class="btn btn-success" onclick="UI.testTelegram()">📱 测试Telegram</button>
-            <button class="btn btn-info" onclick="UI.testTradeLocker()">🔌 测试TradeLocker</button>
-            <button class="btn btn-info" onclick="UI.checkNow()">🔄 立即检查</button>
             <button class="btn btn-success" onclick="AlertManager.loadAlerts()">♻️ 刷新列表</button>
         </div>
 

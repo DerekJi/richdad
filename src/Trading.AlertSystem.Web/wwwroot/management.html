@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统管理 - 交易告警系统</title>
+
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/management.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚙️ 系统管理</h1>
+            <p>测试系统连接和执行管理任务</p>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab">告警管理</a>
+                <a href="history.html" class="nav-tab">告警历史</a>
+                <a href="management.html" class="nav-tab active">系统管理</a>
+            </nav>
+        </header>
+
+        <div class="content">
+            <!-- 配置状态 -->
+            <div class="management-section">
+                <h2 class="section-title">⚙️ 配置状态</h2>
+                <div class="config-status" id="configStatus">
+                    <div class="loading">检查配置中...</div>
+                </div>
+            </div>
+
+            <!-- 连接测试 -->
+            <div class="management-section">
+                <h2 class="section-title">🔌 连接测试</h2>
+                <div class="management-grid">
+                    <div class="management-card">
+                        <div class="card-icon">📱</div>
+                        <h3>Telegram 通知</h3>
+                        <p>测试 Telegram Bot 连接和消息发送</p>
+                        <button class="btn btn-primary" onclick="testTelegram()">测试 Telegram</button>
+                        <div id="telegramResult" class="result-box"></div>
+                    </div>
+
+                    <div class="management-card">
+                        <div class="card-icon">📈</div>
+                        <h3>TradeLocker API</h3>
+                        <p>测试 TradeLocker 数据接口连接</p>
+                        <button class="btn btn-primary" onclick="testTradeLocker()">测试 TradeLocker</button>
+                        <div id="tradelockerResult" class="result-box"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统操作 -->
+            <div class="management-section">
+                <h2 class="section-title">🔄 系统操作</h2>
+                <div class="management-grid">
+                    <div class="management-card">
+                        <div class="card-icon">⚡</div>
+                        <h3>立即检查</h3>
+                        <p>手动触发价格告警检查（不等待定时任务）</p>
+                        <button class="btn btn-success" onclick="checkNow()">立即检查</button>
+                        <div id="checkResult" class="result-box"></div>
+                    </div>
+
+                    <div class="management-card">
+                        <div class="card-icon">🧹</div>
+                        <h3>清理历史</h3>
+                        <p>清理90天前的告警历史记录</p>
+                        <button class="btn btn-warning" onclick="cleanupHistory()">清理历史</button>
+                        <div id="cleanupResult" class="result-box"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 系统状态 -->
+            <div class="management-section">
+                <h2 class="section-title">📊 系统状态</h2>
+                <div class="status-grid">
+                    <div class="status-card">
+                        <div class="status-label">活跃告警</div>
+                        <div class="status-value" id="activeAlerts">-</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">历史记录</div>
+                        <div class="status-value" id="historyCount">-</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">成功率</div>
+                        <div class="status-value" id="successRate">-</div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-label">最后检查</div>
+                        <div class="status-value" id="lastCheck">-</div>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="loadStats()">刷新状态</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/management-app.js"></script>
+</body>
+</html>

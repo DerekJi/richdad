@@ -19,4 +19,9 @@ public class CosmosDbSettings
     /// 价格提醒容器名称
     /// </summary>
     public string AlertContainerName { get; set; } = "PriceAlerts";
+
+    /// <summary>
+    /// 告警历史容器名称
+    /// </summary>
+    public string AlertHistoryContainerName { get; set; } = "AlertHistory";
 }

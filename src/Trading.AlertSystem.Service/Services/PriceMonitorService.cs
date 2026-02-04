@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
+using System.Text.Json;
 using Trading.AlertSystem.Data.Models;
+using Trading.AlertSystem.Data.Repositories;
 using Trading.AlertSystem.Data.Services;
 using Trading.AlertSystem.Service.Configuration;
 using Trading.AlertSystem.Service.Repositories;
@@ -13,6 +15,7 @@ namespace Trading.AlertSystem.Service.Services;
 public class PriceMonitorService : IPriceMonitorService
 {
     private readonly IPriceAlertRepository _alertRepository;
+    private readonly IAlertHistoryRepository _alertHistoryRepository;
     private readonly ITradeLockerService _tradeLockerService;
     private readonly ITelegramService _telegramService;
     private readonly MonitoringSettings _settings;
@@ -22,12 +25,14 @@ public class PriceMonitorService : IPriceMonitorService
 
     public PriceMonitorService(
         IPriceAlertRepository alertRepository,
+        IAlertHistoryRepository alertHistoryRepository,
         ITradeLockerService tradeLockerService,
         ITelegramService telegramService,
         MonitoringSettings settings,
         ILogger<PriceMonitorService> logger)
     {
         _alertRepository = alertRepository;
+        _alertHistoryRepository = alertHistoryRepository;
         _tradeLockerService = tradeLockerService;
         _telegramService = telegramService;
         _settings = settings;
@@ -197,6 +202,36 @@ public class PriceMonitorService : IPriceMonitorService
 
                 // 发送通知
                 var message = FormatMessage(alert, currentPrice.LastPrice, targetValue, targetDescription);
+                await _telegramService.SendFormattedMessageAsync(message, alert.TelegramChatId);
+
+                // 保存告警历史
+                var alertHistory = new AlertHistory
+                {
+                    Type = AlertHistoryType.PriceAlert,
+                    Symbol = alert.Symbol,
+                    AlertTime = DateTime.UtcNow,
+                    Message = message,
+                    Details = JsonSerializer.Serialize(new PriceAlertDetails
+                    {
+                        TargetPrice = targetValue,
+                        CurrentPrice = currentPrice.LastPrice,
+                        Direction = alert.Direction == PriceDirection.Above ? "Above" : "Below"
+                    }),
+                    IsSent = true,
+                    SendTarget = alert.TelegramChatId?.ToString()
+                };
+
+                try
+                {
+                    await _alertHistoryRepository.AddAsync(alertHistory);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "保存告警历史失败");
+                    // 不影响主流程，继续执行
+                }
+
+                //  message = FormatMessage(alert, currentPrice.LastPrice, targetValue, targetDescription);
                 await _telegramService.SendFormattedMessageAsync(message, alert.TelegramChatId);
 
                 // 标记为已触发

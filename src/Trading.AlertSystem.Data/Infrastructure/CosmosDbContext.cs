@@ -12,6 +12,7 @@ public class CosmosDbContext
     private readonly CosmosDbSettings _settings;
     private Database? _database;
     private Container? _alertContainer;
+    private Container? _alertHistoryContainer;
 
     public CosmosDbContext(CosmosDbSettings settings)
     {
@@ -41,6 +42,10 @@ public class CosmosDbContext
         _alertContainer = await _database.CreateContainerIfNotExistsAsync(
             _settings.AlertContainerName,
             "/id");
+
+        _alertHistoryContainer = await _database.CreateContainerIfNotExistsAsync(
+            _settings.AlertHistoryContainerName,
+            "/symbol");
     }
 
     /// <summary>
@@ -49,5 +54,13 @@ public class CosmosDbContext
     public Container AlertContainer
     {
         get => _alertContainer ?? throw new InvalidOperationException("CosmosDbContext未初始化，请先调用InitializeAsync()");
+    }
+
+    /// <summary>
+    /// 告警历史容器
+    /// </summary>
+    public Container AlertHistoryContainer
+    {
+        get => _alertHistoryContainer ?? throw new InvalidOperationException("CosmosDbContext未初始化，请先调用InitializeAsync()");
     }
 }

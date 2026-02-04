@@ -21,6 +21,9 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TelegramSetti
 builder.Services.Configure<MonitoringSettings>(builder.Configuration.GetSection("Monitoring"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<MonitoringSettings>>().Value);
 
+builder.Services.Configure<EmaMonitoringSettings>(builder.Configuration.GetSection("EmaMonitoring"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<EmaMonitoringSettings>>().Value);
+
 // 注册数据库服务（如果配置了CosmosDB）
 var cosmosConfig = builder.Configuration.GetSection("CosmosDb");
 var connectionString = cosmosConfig["ConnectionString"];
@@ -31,17 +34,20 @@ if (!string.IsNullOrEmpty(connectionString))
     {
         ConnectionString = connectionString,
         DatabaseName = cosmosConfig["DatabaseName"] ?? "TradingSystem",
-        AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts"
+        AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts",
+        AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory"
     };
 
     builder.Services.AddSingleton(cosmosSettings);
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
     builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
+    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
 }
 else
 {
     // 使用内存存储作为后备方案
     builder.Services.AddSingleton<IPriceAlertRepository, InMemoryPriceAlertRepository>();
+    // AlertHistoryRepository 需要 CosmosDB，不提供内存版本
 }
 
 // 注册数据层服务
@@ -67,9 +73,13 @@ else
 
 // 注册业务服务
 builder.Services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
+builder.Services.AddSingleton<IEmaMonitoringService, EmaMonitoringService>();
 
 // 添加后台服务（自动启动价格监控）
 builder.Services.AddHostedService<PriceMonitorHostedService>();
+
+// 添加EMA监测后台服务
+builder.Services.AddHostedService<EmaMonitoringHostedService>();
 
 // 添加TradeLocker启动测试服务
 // builder.Services.AddHostedService<TradeLockerStartupTestService>();

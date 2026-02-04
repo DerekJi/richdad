@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>告警历史 - 交易告警系统</title>
+
+    <!-- 样式文件 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/history.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 交易告警系统</h1>
+            <p>查看所有历史告警记录</p>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab">告警管理</a>
+                <a href="history.html" class="nav-tab active">告警历史</a>
+                <a href="management.html" class="nav-tab">系统管理</a>
+            </nav>
+        </header>
+
+        <!-- 筛选器 -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>类型：</label>
+                <select id="filterType" onchange="HistoryManager.applyFilters()">
+                    <option value="">全部</option>
+                    <option value="0">价格告警</option>
+                    <option value="1">EMA穿越</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>品种：</label>
+                <input type="text" id="filterSymbol" placeholder="如：XAUUSD" onchange="HistoryManager.applyFilters()">
+            </div>
+
+            <div class="filter-group">
+                <label>开始时间：</label>
+                <input type="datetime-local" id="filterStartTime" onchange="HistoryManager.applyFilters()">
+            </div>
+
+            <div class="filter-group">
+                <label>结束时间：</label>
+                <input type="datetime-local" id="filterEndTime" onchange="HistoryManager.applyFilters()">
+            </div>
+
+            <button class="btn btn-primary" onclick="HistoryManager.applyFilters()">🔍 筛选</button>
+            <button class="btn btn-secondary" onclick="HistoryManager.clearFilters()">🔄 清空</button>
+            <button class="btn btn-info" onclick="HistoryManager.showStats()">📊 统计</button>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div id="statsCards" class="stats-cards" style="display: none;">
+            <div class="stat-card">
+                <div class="stat-value" id="statTotal">0</div>
+                <div class="stat-label">总告警数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statPrice">0</div>
+                <div class="stat-label">价格告警</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="statEma">0</div>
+                <div class="stat-label">EMA穿越</div>
+            </div>
+        </div>
+
+        <!-- 历史列表 -->
+        <div class="content">
+            <div id="historyList" class="history-list">
+                <div class="loading">
+                    <p>加载中...</p>
+                </div>
+            </div>
+
+            <!-- 分页 -->
+            <div id="pagination" class="pagination"></div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">告警详情</h2>
+                <button class="close-btn" onclick="HistoryUI.closeDetailModal()">&times;</button>
+            </div>
+            <div id="detailContent" class="detail-content">
+            </div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn btn-secondary" onclick="HistoryUI.closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 文件 -->
+    <script src="js/config.js"></script>
+    <script src="js/history-api.js"></script>
+    <script src="js/history-manager.js"></script>
+    <script src="js/history-ui.js"></script>
+    <script src="js/history-app.js"></script>
+</body>
+</html>
