@@ -84,6 +84,7 @@ public class BacktestEngine
 
                 // 检查风险敦口是否足够 (低于10 USD停止交易)
                 decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent, accountSettings);
+                // currentRiskPercent = current.ADX < config.MinAdx ? 0.3m : currentRiskPercent;
                 decimal currentRiskAmount = _currentEquity * currentRiskPercent / 100m;
                 if (currentRiskAmount < 10m)
                 {
@@ -93,12 +94,12 @@ public class BacktestEngine
                 // 检查做多
                 if (_strategy.CanOpenLong(current, previous, openTrade != null))
                 {
-                    openTrade = OpenPosition(current, previous, TradeDirection.Long);
+                    openTrade = OpenPosition(current, previous, TradeDirection.Long, config, accountSettings);
                 }
                 // 检查做空
                 else if (_strategy.CanOpenShort(current, previous, openTrade != null))
                 {
-                    openTrade = OpenPosition(current, previous, TradeDirection.Short);
+                    openTrade = OpenPosition(current, previous, TradeDirection.Short, config, accountSettings);
                 }
             }
         }
@@ -119,11 +120,38 @@ public class BacktestEngine
     /// <summary>
     /// 开仓
     /// </summary>
-    private Trade OpenPosition(Candle current, Candle pinbar, TradeDirection direction)
+    private Trade OpenPosition(Candle current, Candle pinbar, TradeDirection direction, StrategyConfig config, AccountSettings accountSettings)
     {
         var stopLoss = _strategy.CalculateStopLoss(pinbar, direction);
         var entryPrice = current.Close; // 使用当前K线收盘价开仓
         var takeProfit = _strategy.CalculateTakeProfit(entryPrice, stopLoss, direction, pinbar);
+
+        // 计算手数：基于账户风险敞口和止损距离
+        decimal stopLossPips = direction == TradeDirection.Long
+            ? (entryPrice - stopLoss)
+            : (stopLoss - entryPrice);
+
+        // 获取当前动态风险敞口（基于初始资金）
+        decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent, accountSettings);
+        decimal riskAmount = _initialEquity * currentRiskPercent / 100m;
+
+        // 确保风险金额不低于10 USD
+        if (riskAmount < 10m)
+        {
+            riskAmount = 10m;
+        }
+
+        // 计算手数 = 风险金额 / (止损点数 × 合约大小)
+        decimal lotSize = stopLossPips > 0 ? riskAmount / (stopLossPips * config.ContractSize) : 0.01m;
+
+        // 确保手数至少为0.01（最小交易单位）
+        if (lotSize < 0.01m)
+        {
+            lotSize = 0.01m;
+        }
+
+        // 调试输出
+        Console.WriteLine($"[开仓] 方向:{direction}, 入场:{entryPrice}, 止损:{stopLoss}, 止损点数:{stopLossPips:F2}, 风险金额:{riskAmount:F2}, 合约大小:{config.ContractSize}, 计算手数:{lotSize:F4}, 最终手数:{Math.Round(lotSize, 2):F2}");
 
         return new Trade
         {
@@ -131,7 +159,8 @@ public class BacktestEngine
             OpenTime = current.DateTime,
             OpenPrice = entryPrice,
             StopLoss = stopLoss,
-            TakeProfit = takeProfit
+            TakeProfit = takeProfit,
+            Lots = Math.Round(lotSize, 2) // 保留2位小数
         };
     }
 
@@ -183,24 +212,8 @@ public class BacktestEngine
             : (trade.OpenPrice - trade.ClosePrice!.Value);
 
         // 计算USD盈亏 = 点数差 × 合约大小 × 手数
-        // 手数根据动态风险计算
-        decimal stopLossPips = trade.Direction == TradeDirection.Long
-            ? (trade.OpenPrice - trade.StopLoss)
-            : (trade.StopLoss - trade.OpenPrice);
-
-        // 获取当前动态风险敦口
-        decimal currentRiskPercent = GetCurrentRiskPercent(accountSettings.MaxLossPerTradePercent, accountSettings);
-        decimal riskAmount = _currentEquity * currentRiskPercent / 100m;
-
-        // 确保风险金额不低于10 USD
-        if (riskAmount < 10m)
-        {
-            riskAmount = 10m;
-        }
-
-        decimal lotSize = stopLossPips > 0 ? riskAmount / (stopLossPips * config.ContractSize) : 0.01m;
-
-        trade.ProfitLoss = Math.Round(priceDiff * config.ContractSize * lotSize, 8);
+        // 使用开仓时计算好的手数
+        trade.ProfitLoss = Math.Round(priceDiff * config.ContractSize * trade.Lots, 8);
 
         // 计算收益率 (相对于初始资金的百分比)
         trade.ReturnRate = Math.Round((trade.ProfitLoss ?? 0) / (decimal)accountSettings.InitialCapital * 100m, 8);
@@ -464,48 +477,53 @@ public class BacktestEngine
     /// </summary>
     private void UpdateDynamicRiskManagement(Trade trade, StrategyConfig config, AccountSettings accountSettings)
     {
-        // 如果未启用动态风险管理，使用原有逻辑
-        if (!accountSettings.EnableDynamicRiskManagement || config.MaxConsecutiveLosses <= 0)
+        // 动态风险管理逻辑（连续亏损后逐级减半风险）
+        if (accountSettings.EnableDynamicRiskManagement)
         {
-            UpdateConsecutiveLossesLegacy(trade, config);
-            return;
-        }
+            var threshold = accountSettings.DynamicRiskLossThreshold > 0 ? accountSettings.DynamicRiskLossThreshold : 3;
 
-        if (trade.IsWinning == false) // 亏损
-        {
-            _consecutiveLossesAtCurrentLevel++;
-
-            // 如果达到连续亏损上限，减半风险敦口
-            if (_consecutiveLossesAtCurrentLevel >= config.MaxConsecutiveLosses)
+            if (trade.IsWinning == false) // 亏损
             {
-                // 记录当前净值作为恢复阈值
-                _reductionThresholds.Add(_currentEquity);
+                _consecutiveLossesAtCurrentLevel++;
 
-                // 进入下一级别
-                _riskReductionLevel++;
-                _consecutiveLossesAtCurrentLevel = 0;
-
-                Console.WriteLine($"\u8fde续亏损{config.MaxConsecutiveLosses}次，风险敦口减半到第{_riskReductionLevel}级，当前净值: ${_currentEquity:F2}");
-            }
-        }
-        else if (trade.IsWinning == true) // 盈利
-        {
-            _consecutiveLossesAtCurrentLevel = 0; // 重置当前级别的连续亏损计数
-
-            // 检查是否可以恢复上一级别的风险
-            if (_riskReductionLevel > 0 && _reductionThresholds.Count > 0)
-            {
-                // 检查是否超过最近一次减半的阈值
-                decimal lastThreshold = _reductionThresholds[_reductionThresholds.Count - 1];
-                if (_currentEquity >= lastThreshold)
+                // 如果达到连续亏损阈值，减半风险敦口
+                if (_consecutiveLossesAtCurrentLevel >= threshold)
                 {
-                    // 恢复上一级别
-                    _riskReductionLevel--;
-                    _reductionThresholds.RemoveAt(_reductionThresholds.Count - 1);
+                    // 记录当前净值作为恢复阈值
+                    _reductionThresholds.Add(_currentEquity);
 
-                    Console.WriteLine($"\u51c0值恢复到 ${_currentEquity:F2}，风险敦口恢复到第{_riskReductionLevel}级");
+                    // 进入下一级别
+                    _riskReductionLevel++;
+                    _consecutiveLossesAtCurrentLevel = 0;
+
+                    Console.WriteLine($"连续亏损{threshold}次，风险敦口减半到第{_riskReductionLevel}级，当前净值: ${_currentEquity:F2}");
                 }
             }
+            else if (trade.IsWinning == true) // 盈利
+            {
+                _consecutiveLossesAtCurrentLevel = 0; // 重置当前级别的连续亏损计数
+
+                // 检查是否可以恢复上一级别的风险
+                if (_riskReductionLevel > 0 && _reductionThresholds.Count > 0)
+                {
+                    // 检查是否超过最近一次减半的阈值
+                    decimal lastThreshold = _reductionThresholds[_reductionThresholds.Count - 1];
+                    if (_currentEquity >= lastThreshold)
+                    {
+                        // 恢复上一级别
+                        _riskReductionLevel--;
+                        _reductionThresholds.RemoveAt(_reductionThresholds.Count - 1);
+
+                        Console.WriteLine($"净值恢复到 ${_currentEquity:F2}，风险敦口恢复到第{_riskReductionLevel}级");
+                    }
+                }
+            }
+        }
+
+        // 暂停交易逻辑（连续亏损后暂停交易）
+        if (config.MaxConsecutiveLosses > 0)
+        {
+            UpdateConsecutiveLossesLegacy(trade, config);
         }
     }
 

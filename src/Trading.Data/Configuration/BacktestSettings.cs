@@ -29,4 +29,10 @@ public class AccountSettings
     /// 启用动态风险管理（连续亏损后逐级减半风险）
     /// </summary>
     public bool EnableDynamicRiskManagement { get; set; }
+
+    /// <summary>
+    /// 动态风险管理触发阈值（连续亏损多少次后减半风险，默认3次）
+    /// 仅在EnableDynamicRiskManagement=true时生效
+    /// </summary>
+    public int DynamicRiskLossThreshold { get; set; } = 3;
 }

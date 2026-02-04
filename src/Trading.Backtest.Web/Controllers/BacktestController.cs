@@ -131,7 +131,8 @@ public class BacktestController : ControllerBase
                 Leverage = request.Leverage,
                 MaxLossPerTradePercent = request.MaxLossPerTradePercent,
                 MaxDailyLossPercent = request.MaxDailyLossPercent,
-                EnableDynamicRiskManagement = request.EnableDynamicRiskManagement
+                EnableDynamicRiskManagement = request.EnableDynamicRiskManagement,
+                DynamicRiskLossThreshold = request.DynamicRiskLossThreshold
             };
 
             // 解析日期范围
@@ -258,7 +259,7 @@ public class BacktestController : ControllerBase
                         CloseReason = t.CloseReason?.ToString() ?? "",
                         t.ProfitLoss,
                         t.ReturnRate,
-                        Lots = 1 // 暂时固定为1手，后续可以从配置中获取
+                        t.Lots // 使用实际计算的手数
                     })
                 }
             });
@@ -405,6 +406,7 @@ public class BacktestRequest
     public double MaxLossPerTradePercent { get; set; } = 0.5;
     public double MaxDailyLossPercent { get; set; } = 3.0;
     public bool EnableDynamicRiskManagement { get; set; }
+    public int DynamicRiskLossThreshold { get; set; } = 3;
 
     // Date range filter
     public string? StartDate { get; set; }

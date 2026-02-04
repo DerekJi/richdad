@@ -51,12 +51,12 @@ class Program
         // 绑定配置
         var appSettings = new AppSettings();
         configuration.Bind(appSettings);
-        
+
         if (appSettings.Strategies.Count == 0)
         {
             throw new InvalidOperationException("无法加载配置文件或策略配置为空");
         }
-        
+
         services.AddSingleton(appSettings);
         services.AddSingleton(appSettings.CosmosDb);
 
@@ -115,7 +115,7 @@ class Application
             var config = _configService.GetStrategyConfig(strategyName);
             var accountSettings = _configService.GetAccountSettings();
             var dataDirectory = _configService.GetDataDirectory();
-            
+
             // 运行回测
             var result = await _runner.RunAsync(config, accountSettings, dataDirectory);
 
@@ -126,7 +126,7 @@ class Application
             var diagnosticService = new StrategyDiagnosticService(config);
             var diagnosticResult = diagnosticService.Analyze(_runner.LoadedCandles);
             diagnosticService.PrintDiagnostic(diagnosticResult);
-            
+
             // 生成诊断文本用于保存到文件
             var diagnosticText = diagnosticService.GenerateDiagnosticText(diagnosticResult);
 
@@ -134,11 +134,11 @@ class Application
             try
             {
                 var reportPath = _fileReportService.SaveReport(
-                    result, 
-                    (decimal)accountSettings.InitialCapital, 
+                    result,
+                    (decimal)accountSettings.InitialCapital,
                     (decimal)accountSettings.Leverage,
                     diagnosticText);
-                
+
                 var chartPath = reportPath.Replace(".txt", ".png");
                 System.Console.WriteLine($"\n✓ 报告已保存到文件: {reportPath}");
                 System.Console.WriteLine($"✓ 收益曲线图已保存: {chartPath}");
@@ -167,7 +167,8 @@ class Application
 
     private string GetStrategyName(string[] args, List<string> availableStrategies)
     {
-        const string defaultStrategy = "PinBar-XAUUSD-v2";
+        // const string defaultStrategy = "PinBar-XAUUSD-v2";
+        const string defaultStrategy = "PinBar-XAGUSD-v1";
 
         // 如果有命令行参数，使用第一个参数作为策略名称
         if (args.Length > 0)

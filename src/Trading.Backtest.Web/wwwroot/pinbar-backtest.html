@@ -156,6 +156,12 @@
                     <input type="checkbox" id="enableDynamicRiskManagement" checked>
                     <label for="enableDynamicRiskManagement">启用动态风险管理（连续亏损后逐级减半风险）</label>
                 </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>动态风险触发阈值（连续亏损次数）</label>
+                        <input type="number" id="dynamicRiskLossThreshold" step="1" min="1" max="10" value="3">
+                    </div>
+                </div>
 
                 <!-- 交易时段 -->
                 <h3>交易时段</h3>

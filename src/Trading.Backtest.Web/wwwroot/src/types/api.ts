@@ -36,6 +36,7 @@ export interface AccountSettings {
   maxLossPerTradePercent: number;
   maxDailyLossPercent: number;
   enableDynamicRiskManagement: boolean;
+  dynamicRiskLossThreshold: number;
 }
 
 export interface IndicatorSettings {
@@ -211,6 +212,7 @@ export interface BacktestRequest {
   maxLossPerTradePercent: number;
   maxDailyLossPercent: number;
   enableDynamicRiskManagement: boolean;
+  dynamicRiskLossThreshold: number;
   // Date range filter
   startDate?: string;
   endDate?: string;

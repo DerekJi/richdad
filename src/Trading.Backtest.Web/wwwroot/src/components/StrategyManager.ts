@@ -109,6 +109,7 @@ export class StrategyManager {
       this.setInputValue('maxLossPerTradePercent', account?.maxLossPerTradePercent);
       this.setInputValue('maxDailyLossPercent', account?.maxDailyLossPercent);
       this.setCheckboxValue('enableDynamicRiskManagement', account?.enableDynamicRiskManagement !== false);
+      this.setInputValue('dynamicRiskLossThreshold', account?.dynamicRiskLossThreshold || 3);
 
     } catch (error) {
       console.error('加载策略配置失败:', error);

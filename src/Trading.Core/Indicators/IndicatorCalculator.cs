@@ -22,7 +22,7 @@ public class IndicatorCalculator
         }
 
         // 计算ADX (支持多周期)
-        if (config.MinAdx > 0 && config.AdxPeriod > 0)
+        if (config.AdxPeriod > 0)
         {
             if (config.AdxTimeframe == AdxTimeframe.Current)
             {
@@ -214,6 +214,7 @@ public class IndicatorCalculator
 
     /// <summary>
     /// 获取时间周期起始时间
+    /// 例如：H1时，22:15 → 22:00；H4时，01:00 → 00:00
     /// </summary>
     private DateTime GetPeriodStart(DateTime dateTime, int minutes)
     {
@@ -223,14 +224,19 @@ public class IndicatorCalculator
         }
         else
         {
+            // 计算从0点开始经过的分钟数
             var totalMinutes = (int)dateTime.TimeOfDay.TotalMinutes;
+            // 整数除法得到周期索引（例如：H1时，75/60=1表示第1个小时）
             var periodIndex = totalMinutes / minutes;
+            // 返回该周期的起始时间
             return dateTime.Date.AddMinutes(periodIndex * minutes);
         }
     }
 
     /// <summary>
     /// 聚合多根K线为一根
+    /// 例如：4根M15 K线(22:00, 22:15, 22:30, 22:45) → 1根H1 K线(22:00)
+    /// Open=第一根的Open, High=最高的High, Low=最低的Low, Close=最后的Close, Volume=累加
     /// </summary>
     private Candle AggregateCandles(List<Candle> candles, DateTime periodStart)
     {
@@ -247,6 +253,8 @@ public class IndicatorCalculator
 
     /// <summary>
     /// 将高周期ADX映射到低周期K线
+    /// 每个低周期K线会被赋予其所属高周期K线的ADX值
+    /// 例如：H1的22:00 ADX=30 → M15的22:00,22:15,22:30,22:45都设为30
     /// </summary>
     private void MapHigherTimeframeADXToLowerTimeframe(List<Candle> lowerTimeframeCandles, List<Candle> higherTimeframeCandles)
     {
@@ -254,7 +262,7 @@ public class IndicatorCalculator
 
         foreach (var candle in lowerTimeframeCandles)
         {
-            // 找到对应的高周期K线
+            // 找到对应的高周期K线：找到最后一个起始时间 <= 当前K线时间的高周期K线
             while (higherIndex < higherTimeframeCandles.Count - 1 &&
                    candle.DateTime >= higherTimeframeCandles[higherIndex + 1].DateTime)
             {
