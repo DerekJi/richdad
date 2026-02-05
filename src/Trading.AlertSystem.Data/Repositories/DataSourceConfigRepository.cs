@@ -88,9 +88,18 @@ public class DataSourceConfigRepository : IDataSourceConfigRepository
             config.Id = "current"; // 确保ID固定
             config.LastUpdated = DateTime.UtcNow;
 
-            await _container.UpsertItemAsync(
-                config,
-                new PartitionKey(config.Id));
+            // 先删除旧配置（如果存在），再创建新配置
+            try
+            {
+                await _container.DeleteItemAsync<DataSourceConfig>("current", new PartitionKey("current"));
+            }
+            catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                // 配置不存在，忽略
+            }
+
+            // 创建新配置
+            await _container.CreateItemAsync(config, new PartitionKey(config.Id));
 
             _logger.LogInformation("数据源配置已更新: {Provider}", config.Provider);
         }

@@ -1,0 +1,139 @@
+/* 监控状态页面样式 */
+
+/* 工具栏 */
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.status-info {
+    color: #666;
+    font-size: 14px;
+}
+
+.status-info strong {
+    color: #333;
+}
+
+/* 刷新按钮 */
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.refresh-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.refresh-btn.loading .refresh-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* 表格容器 */
+.table-container {
+    overflow-x: auto;
+}
+
+/* 状态表格 */
+.status-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.status-table th,
+.status-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.status-table th {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+}
+
+.status-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.status-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* 类型标签 */
+.type-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.type-badge.price {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.type-badge.ema {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* 单元格样式 */
+.price-cell {
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+}
+
+.symbol-cell {
+    font-weight: 600;
+    color: #333;
+}
+
+.timeframe-cell {
+    color: #666;
+    font-size: 13px;
+}
+
+/* 距离颜色 */
+.distance-positive {
+    color: #4caf50;
+}
+
+.distance-negative {
+    color: #f44336;
+}

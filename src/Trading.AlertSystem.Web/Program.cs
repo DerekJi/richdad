@@ -163,6 +163,7 @@ builder.Services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
 builder.Services.AddSingleton<IChartService, ChartService>();
 builder.Services.AddSingleton<IEmaMonitoringService, EmaMonitoringService>();
 builder.Services.AddSingleton<IStreamingPriceMonitorService, StreamingPriceMonitorService>();
+builder.Services.AddSingleton<IPriceCacheService, PriceCacheService>(); // 价格缓存服务
 
 // 添加后台服务（自动启动价格监控）
 // 使用 Streaming 版本替代轮询版本

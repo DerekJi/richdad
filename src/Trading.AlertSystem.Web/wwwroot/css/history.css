@@ -1,31 +1,5 @@
 /* 告警历史页面样式 */
-
-/* 导航标签 */
-.nav-tabs {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 0;
-}
-
-.nav-tab {
-    padding: 10px 20px;
-    text-decoration: none;
-    color: #666;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s;
-    font-weight: 500;
-}
-
-.nav-tab:hover {
-    color: #2196F3;
-}
-
-.nav-tab.active {
-    color: #2196F3;
-    border-bottom-color: #2196F3;
-}
+/* 注意：导航标签样式统一使用 style.css 中的定义，不要在这里重复定义 */
 
 /* 筛选器 */
 .filters {

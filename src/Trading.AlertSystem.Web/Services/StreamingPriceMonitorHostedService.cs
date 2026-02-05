@@ -1,33 +1,63 @@
+using Trading.AlertSystem.Data.Repositories;
 using Trading.AlertSystem.Service.Services;
 
 namespace Trading.AlertSystem.Web.Services;
 
 /// <summary>
-/// 基于 Streaming 的价格监控后台服务
-/// 使用 OANDA Streaming API 实现实时价格告警
+/// 价格监控后台服务
+/// 根据数据源配置自动选择 Streaming（Oanda）或轮询方式
 /// </summary>
 public class StreamingPriceMonitorHostedService : IHostedService
 {
-    private readonly IStreamingPriceMonitorService _monitorService;
+    private readonly IStreamingPriceMonitorService? _streamingService;
+    private readonly IPriceMonitorService _pollingService;
+    private readonly IDataSourceConfigRepository _dataSourceRepo;
     private readonly ILogger<StreamingPriceMonitorHostedService> _logger;
 
+    private bool _useStreaming = false;
+
     public StreamingPriceMonitorHostedService(
-        IStreamingPriceMonitorService monitorService,
-        ILogger<StreamingPriceMonitorHostedService> logger)
+        IPriceMonitorService pollingService,
+        IDataSourceConfigRepository dataSourceRepo,
+        ILogger<StreamingPriceMonitorHostedService> logger,
+        IStreamingPriceMonitorService? streamingService = null)
     {
-        _monitorService = monitorService;
+        _pollingService = pollingService;
+        _dataSourceRepo = dataSourceRepo;
         _logger = logger;
+        _streamingService = streamingService;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("🚀 启动 Streaming 价格监控后台服务");
-        await _monitorService.StartAsync();
+        // 检查数据源配置
+        var config = await _dataSourceRepo.GetConfigAsync();
+        _useStreaming = config.Provider.Equals("Oanda", StringComparison.OrdinalIgnoreCase)
+                        && _streamingService != null;
+
+        if (_useStreaming)
+        {
+            _logger.LogInformation("🚀 启动 Streaming 价格监控后台服务 (数据源: Oanda)");
+            await _streamingService!.StartAsync();
+        }
+        else
+        {
+            _logger.LogInformation("🚀 启动轮询价格监控后台服务 (数据源: {Provider})", config.Provider);
+            await _pollingService.StartAsync();
+        }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("🛑 停止 Streaming 价格监控后台服务");
-        await _monitorService.StopAsync();
+        if (_useStreaming && _streamingService != null)
+        {
+            _logger.LogInformation("🛑 停止 Streaming 价格监控后台服务");
+            await _streamingService.StopAsync();
+        }
+        else
+        {
+            _logger.LogInformation("🛑 停止轮询价格监控后台服务");
+            await _pollingService.StopAsync();
+        }
     }
 }

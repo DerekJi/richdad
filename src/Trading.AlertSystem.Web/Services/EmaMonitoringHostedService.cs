@@ -51,6 +51,20 @@ public class EmaMonitoringHostedService : IHostedService, IDisposable
         _logger.LogInformation("首次检查将在 {NextRun} UTC 执行（{Delay}秒后）",
             nextRun.ToString("yyyy-MM-dd HH:mm:ss"), initialDelay.TotalSeconds);
 
+        // 启动时立即执行一次检查，不等待整点
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                _logger.LogInformation("服务启动，立即执行首次EMA检查...");
+                await _emaMonitoringService.CheckAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "首次EMA检查失败");
+            }
+        });
+
         // 设置定时器，首次延迟到整点时间，然后按间隔执行
         _timer = new Timer(
             async _ => await ExecuteCheckAsync(),

@@ -111,6 +111,7 @@ public class OandaService : IOandaService
                 Symbol = symbol,
                 Bid = bid,
                 Ask = ask,
+                LastPrice = (bid + ask) / 2,
                 Timestamp = DateTime.UtcNow
             };
         }
