@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Trading.AlertSystem.Service.Configuration;
 using Trading.AlertSystem.Service.Services;
 

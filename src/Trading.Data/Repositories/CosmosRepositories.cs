@@ -3,7 +3,6 @@ using System.Text.Json;
 using Trading.Data.Interfaces;
 using Trading.Data.Models;
 using Trading.Data.Infrastructure;
-using System;
 
 namespace Trading.Data.Repositories;
 
@@ -18,7 +17,7 @@ public class CosmosBacktestRepository : IBacktestRepository
     public CosmosBacktestRepository(CosmosDbContext dbContext)
     {
         _container = dbContext.BacktestContainer;
-        
+
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -55,16 +54,16 @@ public class CosmosBacktestRepository : IBacktestRepository
         {
             var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @id")
                 .WithParameter("@id", id);
-            
+
             var iterator = _container.GetItemQueryIterator<BacktestResult>(query);
             var results = new List<BacktestResult>();
-            
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync();
                 results.AddRange(response);
             }
-            
+
             return results.FirstOrDefault();
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -78,24 +77,24 @@ public class CosmosBacktestRepository : IBacktestRepository
         var queryText = symbol != null
             ? "SELECT TOP @limit * FROM c WHERE c.config.symbol = @symbol ORDER BY c.backtestTime DESC"
             : "SELECT TOP @limit * FROM c ORDER BY c.backtestTime DESC";
-        
+
         var query = new QueryDefinition(queryText)
             .WithParameter("@limit", limit);
-        
+
         if (symbol != null)
         {
             query = query.WithParameter("@symbol", symbol);
         }
-        
+
         var iterator = _container.GetItemQueryIterator<BacktestResult>(query);
         var results = new List<BacktestResult>();
-        
+
         while (iterator.HasMoreResults)
         {
             var response = await iterator.ReadNextAsync();
             results.AddRange(response);
         }
-        
+
         return results;
     }
 
@@ -131,7 +130,7 @@ public class CosmosStrategyConfigRepository : IStrategyConfigRepository
             Config = config,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         var response = await _container.UpsertItemAsync(configWithId, new PartitionKey(config.Symbol));
         return response.Resource.Id;
     }
@@ -142,16 +141,16 @@ public class CosmosStrategyConfigRepository : IStrategyConfigRepository
         {
             var query = new QueryDefinition("SELECT * FROM c WHERE c.id = @id")
                 .WithParameter("@id", id);
-            
+
             var iterator = _container.GetItemQueryIterator<ConfigDocument>(query);
             var results = new List<ConfigDocument>();
-            
+
             while (iterator.HasMoreResults)
             {
                 var response = await iterator.ReadNextAsync();
                 results.AddRange(response);
             }
-            
+
             return results.FirstOrDefault()?.Config;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -165,23 +164,23 @@ public class CosmosStrategyConfigRepository : IStrategyConfigRepository
         var queryText = symbol != null
             ? "SELECT * FROM c WHERE c.config.symbol = @symbol ORDER BY c.createdAt DESC"
             : "SELECT * FROM c ORDER BY c.createdAt DESC";
-        
+
         var query = new QueryDefinition(queryText);
-        
+
         if (symbol != null)
         {
             query = query.WithParameter("@symbol", symbol);
         }
-        
+
         var iterator = _container.GetItemQueryIterator<ConfigDocument>(query);
         var results = new List<StrategyConfig>();
-        
+
         while (iterator.HasMoreResults)
         {
             var response = await iterator.ReadNextAsync();
             results.AddRange(response.Select(d => d.Config));
         }
-        
+
         return results;
     }
 

@@ -29,4 +29,9 @@ public class CosmosDbSettings
     /// EMA配置容器名称
     /// </summary>
     public string EmaConfigContainerName { get; set; } = "EmaConfig";
+
+    /// <summary>
+    /// 数据源配置容器名称
+    /// </summary>
+    public string DataSourceConfigContainerName { get; set; } = "DataSourceConfig";
 }

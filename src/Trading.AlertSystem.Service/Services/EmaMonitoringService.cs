@@ -4,7 +4,6 @@ using System.Text.Json;
 using Trading.AlertSystem.Data.Models;
 using Trading.AlertSystem.Data.Repositories;
 using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Service.Configuration;
 using Trading.AlertSystem.Service.Models;
 
 namespace Trading.AlertSystem.Service.Services;
@@ -14,7 +13,7 @@ namespace Trading.AlertSystem.Service.Services;
 /// </summary>
 public class EmaMonitoringService : IEmaMonitoringService
 {
-    private readonly ITradeLockerService _tradeLockerService;
+    private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
     private readonly IEmaConfigRepository _emaConfigRepository;
@@ -28,14 +27,14 @@ public class EmaMonitoringService : IEmaMonitoringService
     private EmaMonitoringConfig? _currentConfig;
 
     public EmaMonitoringService(
-        ITradeLockerService tradeLockerService,
+        IMarketDataService marketDataService,
         ITelegramService telegramService,
         IAlertHistoryRepository alertHistoryRepository,
         IEmaConfigRepository emaConfigRepository,
         IChartService chartService,
         ILogger<EmaMonitoringService> logger)
     {
-        _tradeLockerService = tradeLockerService;
+        _marketDataService = marketDataService;
         _telegramService = telegramService;
         _alertHistoryRepository = alertHistoryRepository;
         _emaConfigRepository = emaConfigRepository;
@@ -69,8 +68,8 @@ public class EmaMonitoringService : IEmaMonitoringService
         {
             _logger.LogInformation("开始EMA监测检查");
 
-            // 确保已连接到TradeLocker
-            await _tradeLockerService.ConnectAsync();
+            // 确保已连接到市场数据服务
+            await _marketDataService.ConnectAsync();
 
             // 遍历所有配置的品种、周期和EMA周期组合
             foreach (var symbol in _currentConfig.Symbols)
@@ -106,7 +105,7 @@ public class EmaMonitoringService : IEmaMonitoringService
 
         // 获取历史数据（需要足够多的K线来计算EMA）
         var barsNeeded = emaPeriod * _currentConfig.HistoryMultiplier;
-        var candles = await _tradeLockerService.GetHistoricalDataAsync(symbol, timeFrame, barsNeeded);
+        var candles = await _marketDataService.GetHistoricalDataAsync(symbol, timeFrame, barsNeeded);
 
         if (!candles.Any())
         {
@@ -195,13 +194,13 @@ public class EmaMonitoringService : IEmaMonitoringService
                 try
                 {
                     // 获取4个时间周期的K线数据用于生成图表
-                    var candlesM5 = await _tradeLockerService.GetHistoricalDataAsync(
+                    var candlesM5 = await _marketDataService.GetHistoricalDataAsync(
                         symbol, "M5", _currentConfig.HistoryMultiplier * 20);
-                    var candlesM15 = await _tradeLockerService.GetHistoricalDataAsync(
+                    var candlesM15 = await _marketDataService.GetHistoricalDataAsync(
                         symbol, "M15", _currentConfig.HistoryMultiplier * 20);
-                    var candlesH1 = await _tradeLockerService.GetHistoricalDataAsync(
+                    var candlesH1 = await _marketDataService.GetHistoricalDataAsync(
                         symbol, "H1", _currentConfig.HistoryMultiplier * 20);
-                    var candlesH4 = await _tradeLockerService.GetHistoricalDataAsync(
+                    var candlesH4 = await _marketDataService.GetHistoricalDataAsync(
                         symbol, "H4", _currentConfig.HistoryMultiplier * 20);
 
                     // 生成图表

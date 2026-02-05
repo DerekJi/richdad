@@ -115,7 +115,7 @@ public class SystemController : ControllerBase
 
         // 测试获取价格
         var price = await _oandaService.GetSymbolPriceAsync("EURUSD");
-        
+
         return Ok(new
         {
             success = true,
@@ -149,19 +149,19 @@ public class SystemController : ControllerBase
         {
             _logger.LogInformation("开始测试K线图生成和发送: {Symbol}", symbol);
 
-            // 连接TradeLocker
-            var connected = await _tradeLockerService.ConnectAsync();
+            // 连接市场数据服务
+            var connected = await _marketDataService.ConnectAsync();
             if (!connected)
             {
-                return BadRequest(new { success = false, message = "TradeLocker连接失败" });
+                return BadRequest(new { success = false, message = $"{_marketDataService.GetCurrentProvider()}连接失败" });
             }
 
             // 获取4个时间周期的K线数据
-            _logger.LogInformation("获取 {Symbol} 的历史数据...", symbol);
-            var candlesM5 = (await _tradeLockerService.GetHistoricalDataAsync(symbol, "M5", 60))?.ToList();
-            var candlesM15 = (await _tradeLockerService.GetHistoricalDataAsync(symbol, "M15", 60))?.ToList();
-            var candlesH1 = (await _tradeLockerService.GetHistoricalDataAsync(symbol, "H1", 60))?.ToList();
-            var candlesH4 = (await _tradeLockerService.GetHistoricalDataAsync(symbol, "H4", 60))?.ToList();
+            _logger.LogInformation("获取 {Symbol} 的历史数据（数据源: {Provider}）...", symbol, _marketDataService.GetCurrentProvider());
+            var candlesM5 = (await _marketDataService.GetHistoricalDataAsync(symbol, "M5", 60))?.ToList();
+            var candlesM15 = (await _marketDataService.GetHistoricalDataAsync(symbol, "M15", 60))?.ToList();
+            var candlesH1 = (await _marketDataService.GetHistoricalDataAsync(symbol, "H1", 60))?.ToList();
+            var candlesH4 = (await _marketDataService.GetHistoricalDataAsync(symbol, "H4", 60))?.ToList();
 
             // 验证数据
             _logger.LogInformation("数据统计: M5={M5Count}, M15={M15Count}, H1={H1Count}, H4={H4Count}",
@@ -246,7 +246,7 @@ public class SystemController : ControllerBase
     [HttpGet("price/{symbol}")]
     public async Task<ActionResult> GetPrice(string symbol)
     {
-        var price = await _tradeLockerService.GetSymbolPriceAsync(symbol);
+        var price = await _marketDataService.GetSymbolPriceAsync(symbol);
         if (price == null)
             return NotFound(new { success = false, message = $"无法获取{symbol}的价格" });
 

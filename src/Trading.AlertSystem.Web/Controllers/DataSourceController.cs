@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Services;
+using Trading.AlertSystem.Data.Models;
+using Trading.AlertSystem.Data.Repositories;
 
 namespace Trading.AlertSystem.Web.Controllers;
 
@@ -12,20 +11,14 @@ namespace Trading.AlertSystem.Web.Controllers;
 [Route("api/[controller]")]
 public class DataSourceController : ControllerBase
 {
-    private readonly IOptionsMonitor<DataSourceSettings> _settingsMonitor;
-    private readonly IMarketDataService _marketDataService;
-    private readonly IConfiguration _configuration;
+    private readonly IDataSourceConfigRepository _configRepository;
     private readonly ILogger<DataSourceController> _logger;
 
     public DataSourceController(
-        IOptionsMonitor<DataSourceSettings> settingsMonitor,
-        IMarketDataService marketDataService,
-        IConfiguration configuration,
+        IDataSourceConfigRepository configRepository,
         ILogger<DataSourceController> logger)
     {
-        _settingsMonitor = settingsMonitor;
-        _marketDataService = marketDataService;
-        _configuration = configuration;
+        _configRepository = configRepository;
         _logger = logger;
     }
 
@@ -33,16 +26,25 @@ public class DataSourceController : ControllerBase
     /// 获取当前数据源配置
     /// </summary>
     [HttpGet]
-    public ActionResult GetDataSource()
+    public async Task<ActionResult> GetDataSource()
     {
-        var settings = _settingsMonitor.CurrentValue;
-        var currentProvider = _marketDataService.GetCurrentProvider();
-
-        return Ok(new
+        try
         {
-            provider = currentProvider,
-            availableProviders = new[] { "TradeLocker", "Oanda" }
-        });
+            var config = await _configRepository.GetConfigAsync();
+
+            return Ok(new
+            {
+                provider = config.Provider,
+                availableProviders = new[] { "TradeLocker", "Oanda" },
+                lastUpdated = config.LastUpdated,
+                updatedBy = config.UpdatedBy
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取数据源配置失败");
+            return StatusCode(500, new { message = "获取配置失败" });
+        }
     }
 
     /// <summary>
@@ -64,37 +66,13 @@ public class DataSourceController : ControllerBase
 
         try
         {
-            // 更新appsettings.json文件
-            var appSettingsPath = Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json");
-            var json = await System.IO.File.ReadAllTextAsync(appSettingsPath);
-            var doc = System.Text.Json.JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
-            using var stream = new MemoryStream();
-            using (var writer = new System.Text.Json.Utf8JsonWriter(stream, new System.Text.Json.JsonWriterOptions { Indented = true }))
+            var config = new DataSourceConfig
             {
-                writer.WriteStartObject();
+                Provider = request.Provider,
+                UpdatedBy = "User"
+            };
 
-                foreach (var property in root.EnumerateObject())
-                {
-                    if (property.Name == "DataSource")
-                    {
-                        writer.WritePropertyName("DataSource");
-                        writer.WriteStartObject();
-                        writer.WriteString("Provider", request.Provider);
-                        writer.WriteEndObject();
-                    }
-                    else
-                    {
-                        property.WriteTo(writer);
-                    }
-                }
-
-                writer.WriteEndObject();
-            }
-
-            var updatedJson = System.Text.Encoding.UTF8.GetString(stream.ToArray());
-            await System.IO.File.WriteAllTextAsync(appSettingsPath, updatedJson);
+            await _configRepository.UpdateConfigAsync(config);
 
             _logger.LogInformation("数据源已切换到: {Provider}", request.Provider);
 
@@ -102,7 +80,7 @@ public class DataSourceController : ControllerBase
             {
                 success = true,
                 message = $"数据源已切换到 {request.Provider}",
-                note = "配置已保存，但需要重启服务才能生效"
+                note = "配置已保存到数据库，需要重启服务才能生效"
             });
         }
         catch (Exception ex)

@@ -97,21 +97,62 @@ public class ChartService : IChartService
 
         var plot = new Plot();
         plot.Title($"{symbol} - {timeFrame} (EMA{emaPeriod})");
-        plot.Axes.DateTimeTicksBottom();
 
-        // 准备K线数据
-        var ohlc = recentCandles.Select(c => new OHLC(
-            (double)c.Open,
-            (double)c.High,
-            (double)c.Low,
-            (double)c.Close,
-            c.Time,
-            TimeSpan.FromMinutes(GetTimeFrameMinutes(timeFrame))
-        )).ToArray();
+        // 使用索引坐标系统，避免休市时段造成K线缺失
+        // 手动绘制K线图
+        for (int i = 0; i < recentCandles.Count; i++)
+        {
+            var candle = recentCandles[i];
+            double x = i;
+            double open = (double)candle.Open;
+            double high = (double)candle.High;
+            double low = (double)candle.Low;
+            double close = (double)candle.Close;
+            double bodyWidth = 0.4; // K线实体宽度
 
-        // 添加K线图
-        var candlestickPlot = plot.Add.Candlestick(ohlc);
-        candlestickPlot.Axes.YAxis = plot.Axes.Left;
+            // 绘制影线（细线）
+            var wick = plot.Add.Line(x, low, x, high);
+            wick.LineWidth = 1;
+            wick.Color = Colors.Black;
+
+            // 绘制实体
+            double bodyTop = Math.Max(open, close);
+            double bodyBottom = Math.Min(open, close);
+
+            // 十字星的情况，给一个最小高度以便可见
+            if (Math.Abs(bodyTop - bodyBottom) < (high - low) * 0.01)
+            {
+                bodyTop = (open + close) / 2 + (high - low) * 0.005;
+                bodyBottom = (open + close) / 2 - (high - low) * 0.005;
+            }
+
+            // 使用多边形绘制实体（更可靠）
+            double left = x - bodyWidth / 2;
+            double right = x + bodyWidth / 2;
+
+            var bodyCoords = new Coordinates[]
+            {
+                new(left, bodyBottom),
+                new(right, bodyBottom),
+                new(right, bodyTop),
+                new(left, bodyTop)
+            };
+
+            var bodyPoly = plot.Add.Polygon(bodyCoords);
+
+            // 中国习惯：阳线（涨）红色，阴线（跌）绿色
+            if (close >= open)
+            {
+                bodyPoly.FillColor = Colors.Red;
+                bodyPoly.LineColor = Colors.DarkRed;
+            }
+            else
+            {
+                bodyPoly.FillColor = Colors.Green;
+                bodyPoly.LineColor = Colors.DarkGreen;
+            }
+            bodyPoly.LineWidth = 1;
+        }
 
         // 计算EMA
         var quotes = recentCandles.Select(c => new Quote
@@ -126,27 +167,58 @@ public class ChartService : IChartService
 
         var emaResults = quotes.GetEma(emaPeriod).ToList();
 
-        // 准备EMA数据（只包含有值的部分）
-        var emaData = emaResults
-            .Where(r => r.Ema.HasValue)
-            .Select(r => new Coordinates(r.Date.ToOADate(), (double)r.Ema!.Value))
-            .ToArray();
+        // 准备EMA数据（使用索引作为X坐标）
+        var emaData = new List<Coordinates>();
+        for (int i = 0; i < emaResults.Count; i++)
+        {
+            if (emaResults[i].Ema.HasValue)
+            {
+                emaData.Add(new Coordinates(i, (double)emaResults[i].Ema!.Value));
+            }
+        }
 
-        if (emaData.Length > 0)
+        if (emaData.Count > 0)
         {
             var emaLine = plot.Add.ScatterLine(emaData);
             emaLine.Color = Colors.Blue;
             emaLine.LineWidth = 2;
             emaLine.LegendText = $"EMA{emaPeriod}";
-            emaLine.Axes.YAxis = plot.Axes.Left;
         }
 
         // 显示图例
         plot.ShowLegend(Alignment.UpperLeft);
 
+        // 设置自定义X轴刻度标签（只显示时间）
+        var tickPositions = new List<double>();
+        var tickLabels = new List<string>();
+
+        int labelCount = Math.Min(8, recentCandles.Count); // 最多显示8个标签
+        int step = Math.Max(1, recentCandles.Count / labelCount);
+
+        for (int i = 0; i < recentCandles.Count; i += step)
+        {
+            tickPositions.Add(i);
+            tickLabels.Add(recentCandles[i].Time.ToString("HH:mm"));
+        }
+
+        // 确保最后一根K线的时间也显示
+        if (tickPositions.Count == 0 || tickPositions[^1] != recentCandles.Count - 1)
+        {
+            tickPositions.Add(recentCandles.Count - 1);
+            tickLabels.Add(recentCandles[^1].Time.ToString("HH:mm"));
+        }
+
+        plot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(
+            tickPositions.ToArray(),
+            tickLabels.ToArray()
+        );
+
+        // 设置X轴范围
+        plot.Axes.SetLimitsX(-1, recentCandles.Count);
+
         // 设置Y轴范围（留出一些边距）
         var allPrices = recentCandles.SelectMany(c => new[] { c.High, c.Low }).ToList();
-        if (emaData.Length > 0)
+        if (emaData.Count > 0)
         {
             var emaPrices = emaData.Select(d => (decimal)d.Y).ToList();
             allPrices.AddRange(emaPrices);

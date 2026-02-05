@@ -42,7 +42,8 @@ if (!string.IsNullOrEmpty(connectionString))
         DatabaseName = cosmosConfig["DatabaseName"] ?? "TradingSystem",
         AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts",
         AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory",
-        EmaConfigContainerName = cosmosConfig["EmaConfigContainerName"] ?? "EmaConfig"
+        EmaConfigContainerName = cosmosConfig["EmaConfigContainerName"] ?? "EmaConfig",
+        DataSourceConfigContainerName = cosmosConfig["DataSourceConfigContainerName"] ?? "DataSourceConfig"
     };
 
     builder.Services.AddSingleton(cosmosSettings);
@@ -50,12 +51,31 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
+    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository, Trading.AlertSystem.Data.Repositories.DataSourceConfigRepository>();
+
+    // 注册一个延迟初始化的DataSourceSettings
+    // 它会在第一次使用时从数据库加载
+    builder.Services.AddSingleton<DataSourceSettings>(serviceProvider =>
+    {
+        // 同步包装异步操作（在单例工厂中）
+        var dbContext = serviceProvider.GetRequiredService<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
+        var dataSourceRepo = serviceProvider.GetRequiredService<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository>();
+
+        // 初始化数据库并加载配置
+        dbContext.InitializeAsync().GetAwaiter().GetResult();
+        var dataSourceConfig = dataSourceRepo.GetConfigAsync().GetAwaiter().GetResult();
+
+        return new DataSourceSettings { Provider = dataSourceConfig.Provider };
+    });
 }
 else
 {
     // 使用内存存储作为后备方案
     builder.Services.AddSingleton<IPriceAlertRepository, InMemoryPriceAlertRepository>();
     // AlertHistoryRepository 需要 CosmosDB，不提供内存版本
+
+    // 如果没有CosmosDB，使用默认配置
+    builder.Services.AddSingleton(new DataSourceSettings { Provider = "Oanda" });
 }
 
 // 注册数据层服务

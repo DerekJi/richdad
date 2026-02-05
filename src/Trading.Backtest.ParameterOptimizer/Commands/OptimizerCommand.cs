@@ -1,4 +1,3 @@
-using Trading.Backtest.ParameterOptimizer.Helpers;
 using Trading.Backtest.ParameterOptimizer.Models;
 using Trading.Backtest.ParameterOptimizer.Services;
 using Trading.Data.Interfaces;
@@ -24,28 +23,28 @@ public class OptimizerCommand
         var dataDirectory = Path.GetFullPath(Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..", "..", "..", "data"));
         Console.WriteLine($"数据目录: {dataDirectory}");
-        
+
         IMarketDataProvider dataProvider = new CsvDataProvider(dataDirectory);
         var candles = await dataProvider.GetCandlesAsync("XAUUSD", CsvFilter, StartTime, EndTime);
-        
+
         Console.WriteLine($"✓ 数据加载完成: {candles.Count} 根K线");
         Console.WriteLine($"  数据范围: {candles.First().DateTime:yyyy-MM-dd} 至 {candles.Last().DateTime:yyyy-MM-dd}\n");
 
-        // 定义参数搜索空间  
+        // 定义参数搜索空间
         var parameterSpace = new ParameterSpace
         {
             // Pin Bar形态参数
             MaxBodyPercentage = [25], // BEST of ParameterRangeHelper.SetRange(25, 50, 5),
             MinLongerWickPercentage = [45], // BEST of ParameterRangeHelper.SetRange(40, 70, 5),
             MaxShorterWickPercentage =[35], // BEST of ParameterRangeHelper.SetRange(10, 40, 5),
-            
+
             // EMA相关参数
             NearEmaThreshold = [0.6m], // BEST of ParameterRangeHelper.SetRange(0.5m, 0.8m, 0.1m), // ParameterRangeHelper.SetRange(0.8m, 3.0m, 0.3m),
-            
+
             // 止损止盈参数
             StopLossAtrRatio = [1m], // BEST of ParameterRangeHelper.SetRange(1.0m, 2.0m, 0.5m),
             RiskRewardRatio = [2.5m], // BEST of ParameterRangeHelper.SetRange(1.5m, 2.5m, 0.5m),
-            
+
             // 风控参数
             MaxLossPerTradePercent = [1m], // BEST of ParameterRangeHelper.SetRange(0.5m, 1.0m, 0.1m)
         };

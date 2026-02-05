@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Logging;
 using Trading.AlertSystem.Data.Models;
 using Trading.AlertSystem.Data.Services;
 

@@ -16,7 +16,7 @@ public class PriceMonitorService : IPriceMonitorService
 {
     private readonly IPriceAlertRepository _alertRepository;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
-    private readonly ITradeLockerService _tradeLockerService;
+    private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
     private readonly MonitoringSettings _settings;
     private readonly ILogger<PriceMonitorService> _logger;
@@ -26,14 +26,14 @@ public class PriceMonitorService : IPriceMonitorService
     public PriceMonitorService(
         IPriceAlertRepository alertRepository,
         IAlertHistoryRepository alertHistoryRepository,
-        ITradeLockerService tradeLockerService,
+        IMarketDataService marketDataService,
         ITelegramService telegramService,
         MonitoringSettings settings,
         ILogger<PriceMonitorService> logger)
     {
         _alertRepository = alertRepository;
         _alertHistoryRepository = alertHistoryRepository;
-        _tradeLockerService = tradeLockerService;
+        _marketDataService = marketDataService;
         _telegramService = telegramService;
         _settings = settings;
         _logger = logger;
@@ -137,7 +137,7 @@ public class PriceMonitorService : IPriceMonitorService
             _logger.LogDebug("检查告警: {AlertName} ({Symbol})", alert.Name, alert.Symbol);
 
             // 获取当前价格
-            var currentPrice = await _tradeLockerService.GetSymbolPriceAsync(alert.Symbol);
+            var currentPrice = await _marketDataService.GetSymbolPriceAsync(alert.Symbol);
             if (currentPrice == null)
             {
                 _logger.LogWarning("无法获取 {Symbol} 的价格", alert.Symbol);
@@ -253,7 +253,7 @@ public class PriceMonitorService : IPriceMonitorService
     {
         try
         {
-            var candles = await _tradeLockerService.GetHistoricalDataAsync(symbol, timeFrame, period + 50);
+            var candles = await _marketDataService.GetHistoricalDataAsync(symbol, timeFrame, period + 50);
             if (!candles.Any())
                 return 0;
 
@@ -281,7 +281,7 @@ public class PriceMonitorService : IPriceMonitorService
     {
         try
         {
-            var candles = await _tradeLockerService.GetHistoricalDataAsync(symbol, timeFrame, period + 10);
+            var candles = await _marketDataService.GetHistoricalDataAsync(symbol, timeFrame, period + 10);
             if (!candles.Any())
                 return 0;
 

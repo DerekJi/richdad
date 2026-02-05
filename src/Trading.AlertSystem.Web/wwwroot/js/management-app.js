@@ -39,13 +39,13 @@ async function switchDataSource() {
         const result = await response.json();
 
         if (response.ok) {
-            showResult('dataSourceResult', 
-                `✅ ${result.message}\n\n⚠️ ${result.note}\n\n🔄 页面将在3秒后重新加载...`, 
+            showResult('dataSourceResult',
+                `✅ ${result.message}\n\n⚠️ ${result.note}\n\n🔄 页面将在3秒后重新加载...`,
                 'success');
-            
+
             // 更新显示
             document.getElementById('currentProvider').textContent = provider;
-            
+
             // 3秒后重新加载页面
             setTimeout(() => {
                 window.location.reload();

@@ -14,6 +14,7 @@ public class CosmosDbContext
     private Container? _alertContainer;
     private Container? _alertHistoryContainer;
     private Container? _emaConfigContainer;
+    private Container? _dataSourceConfigContainer;
 
     public CosmosDbContext(CosmosDbSettings settings)
     {
@@ -51,6 +52,10 @@ public class CosmosDbContext
         _emaConfigContainer = await _database.CreateContainerIfNotExistsAsync(
             _settings.EmaConfigContainerName,
             "/id");
+
+        _dataSourceConfigContainer = await _database.CreateContainerIfNotExistsAsync(
+            _settings.DataSourceConfigContainerName,
+            "/id");
     }
 
     /// <summary>
@@ -75,5 +80,31 @@ public class CosmosDbContext
     public Container EmaConfigContainer
     {
         get => _emaConfigContainer ?? throw new InvalidOperationException("CosmosDbContext未初始化，请先调用InitializeAsync()");
+    }
+
+    /// <summary>
+    /// 数据源配置容器
+    /// </summary>
+    public Container DataSourceConfigContainer
+    {
+        get => _dataSourceConfigContainer ?? throw new InvalidOperationException("CosmosDbContext未初始化，请先调用InitializeAsync()");
+    }
+
+    /// <summary>
+    /// 根据容器名称获取容器
+    /// </summary>
+    public Container GetContainer(string containerName)
+    {
+        if (_database == null)
+            throw new InvalidOperationException("CosmosDbContext未初始化，请先调用InitializeAsync()");
+
+        return containerName switch
+        {
+            var name when name == _settings.AlertContainerName => AlertContainer,
+            var name when name == _settings.AlertHistoryContainerName => AlertHistoryContainer,
+            var name when name == _settings.EmaConfigContainerName => EmaConfigContainer,
+            var name when name == _settings.DataSourceConfigContainerName => DataSourceConfigContainer,
+            _ => throw new ArgumentException($"未知的容器名称: {containerName}")
+        };
     }
 }

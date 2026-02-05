@@ -1,4 +1,3 @@
-using Trading.Core.Indicators;
 using Trading.Data.Models;
 
 namespace Trading.Backtest.Console.Services;
@@ -21,7 +20,7 @@ public class StrategyDiagnosticService
         public int PinBarsBelowBaseEma { get; set; }
         public int BreakoutConfirmations { get; set; }
         public int FinalSignals { get; set; }
-        
+
         // 详细过滤统计
         public int FilteredByThreshold { get; set; }
         public int FilteredByBodySize { get; set; }
@@ -74,7 +73,7 @@ public class StrategyDiagnosticService
 
             // 分析Pin Bar - 多单方向
             AnalyzePinBar(previous, current, baseEma, true, result);
-            
+
             // 分析Pin Bar - 空单方向
             AnalyzePinBar(previous, current, baseEma, false, result);
         }
@@ -85,7 +84,7 @@ public class StrategyDiagnosticService
     private void AnalyzePinBar(Candle previous, Candle current, decimal baseEma, bool bullish, DiagnosticResult result)
     {
         var total = previous.TotalRange;
-        
+
         // 1. 阈值过滤
         if (total < _config.Threshold)
         {
@@ -160,10 +159,10 @@ public class StrategyDiagnosticService
         result.PinBarsNearEma++;
 
         // 8. 突破确认过滤
-        bool breakout = bullish 
-            ? current.Close > previous.High 
+        bool breakout = bullish
+            ? current.Close > previous.High
             : current.Close < previous.Low;
-        
+
         if (!breakout)
         {
             result.FilteredByNoBreakout++;
@@ -193,7 +192,7 @@ public class StrategyDiagnosticService
             if (bullish)
             {
                 var minBody = Math.Min(candle.Open, candle.Close);
-                if (minBody > emaValue && 
+                if (minBody > emaValue &&
                     (Math.Abs(candle.Low - emaValue) <= _config.NearEmaThreshold || candle.Low < emaValue))
                 {
                     return true;
@@ -202,14 +201,14 @@ public class StrategyDiagnosticService
             else
             {
                 var maxBody = Math.Max(candle.Open, candle.Close);
-                if (maxBody < emaValue && 
+                if (maxBody < emaValue &&
                     (Math.Abs(candle.High - emaValue) <= _config.NearEmaThreshold || candle.High > emaValue))
                 {
                     return true;
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -225,19 +224,19 @@ public class StrategyDiagnosticService
     public string GenerateDiagnosticText(DiagnosticResult result)
     {
         var sb = new System.Text.StringBuilder();
-        
+
         sb.AppendLine("\n============================================================");
         sb.AppendLine("策略诊断分析");
         sb.AppendLine("============================================================");
         sb.AppendLine($"总K线数: {result.TotalCandles:N0}");
         sb.AppendLine($"EMA准备就绪的K线: {result.CandlesWithValidEma:N0} ({Percent(result.CandlesWithValidEma, result.TotalCandles)})");
         sb.AppendLine($"交易时段内的K线: {result.CandlesInTradingHours:N0} ({Percent(result.CandlesInTradingHours, result.TotalCandles)})");
-        
+
         sb.AppendLine("\n--- Pin Bar识别统计 ---");
         sb.AppendLine($"潜在Pin Bar总数: {result.PotentialPinBars:N0}");
         sb.AppendLine($"  - 看涨Pin Bar: {result.BullishPinBars:N0}");
         sb.AppendLine($"  - 看跌Pin Bar: {result.BearishPinBars:N0}");
-        
+
         sb.AppendLine("\n--- 过滤统计 (按优先级) ---");
         sb.AppendLine($"1. 波动太小(Threshold): {result.FilteredByThreshold:N0}");
         sb.AppendLine($"2. 影线长度不足(ATR倍数): {result.FilteredByAtrRatio:N0}");
@@ -247,14 +246,14 @@ public class StrategyDiagnosticService
         sb.AppendLine($"6. EMA位置不符(多/空方向): {result.FilteredByBaseEmaPosition:N0}");
         sb.AppendLine($"7. 不靠近任何EMA: {result.FilteredByNotNearEma:N0}");
         sb.AppendLine($"8. 无突破确认: {result.FilteredByNoBreakout:N0}");
-        
+
         sb.AppendLine("\n--- 通过各阶段的信号数 ---");
         sb.AppendLine($"Pin Bar识别: {result.PotentialPinBars:N0}");
         sb.AppendLine($"+ 在基准EMA正确一侧: {result.PinBarsAboveBaseEma + result.PinBarsBelowBaseEma:N0}");
         sb.AppendLine($"+ 靠近EMA: {result.PinBarsNearEma:N0}");
         sb.AppendLine($"+ 突破确认: {result.BreakoutConfirmations:N0}");
         sb.AppendLine($"+ 交易时段内: {result.FinalSignals:N0}");
-        
+
         sb.AppendLine("\n--- 最大瓶颈分析 ---");
         var bottlenecks = new[]
         {
@@ -265,12 +264,12 @@ public class StrategyDiagnosticService
             ("无突破确认", result.FilteredByNoBreakout),
             ("EMA位置不符", result.FilteredByBaseEmaPosition)
         };
-        
+
         foreach (var (name, count) in bottlenecks.OrderByDescending(x => x.Item2).Take(3))
         {
             sb.AppendLine($"  {name}: {count:N0}");
         }
-        
+
         sb.AppendLine("\n--- 信号转化率 ---");
         sb.AppendLine($"K线 → Pin Bar: {Percent(result.PotentialPinBars, result.CandlesWithValidEma)}");
         sb.AppendLine($"Pin Bar → 靠近EMA: {Percent(result.PinBarsNearEma, result.PotentialPinBars)}");
@@ -278,7 +277,7 @@ public class StrategyDiagnosticService
         sb.AppendLine($"突破确认 → 最终信号: {Percent(result.FinalSignals, result.BreakoutConfirmations)}");
         sb.AppendLine($"总转化率: {Percent(result.FinalSignals, result.CandlesWithValidEma)}");
         sb.AppendLine("============================================================\n");
-        
+
         return sb.ToString();
     }
 

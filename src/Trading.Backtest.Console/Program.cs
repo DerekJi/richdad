@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Trading.Backtest.Console.Services;
+﻿using Trading.Backtest.Console.Services;
 using Trading.Backtest.Services;
 using Trading.Data.Configuration;
 using Trading.Data.Infrastructure;

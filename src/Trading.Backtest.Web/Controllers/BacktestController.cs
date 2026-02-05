@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using Trading.Backtest.Services;
 using Trading.Data.Configuration;
 using Trading.Data.Models;
