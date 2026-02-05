@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Trading.AlertSystem.Mobile.ViewModels"
+             xmlns:models="clr-namespace:Trading.AlertSystem.Mobile.Models"
+             x:Class="Trading.AlertSystem.Mobile.Views.AlertHistoryPage"
+             x:DataType="vm:AlertHistoryViewModel"
+             Title="告警历史">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <Grid RowDefinitions="Auto,*">
+            <!-- 统计信息 -->
+            <Frame Grid.Row="0" Margin="10,10,10,5" Padding="10" BackgroundColor="{StaticResource Primary}">
+                <Label TextColor="White">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="共 "/>
+                            <Span Text="{Binding TotalCount}" FontAttributes="Bold"/>
+                            <Span Text=" 条记录"/>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </Frame>
+
+            <!-- 错误提示 -->
+            <Frame Grid.Row="0"
+                   Margin="10"
+                   Padding="10"
+                   BackgroundColor="#FFE0E0"
+                   IsVisible="{Binding HasError}">
+                <Label Text="{Binding ErrorMessage}" TextColor="Red"/>
+            </Frame>
+
+            <!-- 历史列表 -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Items}"
+                            Margin="10,5,10,10"
+                            RemainingItemsThreshold="5"
+                            RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AlertHistory">
+                        <Frame Margin="0,5" Padding="12" BackgroundColor="White" CornerRadius="8">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AlertHistoryViewModel}}, Path=ViewDetailCommand}"
+                                    CommandParameter="{Binding .}"/>
+                            </Frame.GestureRecognizers>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                <!-- 品种和类型 -->
+                                <HorizontalStackLayout Grid.Row="0" Grid.Column="0">
+                                    <Label Text="{Binding Symbol}"
+                                           FontSize="16"
+                                           FontAttributes="Bold"/>
+                                    <Frame Padding="4,2"
+                                           Margin="8,0,0,0"
+                                           BackgroundColor="{StaticResource Primary}"
+                                           CornerRadius="4">
+                                        <Label Text="{Binding TypeDisplay}"
+                                               TextColor="White"
+                                               FontSize="10"/>
+                                    </Frame>
+                                </HorizontalStackLayout>
+
+                                <!-- 时间 -->
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding TimeDisplay}"
+                                       TextColor="Gray"
+                                       FontSize="12"
+                                       VerticalOptions="Center"/>
+
+                                <!-- 消息 -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Text="{Binding Message}"
+                                       TextColor="Gray"
+                                       LineBreakMode="TailTruncation"
+                                       MaxLines="2"
+                                       Margin="0,8,0,0"/>
+
+                                <!-- 发送状态 -->
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                                    <Label Text="已发送"
+                                           TextColor="Green"
+                                           FontSize="12"
+                                           IsVisible="{Binding IsSent}"/>
+                                    <Label Text="未发送"
+                                           TextColor="Orange"
+                                           FontSize="12"
+                                           IsVisible="{Binding IsSent, Converter={StaticResource InvertBoolConverter}}"/>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.Footer>
+                    <ActivityIndicator IsRunning="{Binding IsLoadingMore}"
+                                       IsVisible="{Binding IsLoadingMore}"
+                                       Margin="0,10"/>
+                </CollectionView.Footer>
+
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="暂无告警历史"
+                               FontSize="16"
+                               TextColor="Gray"
+                               HorizontalOptions="Center"/>
+                    </StackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+
+            <!-- 加载指示器 -->
+            <ActivityIndicator Grid.Row="1"
+                               IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center"/>
+        </Grid>
+    </RefreshView>
+</ContentPage>

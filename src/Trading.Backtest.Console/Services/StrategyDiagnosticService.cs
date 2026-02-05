@@ -1,3 +1,4 @@
+using Trading.Core.Indicators;
 using Trading.Data.Models;
 
 namespace Trading.Backtest.Console.Services;

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Trading.AlertSystem.Mobile.ViewModels"
+             x:Class="Trading.AlertSystem.Mobile.Views.AlertDetailPage"
+             x:DataType="vm:AlertDetailViewModel"
+             Title="{Binding PageTitle}">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="保存" Command="{Binding SaveCommand}"/>
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="16" Spacing="16">
+            <!-- 加载指示器 -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center"/>
+
+            <!-- 品种 -->
+            <StackLayout>
+                <Label Text="交易品种" FontAttributes="Bold"/>
+                <Picker ItemsSource="{Binding SymbolOptions}"
+                        SelectedItem="{Binding Symbol}"/>
+            </StackLayout>
+
+            <!-- 名称 -->
+            <StackLayout>
+                <Label Text="告警名称" FontAttributes="Bold"/>
+                <Entry Placeholder="例如：金价突破2000"
+                       Text="{Binding Name}"/>
+            </StackLayout>
+
+            <!-- 类型 -->
+            <StackLayout>
+                <Label Text="告警类型" FontAttributes="Bold"/>
+                <Picker ItemsSource="{Binding TypeOptions}"
+                        SelectedIndex="{Binding SelectedTypeIndex}"/>
+            </StackLayout>
+
+            <!-- 目标价格（仅固定价格类型） -->
+            <StackLayout IsVisible="{Binding SelectedTypeIndex, Converter={StaticResource EqualToZeroConverter}}">
+                <Label Text="目标价格" FontAttributes="Bold"/>
+                <Entry Placeholder="例如：2000.00"
+                       Keyboard="Numeric"
+                       Text="{Binding TargetPrice}"/>
+            </StackLayout>
+
+            <!-- EMA周期（仅EMA类型） -->
+            <StackLayout IsVisible="{Binding SelectedTypeIndex, Converter={StaticResource EqualToOneConverter}}">
+                <Label Text="EMA周期" FontAttributes="Bold"/>
+                <Entry Placeholder="例如：20"
+                       Keyboard="Numeric"
+                       Text="{Binding EmaPeriod}"/>
+            </StackLayout>
+
+            <!-- MA周期（仅MA类型） -->
+            <StackLayout IsVisible="{Binding SelectedTypeIndex, Converter={StaticResource EqualToTwoConverter}}">
+                <Label Text="MA周期" FontAttributes="Bold"/>
+                <Entry Placeholder="例如：20"
+                       Keyboard="Numeric"
+                       Text="{Binding MaPeriod}"/>
+            </StackLayout>
+
+            <!-- 方向 -->
+            <StackLayout>
+                <Label Text="触发方向" FontAttributes="Bold"/>
+                <Picker ItemsSource="{Binding DirectionOptions}"
+                        SelectedIndex="{Binding SelectedDirectionIndex}"/>
+            </StackLayout>
+
+            <!-- 时间周期 -->
+            <StackLayout>
+                <Label Text="K线周期" FontAttributes="Bold"/>
+                <Picker ItemsSource="{Binding TimeFrameOptions}"
+                        SelectedIndex="{Binding SelectedTimeFrameIndex}"/>
+            </StackLayout>
+
+            <!-- 启用开关 -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0" Text="启用" FontAttributes="Bold" VerticalOptions="Center"/>
+                <Switch Grid.Column="1" IsToggled="{Binding Enabled}"/>
+            </Grid>
+
+            <!-- 按钮 -->
+            <StackLayout Orientation="Horizontal" HorizontalOptions="Center" Spacing="16" Margin="0,20,0,0">
+                <Button Text="取消"
+                        BackgroundColor="Gray"
+                        Command="{Binding CancelCommand}"/>
+                <Button Text="保存"
+                        Command="{Binding SaveCommand}"
+                        IsEnabled="{Binding IsSaving, Converter={StaticResource InvertBoolConverter}}"/>
+            </StackLayout>
+
+            <!-- 保存指示器 -->
+            <ActivityIndicator IsRunning="{Binding IsSaving}"
+                               IsVisible="{Binding IsSaving}"
+                               HorizontalOptions="Center"/>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

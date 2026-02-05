@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="Trading.AlertSystem.Mobile.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:Trading.AlertSystem.Mobile.Views"
+    Shell.FlyoutBehavior="Flyout"
+    Title="Trading Alert">
+
+    <Shell.FlyoutHeader>
+        <Grid HeightRequest="120" BackgroundColor="{StaticResource Primary}">
+            <Label Text="Trading Alert"
+                   TextColor="White"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <!-- 监控状态 -->
+    <FlyoutItem Title="监控状态" Icon="monitor_icon.png">
+        <ShellContent ContentTemplate="{DataTemplate views:MonitorStatusPage}" />
+    </FlyoutItem>
+
+    <!-- 告警规则 -->
+    <FlyoutItem Title="告警规则" Icon="alert_icon.png">
+        <ShellContent ContentTemplate="{DataTemplate views:AlertListPage}" />
+    </FlyoutItem>
+
+    <!-- 告警历史 -->
+    <FlyoutItem Title="告警历史" Icon="history_icon.png">
+        <ShellContent ContentTemplate="{DataTemplate views:AlertHistoryPage}" />
+    </FlyoutItem>
+
+    <!-- EMA 配置 -->
+    <FlyoutItem Title="EMA 配置" Icon="ema_icon.png">
+        <ShellContent ContentTemplate="{DataTemplate views:EmaConfigPage}" />
+    </FlyoutItem>
+
+    <!-- 设置 -->
+    <FlyoutItem Title="设置" Icon="settings_icon.png">
+        <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" />
+    </FlyoutItem>
+
+</Shell>

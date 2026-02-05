@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Trading.AlertSystem.Mobile.ViewModels"
+             xmlns:models="clr-namespace:Trading.AlertSystem.Mobile.Models"
+             x:Class="Trading.AlertSystem.Mobile.Views.MonitorStatusPage"
+             x:DataType="vm:MonitorStatusViewModel"
+             Title="监控状态">
+
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCommand}">
+        <Grid RowDefinitions="Auto,*">
+            <!-- 头部信息 -->
+            <Frame Grid.Row="0" Margin="10,10,10,5" Padding="10" BackgroundColor="{StaticResource Primary}">
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Text="{Binding LastUpdateTime}"
+                           TextColor="White"
+                           VerticalOptions="Center"/>
+                    <ActivityIndicator Grid.Column="1"
+                                       IsRunning="{Binding IsLoading}"
+                                       Color="White"
+                                       IsVisible="{Binding IsLoading}"/>
+                </Grid>
+            </Frame>
+
+            <!-- 错误提示 -->
+            <Frame Grid.Row="0"
+                   Margin="10"
+                   Padding="10"
+                   BackgroundColor="#FFE0E0"
+                   IsVisible="{Binding HasError}">
+                <Label Text="{Binding ErrorMessage}" TextColor="Red"/>
+            </Frame>
+
+            <!-- 监控列表 -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Items}"
+                            Margin="10,5,10,10">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:MonitorStatusItem">
+                        <Frame Margin="0,5" Padding="12" BackgroundColor="White" CornerRadius="8">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+                                <!-- 品种和名称 -->
+                                <HorizontalStackLayout Grid.Row="0" Grid.Column="0">
+                                    <Label Text="{Binding Symbol}"
+                                           FontSize="16"
+                                           FontAttributes="Bold"/>
+                                    <Label Text=" - " TextColor="Gray"/>
+                                    <Label Text="{Binding Name}" TextColor="Gray"/>
+                                    <Frame Padding="4,2"
+                                           Margin="8,0,0,0"
+                                           BackgroundColor="{StaticResource Primary}"
+                                           CornerRadius="4">
+                                        <Label Text="{Binding TypeDisplay}"
+                                               TextColor="White"
+                                               FontSize="10"/>
+                                    </Frame>
+                                </HorizontalStackLayout>
+
+                                <!-- 距离百分比 -->
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Text="{Binding DistanceDisplay}"
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{Binding DistanceColor}"
+                                       HorizontalOptions="End"/>
+
+                                <!-- 价格信息 -->
+                                <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,8,0,0">
+                                    <Label Text="当前: " TextColor="Gray"/>
+                                    <Label Text="{Binding CurrentPrice, StringFormat='{0:F5}'}" FontAttributes="Bold"/>
+                                    <Label Text="  目标: " TextColor="Gray"/>
+                                    <Label Text="{Binding TargetPrice, StringFormat='{0:F5}'}"/>
+                                </HorizontalStackLayout>
+
+                                <!-- 方向和周期 -->
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                                    <Label Text="{Binding Direction}" TextColor="Gray"/>
+                                    <Label Text="  |  " TextColor="LightGray"/>
+                                    <Label Text="{Binding TimeFrame}" TextColor="Gray"/>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <CollectionView.EmptyView>
+                    <StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+                        <Label Text="暂无监控规则"
+                               FontSize="16"
+                               TextColor="Gray"
+                               HorizontalOptions="Center"/>
+                        <Label Text="请先添加告警规则"
+                               FontSize="14"
+                               TextColor="LightGray"
+                               HorizontalOptions="Center"
+                               Margin="0,8,0,0"/>
+                    </StackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </Grid>
+    </RefreshView>
+</ContentPage>

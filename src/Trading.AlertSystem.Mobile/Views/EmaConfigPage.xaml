@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Trading.AlertSystem.Mobile.ViewModels"
+             x:Class="Trading.AlertSystem.Mobile.Views.EmaConfigPage"
+             x:DataType="vm:EmaConfigViewModel"
+             Title="EMA 配置">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="保存" Command="{Binding SaveCommand}"/>
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="16" Spacing="16">
+            <!-- 加载指示器 -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               HorizontalOptions="Center"/>
+
+            <!-- 错误提示 -->
+            <Frame Padding="10"
+                   BackgroundColor="#FFE0E0"
+                   IsVisible="{Binding HasError}">
+                <Label Text="{Binding ErrorMessage}" TextColor="Red"/>
+            </Frame>
+
+            <!-- 启用开关 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0">
+                        <Label Text="启用EMA监控" FontAttributes="Bold" FontSize="16"/>
+                        <Label Text="开启后将自动监控EMA穿越" TextColor="Gray" FontSize="12"/>
+                    </StackLayout>
+                    <Switch Grid.Column="1" IsToggled="{Binding Enabled}" VerticalOptions="Center"/>
+                </Grid>
+            </Frame>
+
+            <!-- 交易品种 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="交易品种" FontAttributes="Bold"/>
+                    <Label Text="多个品种用逗号分隔" TextColor="Gray" FontSize="12"/>
+                    <Entry Placeholder="XAUUSD, XAGUSD, EURUSD"
+                           Text="{Binding Symbols}"
+                           Margin="0,8,0,0"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- 时间周期 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="时间周期" FontAttributes="Bold"/>
+                    <Label Text="可选: M1, M5, M15, M30, H1, H4, D1" TextColor="Gray" FontSize="12"/>
+                    <Entry Placeholder="M5, M15, H1"
+                           Text="{Binding TimeFrames}"
+                           Margin="0,8,0,0"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- EMA周期 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="EMA周期" FontAttributes="Bold"/>
+                    <Label Text="监控的EMA周期，范围1-500" TextColor="Gray" FontSize="12"/>
+                    <Entry Placeholder="20, 60, 120"
+                           Text="{Binding EmaPeriods}"
+                           Keyboard="Numeric"
+                           Margin="0,8,0,0"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- 历史数据倍数 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="历史数据倍数" FontAttributes="Bold"/>
+                    <Label Text="用于计算EMA所需的K线倍数（1-10）" TextColor="Gray" FontSize="12"/>
+                    <Stepper Minimum="1"
+                             Maximum="10"
+                             Value="{Binding HistoryMultiplier}"
+                             Margin="0,8,0,0"/>
+                    <Label Text="{Binding HistoryMultiplier, StringFormat='当前值: {0}'}"
+                           HorizontalOptions="Center"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- 最后更新时间 -->
+            <Label Text="{Binding LastUpdated, StringFormat='最后更新: {0}'}"
+                   TextColor="Gray"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding LastUpdated, Converter={StaticResource IsNotNullOrEmptyConverter}}"/>
+
+            <!-- 保存按钮 -->
+            <Button Text="保存配置"
+                    Command="{Binding SaveCommand}"
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InvertBoolConverter}}"
+                    Margin="0,10,0,0"/>
+
+            <!-- 保存指示器 -->
+            <ActivityIndicator IsRunning="{Binding IsSaving}"
+                               IsVisible="{Binding IsSaving}"
+                               HorizontalOptions="Center"/>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

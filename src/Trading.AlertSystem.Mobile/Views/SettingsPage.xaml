@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Trading.AlertSystem.Mobile.ViewModels"
+             x:Class="Trading.AlertSystem.Mobile.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="设置">
+
+    <ScrollView>
+        <StackLayout Padding="16" Spacing="16">
+            <!-- 服务器设置 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="服务器地址" FontAttributes="Bold" FontSize="16"/>
+                    <Label Text="后端API服务器地址" TextColor="Gray" FontSize="12"/>
+                    <Entry Placeholder="http://10.0.2.2:5000"
+                           Text="{Binding ServerUrl}"
+                           Keyboard="Url"
+                           Margin="0,8,0,0"/>
+
+                    <Grid ColumnDefinitions="*,*" Margin="0,12,0,0">
+                        <Button Grid.Column="0"
+                                Text="测试连接"
+                                Command="{Binding TestConnectionCommand}"
+                                IsEnabled="{Binding IsTesting, Converter={StaticResource InvertBoolConverter}}"/>
+                        <ActivityIndicator Grid.Column="1"
+                                           IsRunning="{Binding IsTesting}"
+                                           IsVisible="{Binding IsTesting}"
+                                           HorizontalOptions="Start"
+                                           VerticalOptions="Center"/>
+                    </Grid>
+
+                    <Label Text="{Binding ConnectionStatus}"
+                           TextColor="{Binding ConnectionStatusColor}"
+                           HorizontalOptions="Center"
+                           Margin="0,8,0,0"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- 自动刷新设置 -->
+            <Frame Padding="12" BackgroundColor="White" CornerRadius="8">
+                <StackLayout>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackLayout Grid.Column="0">
+                            <Label Text="自动刷新" FontAttributes="Bold" FontSize="16"/>
+                            <Label Text="监控状态页面自动刷新" TextColor="Gray" FontSize="12"/>
+                        </StackLayout>
+                        <Switch Grid.Column="1" IsToggled="{Binding AutoRefresh}" VerticalOptions="Center"/>
+                    </Grid>
+
+                    <StackLayout Margin="0,12,0,0" IsVisible="{Binding AutoRefresh}">
+                        <Label Text="刷新间隔（秒）" FontAttributes="Bold"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Slider Grid.Column="0"
+                                    Minimum="10"
+                                    Maximum="120"
+                                    Value="{Binding RefreshIntervalSeconds}"/>
+                            <Label Grid.Column="1"
+                                   Text="{Binding RefreshIntervalSeconds, StringFormat='{0}s'}"
+                                   WidthRequest="50"
+                                   VerticalOptions="Center"/>
+                        </Grid>
+                    </StackLayout>
+                </StackLayout>
+            </Frame>
+
+            <!-- 说明 -->
+            <Frame Padding="12" BackgroundColor="#F5F5F5" CornerRadius="8">
+                <StackLayout>
+                    <Label Text="连接说明" FontAttributes="Bold"/>
+                    <Label Text="• 模拟器访问本机: http://10.0.2.2:5000" TextColor="Gray" FontSize="12"/>
+                    <Label Text="• 真机本地网络: http://192.168.x.x:5000" TextColor="Gray" FontSize="12"/>
+                    <Label Text="• 公网服务器: https://your-server.com" TextColor="Gray" FontSize="12"/>
+                </StackLayout>
+            </Frame>
+
+            <!-- 按钮 -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                <Button Grid.Column="0"
+                        Text="重置默认"
+                        BackgroundColor="Gray"
+                        Command="{Binding ResetCommand}"/>
+                <Button Grid.Column="1"
+                        Text="保存设置"
+                        Command="{Binding SaveCommand}"/>
+            </Grid>
+
+            <!-- 版本信息 -->
+            <Label Text="Trading Alert v1.0"
+                   TextColor="LightGray"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0"/>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>
