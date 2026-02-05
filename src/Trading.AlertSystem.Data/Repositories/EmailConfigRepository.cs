@@ -30,14 +30,14 @@ public class EmailConfigRepository : IEmailConfigRepository
                 new PartitionKey(ConfigId)
             );
             var config = response.Resource;
-            
+
             // 确保 SmtpServer 有有效值（可能从旧版本迁移时为空）
             if (string.IsNullOrWhiteSpace(config.SmtpServer))
             {
                 config.SmtpServer = "smtp-mail.outlook.com";
                 _logger.LogWarning("SMTP服务器地址为空，已使用默认值: {SmtpServer}", config.SmtpServer);
             }
-            
+
             return config;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

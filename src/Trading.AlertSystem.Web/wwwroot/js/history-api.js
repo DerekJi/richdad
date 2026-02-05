@@ -20,7 +20,7 @@ const HistoryAPI = {
             params.append('endTime', filters.endTime);
         }
 
-        const response = await fetch(`${API_BASE_URL}/alerthistory?${params}`);
+        const response = await fetch(`${API_BASE}/alerthistory?${params}`);
         if (!response.ok) {
             throw new Error('获取告警历史失败');
         }
@@ -29,7 +29,7 @@ const HistoryAPI = {
 
     // 获取最近的告警历史
     async getRecent(count = 100) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/recent?count=${count}`);
+        const response = await fetch(`${API_BASE}/alerthistory/recent?count=${count}`);
         if (!response.ok) {
             throw new Error('获取最近告警历史失败');
         }
@@ -38,7 +38,7 @@ const HistoryAPI = {
 
     // 根据ID获取单个告警历史
     async getById(id) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/${id}`);
+        const response = await fetch(`${API_BASE}/alerthistory/${id}`);
         if (!response.ok) {
             throw new Error('获取告警历史详情失败');
         }
@@ -47,7 +47,7 @@ const HistoryAPI = {
 
     // 根据品种获取告警历史
     async getBySymbol(symbol, limit = 100) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/symbol/${symbol}?limit=${limit}`);
+        const response = await fetch(`${API_BASE}/alerthistory/symbol/${symbol}?limit=${limit}`);
         if (!response.ok) {
             throw new Error('获取品种告警历史失败');
         }
@@ -56,7 +56,7 @@ const HistoryAPI = {
 
     // 根据类型获取告警历史
     async getByType(type, limit = 100) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/type/${type}?limit=${limit}`);
+        const response = await fetch(`${API_BASE}/alerthistory/type/${type}?limit=${limit}`);
         if (!response.ok) {
             throw new Error('获取类型告警历史失败');
         }
@@ -65,7 +65,7 @@ const HistoryAPI = {
 
     // 获取统计信息
     async getStats(days = 7) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/stats?days=${days}`);
+        const response = await fetch(`${API_BASE}/alerthistory/stats?days=${days}`);
         if (!response.ok) {
             throw new Error('获取统计信息失败');
         }
@@ -74,7 +74,7 @@ const HistoryAPI = {
 
     // 清理旧记录
     async cleanupOldRecords(daysToKeep = 30) {
-        const response = await fetch(`${API_BASE_URL}/alerthistory/cleanup?daysToKeep=${daysToKeep}`, {
+        const response = await fetch(`${API_BASE}/alerthistory/cleanup?daysToKeep=${daysToKeep}`, {
             method: 'DELETE'
         });
         if (!response.ok) {

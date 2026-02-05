@@ -52,11 +52,11 @@ if (!string.IsNullOrEmpty(connectionString))
 
     builder.Services.AddSingleton(cosmosSettings);
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
-    builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
-    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
-    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
-    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository, Trading.AlertSystem.Data.Repositories.DataSourceConfigRepository>();
-    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository, Trading.AlertSystem.Data.Repositories.EmailConfigRepository>();
+    builder.Services.AddSingleton<IPriceAlertRepository, PriceAlertRepository>();
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository, Trading.AlertSystem.Data.Repositories.DataSourceConfigRepository>();
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository, Trading.AlertSystem.Data.Repositories.EmailConfigRepository>();
 
     // 注册一个延迟初始化的DataSourceSettings
     // 它会在第一次使用时从数据库加载
