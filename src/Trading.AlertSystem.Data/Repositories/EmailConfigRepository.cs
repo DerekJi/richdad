@@ -29,7 +29,16 @@ public class EmailConfigRepository : IEmailConfigRepository
                 ConfigId,
                 new PartitionKey(ConfigId)
             );
-            return response.Resource;
+            var config = response.Resource;
+            
+            // 确保 SmtpServer 有有效值（可能从旧版本迁移时为空）
+            if (string.IsNullOrWhiteSpace(config.SmtpServer))
+            {
+                config.SmtpServer = "smtp-mail.outlook.com";
+                _logger.LogWarning("SMTP服务器地址为空，已使用默认值: {SmtpServer}", config.SmtpServer);
+            }
+            
+            return config;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
@@ -41,7 +50,6 @@ public class EmailConfigRepository : IEmailConfigRepository
     public async Task<EmailConfig> SaveConfigAsync(EmailConfig config)
     {
         config.Id = ConfigId;
-        config.PartitionKey = ConfigId;
         config.LastUpdated = DateTime.UtcNow;
 
         var container = _context.GetEmailConfigContainer();
@@ -72,7 +80,6 @@ public class EmailConfigRepository : IEmailConfigRepository
         var defaultConfig = new EmailConfig
         {
             Id = ConfigId,
-            PartitionKey = ConfigId,
             Enabled = false,
             SmtpServer = "smtp-mail.outlook.com",
             SmtpPort = 587,

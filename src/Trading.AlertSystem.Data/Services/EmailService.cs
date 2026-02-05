@@ -27,6 +27,12 @@ public class EmailService : IEmailService
             return false;
         }
 
+        if (string.IsNullOrWhiteSpace(_settings.SmtpServer))
+        {
+            _logger.LogError("SMTP服务器地址未配置");
+            return false;
+        }
+
         var recipients = toEmails ?? _settings.ToEmails;
         if (recipients.Count == 0)
         {
@@ -36,6 +42,7 @@ public class EmailService : IEmailService
 
         try
         {
+            _logger.LogDebug("正在连接SMTP服务器: {SmtpServer}:{SmtpPort}", _settings.SmtpServer, _settings.SmtpPort);
             using var smtpClient = CreateSmtpClient();
             using var mailMessage = new MailMessage
             {
@@ -56,7 +63,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "发送邮件失败");
+            _logger.LogError(ex, "发送邮件失败，SMTP服务器: {SmtpServer}:{SmtpPort}", _settings.SmtpServer, _settings.SmtpPort);
             return false;
         }
     }

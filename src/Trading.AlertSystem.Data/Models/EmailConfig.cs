@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace Trading.AlertSystem.Data.Models;
 
 /// <summary>
@@ -8,12 +11,9 @@ public class EmailConfig
     /// <summary>
     /// 配置ID（固定为"email-config"）
     /// </summary>
+    [JsonPropertyName("id")]  // For System.Text.Json
+    [JsonProperty("id")]      // For Newtonsoft.Json (CosmosDB)
     public string Id { get; set; } = "email-config";
-
-    /// <summary>
-    /// 分区键
-    /// </summary>
-    public string PartitionKey { get; set; } = "email-config";
 
     /// <summary>
     /// 是否启用邮件通知
