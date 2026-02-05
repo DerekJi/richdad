@@ -380,7 +380,193 @@ async function loadConfigStatus() {
 document.addEventListener('DOMContentLoaded', () => {
     loadConfigStatus();
     loadStats();
+    loadSmtpPresets();
 
     // 每30秒自动刷新统计数据
     setInterval(loadStats, 30000);
 });
+
+// ========== 邮件配置功能 ==========
+
+// 打开邮件配置弹窗
+async function openEmailConfig() {
+    try {
+        const response = await fetch('/api/emailconfig');
+        if (response.ok) {
+            const config = await response.json();
+
+            document.getElementById('emailEnabled').checked = config.enabled;
+            document.getElementById('smtpServer').value = config.smtpServer;
+            document.getElementById('smtpPort').value = config.smtpPort;
+            document.getElementById('useSsl').checked = config.useSsl;
+            document.getElementById('fromEmail').value = config.fromEmail;
+            document.getElementById('fromName').value = config.fromName;
+            document.getElementById('username').value = config.username;
+            document.getElementById('password').value = ''; // 不显示密码
+            document.getElementById('toEmails').value = config.toEmails.join('\n');
+            document.getElementById('onlyOnTelegramFailure').checked = config.onlyOnTelegramFailure;
+        }
+    } catch (error) {
+        console.error('加载邮件配置失败:', error);
+    }
+
+    document.getElementById('emailConfigModal').style.display = 'block';
+}
+
+// 关闭邮件配置弹窗
+function closeEmailConfig() {
+    document.getElementById('emailConfigModal').style.display = 'none';
+}
+
+// 加载SMTP预设
+async function loadSmtpPresets() {
+    try {
+        const response = await fetch('/api/emailconfig/presets');
+        if (response.ok) {
+            const presets = await response.json();
+            const select = document.getElementById('smtpPreset');
+
+            presets.forEach(preset => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(preset);
+                option.textContent = preset.name;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('加载SMTP预设失败:', error);
+    }
+}
+
+// 应用SMTP预设
+function applySmtpPreset() {
+    const select = document.getElementById('smtpPreset');
+    const value = select.value;
+
+    if (value) {
+        const preset = JSON.parse(value);
+        document.getElementById('smtpServer').value = preset.server;
+        document.getElementById('smtpPort').value = preset.port;
+        document.getElementById('useSsl').checked = preset.useSsl;
+    }
+}
+
+// 保存邮件配置
+async function saveEmailConfig(event) {
+    event.preventDefault();
+
+    const button = event.target.querySelector('button[type="submit"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = '保存中...';
+
+    const toEmailsText = document.getElementById('toEmails').value;
+    const toEmails = toEmailsText.split('\n')
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
+
+    const password = document.getElementById('password').value;
+
+    const config = {
+        enabled: document.getElementById('emailEnabled').checked,
+        smtpServer: document.getElementById('smtpServer').value,
+        smtpPort: parseInt(document.getElementById('smtpPort').value),
+        useSsl: document.getElementById('useSsl').checked,
+        fromEmail: document.getElementById('fromEmail').value,
+        fromName: document.getElementById('fromName').value,
+        username: document.getElementById('username').value,
+        password: password || '********', // 如果没填密码，发送掩码保持原密码
+        toEmails: toEmails,
+        onlyOnTelegramFailure: document.getElementById('onlyOnTelegramFailure').checked
+    };
+
+    try {
+        const response = await fetch('/api/emailconfig', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(config)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showModalResult('emailConfigResult', '✅ 邮件配置已保存！\n\n⚠️ 建议重启应用以应用新配置。', 'success');
+        } else {
+            showModalResult('emailConfigResult', `❌ 保存失败: ${result.error || result.details}`, 'error');
+        }
+    } catch (error) {
+        showModalResult('emailConfigResult', `❌ 保存失败: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+// 测试邮件连接
+async function testEmailConnection() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = '测试中...';
+
+    try {
+        // 先保存配置
+        await saveEmailConfigSilently();
+
+        // 然后测试
+        const response = await fetch('/api/emailconfig/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showModalResult('emailConfigResult', `✅ ${result.message}`, 'success');
+        } else {
+            showModalResult('emailConfigResult', `❌ 测试失败: ${result.error || result.details}`, 'error');
+        }
+    } catch (error) {
+        showModalResult('emailConfigResult', `❌ 测试失败: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = '测试连接';
+    }
+}
+
+// 静默保存配置（不显示结果）
+async function saveEmailConfigSilently() {
+    const toEmailsText = document.getElementById('toEmails').value;
+    const toEmails = toEmailsText.split('\n')
+        .map(e => e.trim())
+        .filter(e => e.length > 0);
+
+    const password = document.getElementById('password').value;
+
+    const config = {
+        enabled: document.getElementById('emailEnabled').checked,
+        smtpServer: document.getElementById('smtpServer').value,
+        smtpPort: parseInt(document.getElementById('smtpPort').value),
+        useSsl: document.getElementById('useSsl').checked,
+        fromEmail: document.getElementById('fromEmail').value,
+        fromName: document.getElementById('fromName').value,
+        username: document.getElementById('username').value,
+        password: password || '********',
+        toEmails: toEmails,
+        onlyOnTelegramFailure: document.getElementById('onlyOnTelegramFailure').checked
+    };
+
+    await fetch('/api/emailconfig', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(config)
+    });
+}
+
+// 显示弹窗内的结果消息
+function showModalResult(elementId, message, type = 'info') {
+    const element = document.getElementById(elementId);
+    element.className = `result-box ${type}`;
+    element.textContent = message;
+    element.style.display = 'block';
+}

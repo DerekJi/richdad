@@ -34,4 +34,9 @@ public class CosmosDbSettings
     /// 数据源配置容器名称
     /// </summary>
     public string DataSourceConfigContainerName { get; set; } = "DataSourceConfig";
+
+    /// <summary>
+    /// 邮件配置容器名称
+    /// </summary>
+    public string EmailConfigContainerName { get; set; } = "EmailConfig";
 }

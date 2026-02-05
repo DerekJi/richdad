@@ -24,6 +24,9 @@ builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<OandaSettings
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("Telegram"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TelegramSettings>>().Value);
 
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("Email"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<EmailSettings>>().Value);
+
 builder.Services.Configure<MonitoringSettings>(builder.Configuration.GetSection("Monitoring"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<MonitoringSettings>>().Value);
 
@@ -43,7 +46,8 @@ if (!string.IsNullOrEmpty(connectionString))
         AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts",
         AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory",
         EmaConfigContainerName = cosmosConfig["EmaConfigContainerName"] ?? "EmaConfig",
-        DataSourceConfigContainerName = cosmosConfig["DataSourceConfigContainerName"] ?? "DataSourceConfig"
+        DataSourceConfigContainerName = cosmosConfig["DataSourceConfigContainerName"] ?? "DataSourceConfig",
+        EmailConfigContainerName = cosmosConfig["EmailConfigContainerName"] ?? "EmailConfig"
     };
 
     builder.Services.AddSingleton(cosmosSettings);
@@ -52,6 +56,7 @@ if (!string.IsNullOrEmpty(connectionString))
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository, Trading.AlertSystem.Data.Repositories.DataSourceConfigRepository>();
+    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository, Trading.AlertSystem.Data.Repositories.EmailConfigRepository>();
 
     // 注册一个延迟初始化的DataSourceSettings
     // 它会在第一次使用时从数据库加载
@@ -66,6 +71,30 @@ if (!string.IsNullOrEmpty(connectionString))
         var dataSourceConfig = dataSourceRepo.GetConfigAsync().GetAwaiter().GetResult();
 
         return new DataSourceSettings { Provider = dataSourceConfig.Provider };
+    });
+
+    // 从数据库加载邮件配置
+    builder.Services.AddSingleton<EmailSettings>(serviceProvider =>
+    {
+        var dbContext = serviceProvider.GetRequiredService<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
+        var emailRepo = serviceProvider.GetRequiredService<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository>();
+
+        dbContext.InitializeAsync().GetAwaiter().GetResult();
+        var emailConfig = emailRepo.GetConfigAsync().GetAwaiter().GetResult();
+
+        return new EmailSettings
+        {
+            Enabled = emailConfig.Enabled,
+            SmtpServer = emailConfig.SmtpServer,
+            SmtpPort = emailConfig.SmtpPort,
+            UseSsl = emailConfig.UseSsl,
+            FromEmail = emailConfig.FromEmail,
+            FromName = emailConfig.FromName,
+            Username = emailConfig.Username,
+            Password = emailConfig.Password,
+            ToEmails = emailConfig.ToEmails,
+            OnlyOnTelegramFailure = emailConfig.OnlyOnTelegramFailure
+        };
     });
 }
 else
@@ -97,7 +126,24 @@ if (!string.IsNullOrEmpty(oandaConfig["ApiKey"]) && !string.IsNullOrEmpty(oandaC
 }
 
 // 注册统一的市场数据服务（根据配置自动路由）
+// 注册统一的市场数据服务（根据配置自动路由）
+// 注册统一的市场数据服务（根据配置自动路由）
 builder.Services.AddSingleton<IMarketDataService, MarketDataService>();
+
+// 注册邮件服务（如果有EmailSettings配置）
+if (builder.Services.Any(x => x.ServiceType == typeof(EmailSettings)))
+{
+    builder.Services.AddSingleton<IEmailService, EmailService>();
+}
+else
+{
+    // 如果没有CosmosDB，从appsettings加载
+    var emailConfig = builder.Configuration.GetSection("Email");
+    if (!string.IsNullOrEmpty(emailConfig["SmtpServer"]) && !string.IsNullOrEmpty(emailConfig["FromEmail"]))
+    {
+        builder.Services.AddSingleton<IEmailService, EmailService>();
+    }
+}
 
 var telegramConfig = builder.Configuration.GetSection("Telegram");
 if (!string.IsNullOrEmpty(telegramConfig["BotToken"]))
@@ -168,6 +214,13 @@ if (cosmosDbContext != null)
             emaSettings.TimeFrames,
             emaSettings.EmaPeriods,
             emaSettings.HistoryMultiplier);
+    }
+
+    // 初始化邮件配置（如果数据库中不存在）
+    var emailConfigRepo = app.Services.GetService<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository>();
+    if (emailConfigRepo != null)
+    {
+        await emailConfigRepo.InitializeDefaultConfigAsync();
     }
 }
 
