@@ -1,5 +1,66 @@
 // 管理页面功能
 
+// 页面加载时获取当前数据源
+document.addEventListener('DOMContentLoaded', async () => {
+    await loadCurrentDataSource();
+});
+
+// 加载当前数据源
+async function loadCurrentDataSource() {
+    try {
+        const response = await fetch('/api/datasource');
+        if (response.ok) {
+            const result = await response.json();
+            document.getElementById('currentProvider').textContent = result.provider;
+            document.getElementById('dataSourceSelect').value = result.provider;
+        }
+    } catch (error) {
+        document.getElementById('currentProvider').textContent = '加载失败';
+        console.error('加载数据源失败:', error);
+    }
+}
+
+// 切换数据源
+async function switchDataSource() {
+    const button = event.target;
+    const select = document.getElementById('dataSourceSelect');
+    const provider = select.value;
+
+    button.disabled = true;
+    button.textContent = '切换中...';
+
+    try {
+        const response = await fetch('/api/datasource', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider: provider })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showResult('dataSourceResult', 
+                `✅ ${result.message}\n\n⚠️ ${result.note}\n\n🔄 页面将在3秒后重新加载...`, 
+                'success');
+            
+            // 更新显示
+            document.getElementById('currentProvider').textContent = provider;
+            
+            // 3秒后重新加载页面
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else {
+            showResult('dataSourceResult', `❌ ${result.message}`, 'error');
+        }
+    } catch (error) {
+        showResult('dataSourceResult', `❌ 请求失败: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = '切换并重启';
+    }
+}
+
 // 显示结果
 function showResult(elementId, message, type = 'info') {
     const resultBox = document.getElementById(elementId);

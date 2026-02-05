@@ -14,6 +14,7 @@ public class SystemController : ControllerBase
     private readonly IPriceMonitorService _monitorService;
     private readonly ITradeLockerService _tradeLockerService;
     private readonly IOandaService? _oandaService;
+    private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
     private readonly IChartService _chartService;
     private readonly ILogger<SystemController> _logger;
@@ -21,6 +22,7 @@ public class SystemController : ControllerBase
     public SystemController(
         IPriceMonitorService monitorService,
         ITradeLockerService tradeLockerService,
+        IMarketDataService marketDataService,
         ITelegramService telegramService,
         IChartService chartService,
         ILogger<SystemController> logger,
@@ -29,6 +31,7 @@ public class SystemController : ControllerBase
         _monitorService = monitorService;
         _tradeLockerService = tradeLockerService;
         _oandaService = oandaService;
+        _marketDataService = marketDataService;
         _telegramService = telegramService;
         _chartService = chartService;
         _logger = logger;

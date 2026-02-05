@@ -23,6 +23,27 @@
         </header>
 
         <div class="content">
+            <!-- 数据源配置 -->
+            <div class="management-section">
+                <h2 class="section-title">🔌 数据源配置</h2>
+                <div class="management-grid">
+                    <div class="management-card">
+                        <div class="card-icon">📊</div>
+                        <h3>当前数据源</h3>
+                        <p id="currentProvider" style="font-size: 1.2em; font-weight: bold; color: #2563eb; margin: 10px 0;">加载中...</p>
+                        <div style="margin-top: 15px;">
+                            <label for="dataSourceSelect" style="display: block; margin-bottom: 8px; font-weight: 500;">切换数据源：</label>
+                            <select id="dataSourceSelect" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px;">
+                                <option value="TradeLocker">TradeLocker</option>
+                                <option value="Oanda">OANDA</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="switchDataSource()">切换并重启</button>
+                        </div>
+                        <div id="dataSourceResult" class="result-box"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 配置状态 -->
             <div class="management-section">
                 <h2 class="section-title">⚙️ 配置状态</h2>

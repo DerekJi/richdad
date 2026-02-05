@@ -12,6 +12,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddUserSecrets<Program>(optional: true);
 
 // 配置设置
+builder.Services.Configure<DataSourceSettings>(builder.Configuration.GetSection("DataSource"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<DataSourceSettings>>().Value);
+
 builder.Services.Configure<TradeLockerSettings>(builder.Configuration.GetSection("TradeLocker"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TradeLockerSettings>>().Value);
 
@@ -72,6 +75,9 @@ if (!string.IsNullOrEmpty(oandaConfig["ApiKey"]) && !string.IsNullOrEmpty(oandaC
 {
     builder.Services.AddHttpClient<IOandaService, OandaService>();
 }
+
+// 注册统一的市场数据服务（根据配置自动路由）
+builder.Services.AddSingleton<IMarketDataService, MarketDataService>();
 
 var telegramConfig = builder.Configuration.GetSection("Telegram");
 if (!string.IsNullOrEmpty(telegramConfig["BotToken"]))

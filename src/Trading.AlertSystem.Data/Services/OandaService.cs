@@ -25,11 +25,11 @@ public class OandaService : IOandaService
         _settings = settings;
         _logger = logger;
         _httpClient.BaseAddress = new Uri(_settings.ApiBaseUrl);
-        
+
         // OANDA使用Bearer Token认证
         if (!string.IsNullOrEmpty(_settings.ApiKey))
         {
-            _httpClient.DefaultRequestHeaders.Authorization = 
+            _httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
         }
     }
@@ -50,7 +50,7 @@ public class OandaService : IOandaService
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("连接OANDA失败: {StatusCode} - {Content}", 
+                _logger.LogError("连接OANDA失败: {StatusCode} - {Content}",
                     response.StatusCode, errorContent);
                 return false;
             }
@@ -86,7 +86,7 @@ public class OandaService : IOandaService
 
             var result = JsonSerializer.Deserialize<JsonElement>(content);
             var prices = result.GetProperty("prices");
-            
+
             if (prices.GetArrayLength() == 0)
             {
                 _logger.LogWarning("未找到{Symbol}的价格数据", symbol);
@@ -130,7 +130,7 @@ public class OandaService : IOandaService
             var granularity = ConvertToOandaGranularity(timeFrame);
 
             var url = $"/v3/instruments/{oandaSymbol}/candles?count={count}&granularity={granularity}&price=M";
-            
+
             _logger.LogDebug("请求OANDA历史数据: {Url}", url);
 
             var response = await _httpClient.GetAsync(url);
@@ -138,13 +138,13 @@ public class OandaService : IOandaService
             if (!response.IsSuccessStatusCode)
             {
                 var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogWarning("获取{Symbol} {TimeFrame}历史数据失败: {StatusCode} - {Error}", 
+                _logger.LogWarning("获取{Symbol} {TimeFrame}历史数据失败: {StatusCode} - {Error}",
                     symbol, timeFrame, response.StatusCode, errorContent);
                 return new List<Candle>();
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            _logger.LogDebug("OANDA历史数据API返回: {Content}", 
+            _logger.LogDebug("OANDA历史数据API返回: {Content}",
                 content.Length > 500 ? content.Substring(0, 500) + "..." : content);
 
             var result = JsonSerializer.Deserialize<JsonElement>(content);
@@ -173,7 +173,7 @@ public class OandaService : IOandaService
                 });
             }
 
-            _logger.LogInformation("成功获取{Symbol} {TimeFrame}历史数据: {Count}根K线", 
+            _logger.LogInformation("成功获取{Symbol} {TimeFrame}历史数据: {Count}根K线",
                 symbol, timeFrame, candles.Count);
 
             return candles;
@@ -234,7 +234,7 @@ public class OandaService : IOandaService
             return "XAU_USD";
         if (symbol.StartsWith("XAG"))
             return "XAG_USD";
-        
+
         // 处理外汇对 (假设都是6位)
         if (symbol.Length == 6)
         {
