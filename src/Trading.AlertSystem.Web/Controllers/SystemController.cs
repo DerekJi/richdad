@@ -13,6 +13,7 @@ public class SystemController : ControllerBase
 {
     private readonly IPriceMonitorService _monitorService;
     private readonly ITradeLockerService _tradeLockerService;
+    private readonly IOandaService? _oandaService;
     private readonly ITelegramService _telegramService;
     private readonly IChartService _chartService;
     private readonly ILogger<SystemController> _logger;
@@ -22,10 +23,12 @@ public class SystemController : ControllerBase
         ITradeLockerService tradeLockerService,
         ITelegramService telegramService,
         IChartService chartService,
-        ILogger<SystemController> logger)
+        ILogger<SystemController> logger,
+        IOandaService? oandaService = null)
     {
         _monitorService = monitorService;
         _tradeLockerService = tradeLockerService;
+        _oandaService = oandaService;
         _telegramService = telegramService;
         _chartService = chartService;
         _logger = logger;
@@ -81,6 +84,56 @@ public class SystemController : ControllerBase
         }
 
         return BadRequest(new { success = false, message = "Telegram连接失败" });
+    }
+
+    /// <summary>
+    /// 测试OANDA连接
+    /// </summary>
+    [HttpPost("test-oanda")]
+    public async Task<ActionResult> TestOanda()
+    {
+        if (_oandaService == null)
+        {
+            return BadRequest(new { success = false, message = "OANDA服务未配置" });
+        }
+
+        var connected = await _oandaService.ConnectAsync();
+        if (!connected)
+        {
+            return BadRequest(new { success = false, message = "OANDA连接失败" });
+        }
+
+        // 获取账户信息
+        var accountInfo = await _oandaService.GetAccountInfoAsync();
+        if (accountInfo == null)
+        {
+            return Ok(new { success = true, message = "OANDA连接成功，但无法获取账户信息" });
+        }
+
+        // 测试获取价格
+        var price = await _oandaService.GetSymbolPriceAsync("EURUSD");
+        
+        return Ok(new
+        {
+            success = true,
+            message = "OANDA连接成功",
+            accountInfo = new
+            {
+                accountInfo.AccountId,
+                accountInfo.AccountName,
+                accountInfo.Balance,
+                accountInfo.Currency,
+                accountInfo.Equity,
+                accountInfo.Margin,
+                accountInfo.FreeMargin
+            },
+            testPrice = price != null ? new
+            {
+                price.Symbol,
+                price.Bid,
+                price.Ask
+            } : null
+        });
     }
 
     /// <summary>

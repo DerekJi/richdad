@@ -15,6 +15,9 @@ builder.Configuration.AddUserSecrets<Program>(optional: true);
 builder.Services.Configure<TradeLockerSettings>(builder.Configuration.GetSection("TradeLocker"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TradeLockerSettings>>().Value);
 
+builder.Services.Configure<OandaSettings>(builder.Configuration.GetSection("Oanda"));
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<OandaSettings>>().Value);
+
 builder.Services.Configure<TelegramSettings>(builder.Configuration.GetSection("Telegram"));
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<TelegramSettings>>().Value);
 
@@ -61,6 +64,13 @@ if (!string.IsNullOrEmpty(tradeLockerConfig["Email"]) && !string.IsNullOrEmpty(t
 else
 {
     builder.Services.AddSingleton<ITradeLockerService, DemoTradeLockerService>();
+}
+
+// 注册OANDA服务
+var oandaConfig = builder.Configuration.GetSection("Oanda");
+if (!string.IsNullOrEmpty(oandaConfig["ApiKey"]) && !string.IsNullOrEmpty(oandaConfig["AccountId"]))
+{
+    builder.Services.AddHttpClient<IOandaService, OandaService>();
 }
 
 var telegramConfig = builder.Configuration.GetSection("Telegram");

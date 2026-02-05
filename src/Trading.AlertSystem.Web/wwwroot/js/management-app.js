@@ -75,6 +75,47 @@ async function testTradeLocker() {
     }
 }
 
+// 测试 OANDA
+async function testOanda() {
+    const button = event.target;
+    button.disabled = true;
+    button.textContent = '测试中...';
+
+    try {
+        const response = await fetch('/api/system/test-oanda', {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            let details = '';
+            if (result.accountInfo) {
+                details = `\n\n账户信息：\n` +
+                    `• 账户ID: ${result.accountInfo.accountId}\n` +
+                    `• 账户名: ${result.accountInfo.accountName}\n` +
+                    `• 余额: ${result.accountInfo.balance} ${result.accountInfo.currency}\n` +
+                    `• 净值: ${result.accountInfo.equity}\n` +
+                    `• 已用保证金: ${result.accountInfo.margin}\n` +
+                    `• 可用保证金: ${result.accountInfo.freeMargin}`;
+            }
+            if (result.testPrice) {
+                details += `\n\n测试价格 (${result.testPrice.symbol})：\n` +
+                    `• Bid: ${result.testPrice.bid}\n` +
+                    `• Ask: ${result.testPrice.ask}`;
+            }
+            showResult('oandaResult', `✅ ${result.message}${details}`, 'success');
+        } else {
+            showResult('oandaResult', `❌ ${result.message}\n\n💡 请确保已配置OANDA API密钥和账户ID`, 'error');
+        }
+    } catch (error) {
+        showResult('oandaResult', `❌ 请求失败: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = '测试 OANDA';
+    }
+}
+
 // 测试 K线图
 async function testChart() {
     const button = event.target;
