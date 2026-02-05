@@ -1,0 +1,42 @@
+using Trading.AlertSystem.Service.Services;
+using Trading.AlertSystem.Web.Services;
+
+namespace Trading.AlertSystem.Web.Configuration;
+
+/// <summary>
+/// 业务服务和后台服务配置扩展方法
+/// </summary>
+public static class BusinessServiceConfiguration
+{
+    /// <summary>
+    /// 注册业务服务
+    /// </summary>
+    public static IServiceCollection AddBusinessServices(this IServiceCollection services)
+    {
+        services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
+        services.AddSingleton<IChartService, ChartService>();
+        services.AddSingleton<IEmaMonitoringService, EmaMonitoringService>();
+        services.AddSingleton<IStreamingPriceMonitorService, StreamingPriceMonitorService>();
+        services.AddSingleton<IPriceCacheService, PriceCacheService>();
+        services.AddSingleton<PinBarMonitoringService>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// 注册后台服务
+    /// </summary>
+    public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
+    {
+        // 使用 Streaming 版本替代轮询版本
+        services.AddHostedService<StreamingPriceMonitorHostedService>();
+
+        // EMA 监测后台服务
+        services.AddHostedService<EmaMonitoringHostedService>();
+
+        // PinBar 监控后台服务
+        services.AddHostedService<PinBarMonitoringService>();
+
+        return services;
+    }
+}

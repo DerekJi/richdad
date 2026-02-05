@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PinBar策略配置 - 交易告警系统</title>
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/pinbar-config.css?v=2">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📊 PinBar策略配置</h1>
+            <p>配置PinBar策略监测参数，实时捕捉反转信号</p>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab">价格监控</a>
+                <a href="ema-config.html" class="nav-tab">EMA监控</a>
+                <a href="pinbar-config.html" class="nav-tab active">PinBar策略</a>
+                <a href="monitor-status.html" class="nav-tab">监控状态</a>
+                <a href="history.html" class="nav-tab">触发记录</a>
+                <a href="management.html" class="nav-tab">系统管理</a>
+            </nav>
+        </header>
+
+        <div class="content">
+            <div class="config-section">
+                <div class="section-header">
+                    <h2>启用状态</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="enabledSwitch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="help-text">启用后将自动监测PinBar开仓条件并发送Telegram通知</p>
+            </div>
+
+            <div class="config-section">
+                <h2>监测品种</h2>
+                <div class="tag-input-container">
+                    <div id="symbolsTags" class="tags"></div>
+                    <input type="text" id="symbolInput" placeholder="输入品种代码，按回车添加..." class="tag-input">
+                </div>
+                <p class="help-text">示例: XAUUSD, XAGUSD</p>
+            </div>
+
+            <div class="config-section">
+                <h2>K线周期</h2>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="M5" class="timeframe-check"> M5 (5分钟)</label>
+                    <label><input type="checkbox" value="M15" class="timeframe-check"> M15 (15分钟)</label>
+                    <label><input type="checkbox" value="M30" class="timeframe-check"> M30 (30分钟)</label>
+                    <label><input type="checkbox" value="H1" class="timeframe-check"> H1 (1小时)</label>
+                    <label><input type="checkbox" value="H4" class="timeframe-check"> H4 (4小时)</label>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>EMA设置</h2>
+                <div class="tag-input-container">
+                    <div id="emaPeriodsTags" class="tags"></div>
+                    <input type="number" id="emaPeriodInput" placeholder="输入EMA周期，按回车添加..." class="tag-input" min="1" max="500">
+                </div>
+                <p class="help-text">示例: 20, 60, 120, 200</p>
+            </div>
+
+            <div class="config-section">
+                <h2>📊 PinBar形态参数</h2>
+
+                <div class="param-group">
+                    <label>影线占比最小值</label>
+                    <div class="input-group">
+                        <input type="number" id="minWickRatio" class="form-control" min="0" max="1" step="0.01" value="0.6">
+                        <span class="input-suffix">%</span>
+                    </div>
+                    <p class="help-text">影线长度占整个K线的最小比例 (0-1)</p>
+                </div>
+
+                <div class="param-group">
+                    <label>实体占比最大值</label>
+                    <div class="input-group">
+                        <input type="number" id="maxBodyRatio" class="form-control" min="0" max="1" step="0.01" value="0.3">
+                        <span class="input-suffix">%</span>
+                    </div>
+                    <p class="help-text">实体大小占整个K线的最大比例 (0-1)</p>
+                </div>
+
+                <div class="param-group">
+                    <label>反向影线占比最大值</label>
+                    <div class="input-group">
+                        <input type="number" id="maxOppositeWickRatio" class="form-control" min="0" max="1" step="0.01" value="0.3">
+                        <span class="input-suffix">%</span>
+                    </div>
+                    <p class="help-text">反向影线占整个K线的最大比例 (0-1)</p>
+                </div>
+
+                <div class="param-group">
+                    <label>最小影线ATR倍数</label>
+                    <div class="input-group">
+                        <input type="number" id="minWickAtrMultiplier" class="form-control" min="0" step="0.1" value="1.0">
+                        <span class="input-suffix">倍</span>
+                    </div>
+                    <p class="help-text">影线长度相对ATR的最小倍数</p>
+                </div>
+
+                <div class="param-group">
+                    <label>ATR周期</label>
+                    <div class="input-group">
+                        <input type="number" id="atrPeriod" class="form-control" min="1" value="14">
+                        <span class="input-suffix">K线</span>
+                    </div>
+                    <p class="help-text">计算ATR使用的K线数量</p>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>⚙️ 开仓过滤条件</h2>
+
+                <div class="param-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="requireEmaAlignment">
+                        要求EMA对齐
+                    </label>
+                    <p class="help-text">要求价格与EMA方向一致才开仓</p>
+                </div>
+
+                <div class="param-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="requireVolumeConfirm">
+                        要求成交量确认
+                    </label>
+                    <p class="help-text">要求PinBar K线的成交量大于前几根K线平均值</p>
+                </div>
+
+                <div class="param-group">
+                    <label>最小成交量倍数</label>
+                    <div class="input-group">
+                        <input type="number" id="minVolumeMultiplier" class="form-control" min="0" step="0.1" value="1.2">
+                        <span class="input-suffix">倍</span>
+                    </div>
+                    <p class="help-text">PinBar成交量相对平均成交量的最小倍数</p>
+                </div>
+
+                <div class="param-group">
+                    <label>成交量参考周期</label>
+                    <div class="input-group">
+                        <input type="number" id="volumeLookbackPeriod" class="form-control" min="1" value="10">
+                        <span class="input-suffix">K线</span>
+                    </div>
+                    <p class="help-text">计算平均成交量使用的K线数量</p>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>💰 风险管理参数</h2>
+
+                <div class="param-group">
+                    <label>止损策略</label>
+                    <select id="stopLossStrategy" class="form-control">
+                        <option value="PinbarEndPlusAtr">PinBar端点+ATR</option>
+                        <option value="PinbarEnd">仅PinBar端点</option>
+                        <option value="AtrBased">基于ATR</option>
+                    </select>
+                    <p class="help-text">选择止损位置计算方法</p>
+                </div>
+
+                <div class="param-group">
+                    <label>止损ATR倍数</label>
+                    <div class="input-group">
+                        <input type="number" id="stopLossAtrMultiplier" class="form-control" min="0" step="0.1" value="0.5">
+                        <span class="input-suffix">倍</span>
+                    </div>
+                    <p class="help-text">止损位置相对ATR的倍数</p>
+                </div>
+
+                <div class="param-group">
+                    <label>止盈比例</label>
+                    <div class="input-group">
+                        <input type="number" id="takeProfitRatio" class="form-control" min="0" step="0.1" value="2.0">
+                        <span class="input-suffix">:1</span>
+                    </div>
+                    <p class="help-text">止盈距离是止损距离的多少倍 (风险回报比)</p>
+                </div>
+
+                <div class="param-group">
+                    <label>最小RR比</label>
+                    <div class="input-group">
+                        <input type="number" id="minRiskRewardRatio" class="form-control" min="0" step="0.1" value="1.5">
+                        <span class="input-suffix">:1</span>
+                    </div>
+                    <p class="help-text">交易的最小风险回报比，低于此值不开仓</p>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>📧 Telegram通知</h2>
+
+                <div class="param-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="enableTelegramNotification">
+                        启用Telegram通知
+                    </label>
+                    <p class="help-text">满足开仓条件时发送Telegram消息</p>
+                </div>
+
+                <div class="param-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="includeChart">
+                        包含图表
+                    </label>
+                    <p class="help-text">在通知消息中包含价格走势图表</p>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>配置信息</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">最后更新:</span>
+                        <span id="updatedAt">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">更新者:</span>
+                        <span id="updatedBy">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="pinBarConfig.saveConfig()">💾 保存配置</button>
+                <button class="btn btn-secondary" onclick="pinBarConfig.loadConfig()">🔄 重新加载</button>
+                <button class="btn btn-info" onclick="location.href='monitor-status.html'">📊 查看状态</button>
+            </div>
+
+            <div id="statusMessage" class="status-message"></div>
+
+            <div class="config-section">
+                <h2>📜 最近信号</h2>
+                <div id="recentSignals" class="signals-container">
+                    <p class="loading">加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/pinbar-config.js?v=3"></script>
+    <script>
+        // 使用全局变量以便HTML onclick事件可以访问
+        window.pinBarConfig = new PinBarConfigManager();
+        document.addEventListener('DOMContentLoaded', () => {
+            window.pinBarConfig.init();
+        });
+    </script>
+</body>
+</html>
