@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Trading.AlertSystem.Data.Models;
 using Trading.AlertSystem.Data.Repositories;
+using Trading.AlertSystem.Service.Repositories;
 
 namespace Trading.AlertSystem.Web.Controllers;
 
@@ -12,13 +13,16 @@ namespace Trading.AlertSystem.Web.Controllers;
 public class AlertHistoryController : ControllerBase
 {
     private readonly IAlertHistoryRepository _repository;
+    private readonly IPriceAlertRepository _priceAlertRepository;
     private readonly ILogger<AlertHistoryController> _logger;
 
     public AlertHistoryController(
         IAlertHistoryRepository repository,
+        IPriceAlertRepository priceAlertRepository,
         ILogger<AlertHistoryController> logger)
     {
         _repository = repository;
+        _priceAlertRepository = priceAlertRepository;
         _logger = logger;
     }
 
@@ -39,8 +43,77 @@ public class AlertHistoryController : ControllerBase
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1 || pageSize > 100) pageSize = 50;
 
-            var (items, totalCount) = await _repository.GetAllAsync(
+            // 获取 AlertHistory 记录
+            var (historyItems, historyCount) = await _repository.GetAllAsync(
                 pageNumber, pageSize, type, symbol, startTime, endTime);
+
+            // 获取已触发的 PriceAlerts 并转换为统一格式
+            var triggeredAlerts = await _priceAlertRepository.GetTriggeredAlertsAsync();
+
+            // 过滤已触发的告警
+            var filteredAlerts = triggeredAlerts.AsEnumerable();
+            if (type == AlertHistoryType.PriceAlert)
+            {
+                // 只有价格告警类型时才包含 PriceAlert
+                filteredAlerts = filteredAlerts.Where(a => a.Type == AlertType.FixedPrice);
+            }
+            else if (type == AlertHistoryType.EmaCross)
+            {
+                // EMA类型时排除 PriceAlert
+                filteredAlerts = Enumerable.Empty<PriceAlert>();
+            }
+
+            if (!string.IsNullOrEmpty(symbol))
+            {
+                filteredAlerts = filteredAlerts.Where(a => a.Symbol == symbol);
+            }
+
+            // 将 PriceAlert 转换为统一的显示格式
+            var convertedAlerts = filteredAlerts.Select(a => new
+            {
+                id = a.Id,
+                type = AlertHistoryType.PriceAlert,
+                symbol = a.Symbol,
+                alertTime = a.LastTriggeredAt ?? a.UpdatedAt,
+                message = $"【{a.Symbol}】价格{(a.Direction == PriceDirection.Above ? "上穿" : "下穿")} {a.TargetPrice}",
+                details = System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    AlertId = a.Id,
+                    AlertName = a.Name,
+                    TargetPrice = a.TargetPrice,
+                    Direction = a.Direction.ToString(),
+                    Source = "PriceAlert"
+                }),
+                isSent = true,
+                sendTarget = (string?)null,
+                createdAt = a.CreatedAt,
+                // 标记来源
+                source = "PriceAlert"
+            }).ToList();
+
+            // 合并结果
+            var allItems = historyItems.Select(h => new
+            {
+                id = h.Id,
+                type = h.Type,
+                symbol = h.Symbol,
+                alertTime = h.AlertTime,
+                message = h.Message,
+                details = h.Details,
+                isSent = h.IsSent,
+                sendTarget = h.SendTarget,
+                createdAt = h.CreatedAt,
+                source = "AlertHistory"
+            }).Concat(convertedAlerts)
+              .OrderByDescending(x => x.alertTime)
+              .ToList();
+
+            // 分页处理
+            var totalCount = allItems.Count;
+            var pagedItems = allItems
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             return Ok(new
             {
@@ -48,7 +121,7 @@ public class AlertHistoryController : ControllerBase
                 PageSize = pageSize,
                 TotalCount = totalCount,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                Items = items
+                Items = pagedItems
             });
         }
         catch (Exception ex)

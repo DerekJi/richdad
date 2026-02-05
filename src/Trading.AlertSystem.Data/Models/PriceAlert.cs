@@ -4,7 +4,8 @@ using Newtonsoft.Json;
 namespace Trading.AlertSystem.Data.Models;
 
 /// <summary>
-/// 价格告警配置
+/// 告警规则配置（待触发的告警条件）
+/// 当满足条件时触发告警，并生成AlertHistory记录
 /// </summary>
 public class PriceAlert
 {

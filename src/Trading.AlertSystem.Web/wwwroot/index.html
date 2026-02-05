@@ -9,22 +9,23 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/alert-card.css">
     <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/ema-config.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>📊 交易告警系统</h1>
-            <p>实时监控价格变化，及时收到Telegram通知</p>
+            <p>设置告警规则，监控目标价位</p>
             <nav class="nav-tabs">
-                <a href="index.html" class="nav-tab active">告警管理</a>
-                <a href="history.html" class="nav-tab">告警历史</a>
+                <a href="index.html" class="nav-tab active">告警规则</a>
+                <a href="ema-config.html" class="nav-tab">EMA监控</a>
+                <a href="history.html" class="nav-tab">触发记录</a>
                 <a href="management.html" class="nav-tab">系统管理</a>
-                <a href="ema-config.html" class="nav-tab">EMA配置</a>
             </nav>
         </header>
 
         <div class="controls">
-            <button class="btn btn-primary" onclick="UI.showCreateModal()">➕ 创建新告警</button>
+            <button class="btn btn-primary" onclick="UI.showCreateModal()">➕ 创建规则</button>
             <button class="btn btn-success" onclick="AlertManager.loadAlerts()">♻️ 刷新列表</button>
         </div>
 
@@ -41,7 +42,7 @@
     <div id="alertModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">创建新告警</h2>
+                <h2 class="modal-title" id="modalTitle">创建告警规则</h2>
             </div>
             <form id="alertForm">
                 <input type="hidden" id="alertId">
@@ -120,14 +121,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Telegram Chat ID（可选）</label>
-                    <input type="number" class="form-control" id="telegramChatId" placeholder="留空使用默认配置">
-                </div>
-
-                <div class="form-group">
-                    <div class="form-check">
-                        <input type="checkbox" id="enabled" checked>
-                        <label class="form-label" for="enabled">启用告警</label>
+                    <div class="section-header" style="margin-bottom: 0;">
+                        <label class="form-label" style="margin: 0;">启用提示</label>
+                        <label class="switch">
+                            <input type="checkbox" id="enabled" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
                 </div>
 

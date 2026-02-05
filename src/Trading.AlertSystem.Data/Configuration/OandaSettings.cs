@@ -26,6 +26,13 @@ public class OandaSettings
     public string ApiBaseUrl { get; set; } = "https://api-fxpractice.oanda.com";
 
     /// <summary>
+    /// Streaming API基础URL
+    /// Practice (模拟): https://stream-fxpractice.oanda.com
+    /// Live (实盘): https://stream-fxtrade.oanda.com
+    /// </summary>
+    public string StreamingBaseUrl { get; set; } = "https://stream-fxpractice.oanda.com";
+
+    /// <summary>
     /// 环境类型 (practice/live)
     /// </summary>
     public string Environment { get; set; } = "practice";

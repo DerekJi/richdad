@@ -18,6 +18,11 @@ public interface IPriceAlertRepository
     Task<IEnumerable<PriceAlert>> GetEnabledAlertsAsync();
 
     /// <summary>
+    /// 获取已触发的告警
+    /// </summary>
+    Task<IEnumerable<PriceAlert>> GetTriggeredAlertsAsync();
+
+    /// <summary>
     /// 根据ID获取告警
     /// </summary>
     Task<PriceAlert?> GetByIdAsync(string id);

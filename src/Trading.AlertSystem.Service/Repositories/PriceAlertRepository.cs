@@ -79,6 +79,31 @@ public class PriceAlertRepository : IPriceAlertRepository
         }
     }
 
+    public async Task<IEnumerable<PriceAlert>> GetTriggeredAlertsAsync()
+    {
+        try
+        {
+            await EnsureInitializedAsync();
+            var container = _cosmosDb.AlertContainer;
+            var query = new QueryDefinition("SELECT * FROM c WHERE c.IsTriggered = true");
+            var iterator = container.GetItemQueryIterator<PriceAlert>(query);
+
+            var results = new List<PriceAlert>();
+            while (iterator.HasMoreResults)
+            {
+                var response = await iterator.ReadNextAsync();
+                results.AddRange(response);
+            }
+
+            return results;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取已触发的告警失败");
+            return Array.Empty<PriceAlert>();
+        }
+    }
+
     public async Task<PriceAlert?> GetByIdAsync(string id)
     {
         try

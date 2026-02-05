@@ -123,6 +123,9 @@ var oandaConfig = builder.Configuration.GetSection("Oanda");
 if (!string.IsNullOrEmpty(oandaConfig["ApiKey"]) && !string.IsNullOrEmpty(oandaConfig["AccountId"]))
 {
     builder.Services.AddHttpClient<IOandaService, OandaService>();
+
+    // 注册 OANDA Streaming 服务
+    builder.Services.AddSingleton<IOandaStreamingService, OandaStreamingService>();
 }
 
 // 注册统一的市场数据服务（根据配置自动路由）
@@ -159,9 +162,11 @@ else
 builder.Services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
 builder.Services.AddSingleton<IChartService, ChartService>();
 builder.Services.AddSingleton<IEmaMonitoringService, EmaMonitoringService>();
+builder.Services.AddSingleton<IStreamingPriceMonitorService, StreamingPriceMonitorService>();
 
 // 添加后台服务（自动启动价格监控）
-builder.Services.AddHostedService<PriceMonitorHostedService>();
+// 使用 Streaming 版本替代轮询版本
+builder.Services.AddHostedService<StreamingPriceMonitorHostedService>();
 
 // 添加EMA监测后台服务
 builder.Services.AddHostedService<EmaMonitoringHostedService>();

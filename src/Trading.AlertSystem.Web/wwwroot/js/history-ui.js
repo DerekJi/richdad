@@ -29,8 +29,8 @@ const HistoryUI = {
             container.innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">📭</div>
-                    <div class="empty-state-text">暂无告警历史</div>
-                    <div class="empty-state-hint">当系统触发告警时，记录会显示在这里</div>
+                    <div class="empty-state-text">暂无触发记录</div>
+                    <div class="empty-state-hint">当告警规则触发时，记录会显示在这里</div>
                 </div>
             `;
             return;
@@ -42,8 +42,10 @@ const HistoryUI = {
 
     // 渲染单个告警历史项
     renderHistoryItem(item) {
-        const typeClass = item.type === 0 ? 'price' : 'ema';
-        const typeText = item.type === 0 ? '💰 价格告警' : '📊 EMA穿越';
+        // type 可能是字符串 "PriceAlert"/"EmaCross" 或数字 0/1
+        const isPriceAlert = item.type === 'PriceAlert' || item.type === 0;
+        const typeClass = isPriceAlert ? 'price' : 'ema';
+        const typeText = isPriceAlert ? '💰 价格规则' : '📊 EMA穿越';
         const time = new Date(item.alertTime).toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',
@@ -57,23 +59,33 @@ const HistoryUI = {
         if (item.details) {
             try {
                 const details = JSON.parse(item.details);
-                if (item.type === 0) {
+                if (isPriceAlert) {
                     // 价格告警
+                    const targetPrice = details.TargetPrice || details.targetPrice;
+                    const currentPrice = details.CurrentPrice || details.currentPrice;
+                    const direction = details.Direction || details.direction;
+
+                    // 构建详情显示
+                    let detailParts = [];
+                    detailParts.push(`目标价: ${targetPrice != null ? Number(targetPrice).toFixed(2) : 'N/A'}`);
+                    if (currentPrice != null) {
+                        detailParts.push(`触发价: ${Number(currentPrice).toFixed(2)}`);
+                    }
+                    detailParts.push(`方向: ${direction === 'Above' ? '上穿 ⬆️' : '下穿 ⬇️'}`);
+
                     detailsHtml = `
                         <div class="history-details">
-                            目标价: ${details.targetPrice?.toFixed(4) || 'N/A'} |
-                            当前价: ${details.currentPrice?.toFixed(4) || 'N/A'} |
-                            方向: ${details.direction === 'Above' ? '上穿' : '下穿'}
+                            ${detailParts.join(' | ')}
                         </div>
                     `;
                 } else {
                     // EMA穿越
                     detailsHtml = `
                         <div class="history-details">
-                            周期: ${details.timeFrame || 'N/A'} |
-                            EMA${details.emaPeriod || 'N/A'}: ${details.emaValue?.toFixed(4) || 'N/A'} |
-                            收盘价: ${details.closePrice?.toFixed(4) || 'N/A'} |
-                            ${details.crossType === 'CrossAbove' ? '上穿 ⬆️' : '下穿 ⬇️'}
+                            周期: ${details.timeFrame || details.TimeFrame || 'N/A'} |
+                            EMA${details.emaPeriod || details.EmaPeriod || 'N/A'}: ${details.emaValue?.toFixed(4) || details.EmaValue?.toFixed(4) || 'N/A'} |
+                            收盘价: ${details.closePrice?.toFixed(4) || details.ClosePrice?.toFixed(4) || 'N/A'} |
+                            ${(details.crossType || details.CrossType) === 'CrossAbove' ? '上穿 ⬆️' : '下穿 ⬇️'}
                         </div>
                     `;
                 }

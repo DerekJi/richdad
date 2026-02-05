@@ -2,7 +2,7 @@
 const UI = {
     // 显示创建模态框
     showCreateModal() {
-        document.getElementById('modalTitle').textContent = '创建新告警';
+        document.getElementById('modalTitle').textContent = '创建告警规则';
         document.getElementById('alertForm').reset();
         document.getElementById('alertId').value = '';
         this.updateFormFields();
@@ -27,7 +27,7 @@ const UI = {
                 direction = direction === 'Above' ? 0 : 1;
             }
 
-            document.getElementById('modalTitle').textContent = '编辑告警';
+            document.getElementById('modalTitle').textContent = '编辑规则';
             document.getElementById('alertId').value = alert.id;
             document.getElementById('alertName').value = alert.name;
             document.getElementById('alertSymbol').value = alert.symbol;
@@ -38,7 +38,7 @@ const UI = {
             document.getElementById('direction').value = direction;
             document.getElementById('timeFrame').value = alert.timeFrame;
             document.getElementById('messageTemplate').value = alert.messageTemplate || '';
-            document.getElementById('telegramChatId').value = alert.telegramChatId || '';
+            // telegramChatId 字段已移除，使用系统默认值
             document.getElementById('enabled').checked = alert.enabled;
 
             this.updateFormFields();

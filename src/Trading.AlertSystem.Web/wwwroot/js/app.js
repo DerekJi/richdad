@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
             direction: parseInt(document.getElementById('direction').value),
             timeFrame: document.getElementById('timeFrame').value,
             messageTemplate: document.getElementById('messageTemplate').value || null,
-            telegramChatId: document.getElementById('telegramChatId').value ?
-                parseInt(document.getElementById('telegramChatId').value) : null,
+            telegramChatId: null, // 使用系统默认的 Telegram Chat ID
             enabled: document.getElementById('enabled').checked
         };
 

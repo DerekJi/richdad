@@ -1,13 +1,19 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace Trading.AlertSystem.Data.Models;
 
 /// <summary>
-/// 告警历史记录
+/// 告警触发记录（已触发的告警日志）
+/// 记录每次告警触发的详细信息，包括价格告警和EMA穿越告警
 /// </summary>
 public class AlertHistory
 {
     /// <summary>
     /// 唯一标识符
     /// </summary>
+    [JsonPropertyName("id")]
+    [JsonProperty("id")]
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     /// <summary>
@@ -18,6 +24,8 @@ public class AlertHistory
     /// <summary>
     /// 品种
     /// </summary>
+    [JsonPropertyName("symbol")]
+    [JsonProperty("symbol")]
     public string Symbol { get; set; } = string.Empty;
 
     /// <summary>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Trading.AlertSystem.Data.Models;
 using Trading.AlertSystem.Service.Repositories;
+using Trading.AlertSystem.Service.Services;
 
 namespace Trading.AlertSystem.Web.Controllers;
 
@@ -12,13 +13,16 @@ namespace Trading.AlertSystem.Web.Controllers;
 public class AlertsController : ControllerBase
 {
     private readonly IPriceAlertRepository _alertRepository;
+    private readonly IStreamingPriceMonitorService? _streamingMonitor;
     private readonly ILogger<AlertsController> _logger;
 
     public AlertsController(
         IPriceAlertRepository alertRepository,
+        IStreamingPriceMonitorService? streamingMonitor,
         ILogger<AlertsController> logger)
     {
         _alertRepository = alertRepository;
+        _streamingMonitor = streamingMonitor;
         _logger = logger;
     }
 
@@ -79,6 +83,13 @@ public class AlertsController : ControllerBase
             };
 
             var created = await _alertRepository.CreateAsync(alert);
+
+            // 刷新 Streaming 订阅
+            if (_streamingMonitor != null)
+            {
+                _ = _streamingMonitor.RefreshAlertsAsync();
+            }
+
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
         catch (Exception ex)
@@ -113,6 +124,13 @@ public class AlertsController : ControllerBase
             existing.Enabled = request.Enabled ?? existing.Enabled;
 
             var updated = await _alertRepository.UpdateAsync(existing);
+
+            // 刷新 Streaming 订阅
+            if (_streamingMonitor != null)
+            {
+                _ = _streamingMonitor.RefreshAlertsAsync();
+            }
+
             return Ok(updated);
         }
         catch (Exception ex)
@@ -131,6 +149,12 @@ public class AlertsController : ControllerBase
         var success = await _alertRepository.DeleteAsync(id);
         if (!success)
             return NotFound();
+
+        // 刷新 Streaming 订阅
+        if (_streamingMonitor != null)
+        {
+            _ = _streamingMonitor.RefreshAlertsAsync();
+        }
 
         return NoContent();
     }

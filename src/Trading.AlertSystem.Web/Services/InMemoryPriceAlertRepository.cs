@@ -37,6 +37,17 @@ public class InMemoryPriceAlertRepository : IPriceAlertRepository
         }
     }
 
+    public Task<IEnumerable<PriceAlert>> GetTriggeredAlertsAsync()
+    {
+        lock (_lock)
+        {
+            var triggered = _alerts.Values
+                .Where(a => a.IsTriggered)
+                .ToList();
+            return Task.FromResult<IEnumerable<PriceAlert>>(triggered);
+        }
+    }
+
     public Task<PriceAlert?> GetByIdAsync(string id)
     {
         lock (_lock)
