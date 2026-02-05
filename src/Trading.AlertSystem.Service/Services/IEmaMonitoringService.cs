@@ -26,4 +26,14 @@ public interface IEmaMonitoringService
     /// 获取当前监测状态
     /// </summary>
     Task<IEnumerable<EmaMonitoringState>> GetStatesAsync();
+
+    /// <summary>
+    /// 重新加载配置
+    /// </summary>
+    Task ReloadConfigAsync();
+
+    /// <summary>
+    /// 获取当前是否启用
+    /// </summary>
+    bool IsEnabled();
 }

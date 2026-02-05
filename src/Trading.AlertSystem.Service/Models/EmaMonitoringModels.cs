@@ -41,6 +41,11 @@ public class EmaMonitoringState
     public int LastPosition { get; set; }
 
     /// <summary>
+    /// 上一根K线的时间戳（用于避免重复处理同一根K线）
+    /// </summary>
+    public DateTime LastCandleTime { get; set; }
+
+    /// <summary>
     /// 最后检查时间
     /// </summary>
     public DateTime LastCheckTime { get; set; }

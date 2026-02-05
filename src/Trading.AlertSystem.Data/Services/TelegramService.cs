@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Trading.AlertSystem.Data.Configuration;
 
@@ -89,6 +90,42 @@ public class TelegramService : ITelegramService
         catch (Exception ex)
         {
             _logger.LogError(ex, "发送格式化Telegram消息失败");
+            return false;
+        }
+    }
+
+    public async Task<bool> SendPhotoAsync(Stream photoStream, string? caption = null, long? chatId = null)
+    {
+        if (!_settings.Enabled)
+        {
+            _logger.LogInformation("Telegram通知已禁用，跳过发送图片");
+            return false;
+        }
+
+        try
+        {
+            var targetChatId = chatId ?? _settings.DefaultChatId;
+            if (targetChatId == null)
+            {
+                _logger.LogError("未指定Telegram Chat ID");
+                return false;
+            }
+
+            photoStream.Position = 0; // 重置流位置
+            var inputFile = InputFile.FromStream(photoStream, "chart.png");
+
+            await _botClient.SendPhoto(
+                chatId: targetChatId.Value,
+                photo: inputFile,
+                caption: caption
+            );
+
+            _logger.LogInformation("成功发送Telegram图片到Chat ID: {ChatId}", targetChatId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "发送Telegram图片失败");
             return false;
         }
     }

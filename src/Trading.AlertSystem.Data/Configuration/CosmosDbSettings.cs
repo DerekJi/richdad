@@ -24,4 +24,9 @@ public class CosmosDbSettings
     /// 告警历史容器名称
     /// </summary>
     public string AlertHistoryContainerName { get; set; } = "AlertHistory";
+
+    /// <summary>
+    /// EMA配置容器名称
+    /// </summary>
+    public string EmaConfigContainerName { get; set; } = "EmaConfig";
 }

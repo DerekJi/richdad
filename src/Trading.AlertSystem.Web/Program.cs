@@ -35,13 +35,15 @@ if (!string.IsNullOrEmpty(connectionString))
         ConnectionString = connectionString,
         DatabaseName = cosmosConfig["DatabaseName"] ?? "TradingSystem",
         AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts",
-        AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory"
+        AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory",
+        EmaConfigContainerName = cosmosConfig["EmaConfigContainerName"] ?? "EmaConfig"
     };
 
     builder.Services.AddSingleton(cosmosSettings);
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
     builder.Services.AddScoped<IPriceAlertRepository, PriceAlertRepository>();
     builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
+    builder.Services.AddScoped<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
 }
 else
 {
@@ -73,6 +75,7 @@ else
 
 // 注册业务服务
 builder.Services.AddSingleton<IPriceMonitorService, PriceMonitorService>();
+builder.Services.AddSingleton<IChartService, ChartService>();
 builder.Services.AddSingleton<IEmaMonitoringService, EmaMonitoringService>();
 
 // 添加后台服务（自动启动价格监控）
@@ -111,6 +114,26 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
+
+// 初始化 Cosmos DB
+var cosmosDbContext = app.Services.GetService<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
+if (cosmosDbContext != null)
+{
+    await cosmosDbContext.InitializeAsync();
+
+    // 使用 appsettings 中的值初始化 EMA 配置（如果数据库中不存在）
+    var emaConfigRepo = app.Services.GetService<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository>();
+    var emaSettings = app.Services.GetService<EmaMonitoringSettings>();
+    if (emaConfigRepo != null && emaSettings != null)
+    {
+        await emaConfigRepo.InitializeDefaultConfigAsync(
+            emaSettings.Enabled,
+            emaSettings.Symbols,
+            emaSettings.TimeFrames,
+            emaSettings.EmaPeriods,
+            emaSettings.HistoryMultiplier);
+    }
+}
 
 // 启用CORS
 app.UseCors();

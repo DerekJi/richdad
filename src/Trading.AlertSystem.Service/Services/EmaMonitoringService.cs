@@ -17,33 +17,37 @@ public class EmaMonitoringService : IEmaMonitoringService
     private readonly ITradeLockerService _tradeLockerService;
     private readonly ITelegramService _telegramService;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
-    private readonly EmaMonitoringSettings _settings;
+    private readonly IEmaConfigRepository _emaConfigRepository;
+    private readonly IChartService _chartService;
     private readonly ILogger<EmaMonitoringService> _logger;
 
-    // 内存中存储监测状态
+    // 内存中存储监测状态和配置
     private readonly Dictionary<string, EmaMonitoringState> _states = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private bool _isRunning = false;
+    private EmaMonitoringConfig? _currentConfig;
 
     public EmaMonitoringService(
         ITradeLockerService tradeLockerService,
         ITelegramService telegramService,
         IAlertHistoryRepository alertHistoryRepository,
-        EmaMonitoringSettings settings,
+        IEmaConfigRepository emaConfigRepository,
+        IChartService chartService,
         ILogger<EmaMonitoringService> logger)
     {
         _tradeLockerService = tradeLockerService;
         _telegramService = telegramService;
         _alertHistoryRepository = alertHistoryRepository;
-        _settings = settings;
+        _emaConfigRepository = emaConfigRepository;
+        _chartService = chartService;
         _logger = logger;
     }
 
-    public Task StartAsync()
+    public async Task StartAsync()
     {
         _logger.LogInformation("启动EMA监测服务");
+        await ReloadConfigAsync();
         _isRunning = true;
-        return Task.CompletedTask;
     }
 
     public Task StopAsync()
@@ -55,7 +59,7 @@ public class EmaMonitoringService : IEmaMonitoringService
 
     public async Task CheckAsync()
     {
-        if (!_settings.Enabled || !_isRunning)
+        if (_currentConfig == null || !_currentConfig.Enabled || !_isRunning)
         {
             return;
         }
@@ -69,11 +73,11 @@ public class EmaMonitoringService : IEmaMonitoringService
             await _tradeLockerService.ConnectAsync();
 
             // 遍历所有配置的品种、周期和EMA周期组合
-            foreach (var symbol in _settings.Symbols)
+            foreach (var symbol in _currentConfig.Symbols)
             {
-                foreach (var timeFrame in _settings.TimeFrames)
+                foreach (var timeFrame in _currentConfig.TimeFrames)
                 {
-                    foreach (var emaPeriod in _settings.EmaPeriods)
+                    foreach (var emaPeriod in _currentConfig.EmaPeriods)
                     {
                         try
                         {
@@ -87,8 +91,6 @@ public class EmaMonitoringService : IEmaMonitoringService
                     }
                 }
             }
-
-            _logger.LogInformation("EMA监测检查完成");
         }
         finally
         {
@@ -98,10 +100,12 @@ public class EmaMonitoringService : IEmaMonitoringService
 
     private async Task CheckEmaCrossAsync(string symbol, string timeFrame, int emaPeriod)
     {
+        if (_currentConfig == null) return;
+
         var stateId = $"{symbol}_{timeFrame}_EMA{emaPeriod}";
 
         // 获取历史数据（需要足够多的K线来计算EMA）
-        var barsNeeded = emaPeriod * _settings.HistoryMultiplier;
+        var barsNeeded = emaPeriod * _currentConfig.HistoryMultiplier;
         var candles = await _tradeLockerService.GetHistoricalDataAsync(symbol, timeFrame, barsNeeded);
 
         if (!candles.Any())
@@ -111,6 +115,19 @@ public class EmaMonitoringService : IEmaMonitoringService
         }
 
         var candleList = candles.OrderBy(c => c.Time).ToList();
+        var latestCandle = candleList[^1];
+
+        // 检查是否应该处理这根K线（避免重复处理同一根K线）
+        if (_states.TryGetValue(stateId, out var existingState))
+        {
+            // 如果最新K线的时间与上次检查的时间相同，说明是同一根K线，跳过
+            if (existingState.LastCandleTime == latestCandle.Time)
+            {
+                _logger.LogDebug("跳过 {Symbol} {TimeFrame} EMA{Period} 检查（K线未更新）",
+                    symbol, timeFrame, emaPeriod);
+                return;
+            }
+        }
 
         // 至少需要 emaPeriod + 1 根K线
         if (candleList.Count < emaPeriod + 1)
@@ -172,9 +189,39 @@ public class EmaMonitoringService : IEmaMonitoringService
 
                 _logger.LogInformation("检测到EMA穿越: {Message}", crossEvent.FormatMessage());
 
-                // 发送通知
+                // 发送通知（带图片）
                 var message = crossEvent.FormatMessage();
-                await _telegramService.SendMessageAsync(message);
+
+                try
+                {
+                    // 获取4个时间周期的K线数据用于生成图表
+                    var candlesM5 = await _tradeLockerService.GetHistoricalDataAsync(
+                        symbol, "M5", _currentConfig.HistoryMultiplier * 20);
+                    var candlesM15 = await _tradeLockerService.GetHistoricalDataAsync(
+                        symbol, "M15", _currentConfig.HistoryMultiplier * 20);
+                    var candlesH1 = await _tradeLockerService.GetHistoricalDataAsync(
+                        symbol, "H1", _currentConfig.HistoryMultiplier * 20);
+                    var candlesH4 = await _tradeLockerService.GetHistoricalDataAsync(
+                        symbol, "H4", _currentConfig.HistoryMultiplier * 20);
+
+                    // 生成图表
+                    using var chartStream = await _chartService.GenerateMultiTimeFrameChartAsync(
+                        symbol,
+                        candlesM5,
+                        candlesM15,
+                        candlesH1,
+                        candlesH4,
+                        20  // 固定使用EMA20
+                    );
+
+                    // 发送图片和文字说明
+                    await _telegramService.SendPhotoAsync(chartStream, message);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "生成或发送图表失败，仅发送文字消息");
+                    await _telegramService.SendMessageAsync(message);
+                }
 
                 // 保存告警历史
                 var alertHistory = new AlertHistory
@@ -224,15 +271,55 @@ public class EmaMonitoringService : IEmaMonitoringService
         state.LastClose = currentCandle.Close;
         state.LastEmaValue = currEmaValue;
         state.LastPosition = currentPosition;
+        state.LastCandleTime = currentCandle.Time;
         state.LastCheckTime = DateTime.UtcNow;
 
-        _logger.LogDebug("{Symbol} {TimeFrame} EMA{Period}: Close={Close:F4}, EMA={Ema:F4}, Position={Position}",
+        _logger.LogDebug("{Symbol} {TimeFrame} EMA{Period}: Close={Close:F4}, EMA={Ema:F4}, Position={Position}, CandleTime={CandleTime}",
             symbol, timeFrame, emaPeriod, currentCandle.Close, currEmaValue,
-            currentPosition > 0 ? "Above" : "Below");
+            currentPosition > 0 ? "Above" : "Below", currentCandle.Time.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 
     public Task<IEnumerable<EmaMonitoringState>> GetStatesAsync()
     {
         return Task.FromResult(_states.Values.AsEnumerable());
+    }
+
+    public async Task ReloadConfigAsync()
+    {
+        try
+        {
+            var config = await _emaConfigRepository.GetConfigAsync();
+            if (config == null)
+            {
+                _logger.LogWarning("未找到EMA配置，将使用禁用状态");
+                _currentConfig = new EmaMonitoringConfig
+                {
+                    Id = "default",
+                    Enabled = false,
+                    Symbols = new List<string>(),
+                    TimeFrames = new List<string>(),
+                    EmaPeriods = new List<int>(),
+                    HistoryMultiplier = 3,
+                    UpdatedAt = DateTime.UtcNow,
+                    UpdatedBy = "System"
+                };
+            }
+            else
+            {
+                _currentConfig = config;
+                _logger.LogInformation("已加载EMA配置：Enabled={Enabled}, Symbols={SymbolCount}, TimeFrames={TimeFrameCount}, EmaPeriods={EmaCount}",
+                    config.Enabled, config.Symbols.Count, config.TimeFrames.Count, config.EmaPeriods.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "重新加载EMA配置失败");
+            throw;
+        }
+    }
+
+    public bool IsEnabled()
+    {
+        return _currentConfig?.Enabled ?? false;
     }
 }

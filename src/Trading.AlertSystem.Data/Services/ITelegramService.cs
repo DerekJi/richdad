@@ -16,6 +16,11 @@ public interface ITelegramService
     Task<bool> SendFormattedMessageAsync(string message, long? chatId = null, string parseMode = "Markdown");
 
     /// <summary>
+    /// 发送图片消息
+    /// </summary>
+    Task<bool> SendPhotoAsync(Stream photoStream, string? caption = null, long? chatId = null);
+
+    /// <summary>
     /// 测试连接
     /// </summary>
     Task<bool> TestConnectionAsync();

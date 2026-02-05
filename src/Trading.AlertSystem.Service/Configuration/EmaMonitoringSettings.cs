@@ -8,22 +8,22 @@ public class EmaMonitoringSettings
     /// <summary>
     /// 是否启用EMA监测
     /// </summary>
-    public bool Enabled { get; set; } = true;
+    public bool Enabled { get; set; }
 
     /// <summary>
     /// 监测的品种列表
     /// </summary>
-    public List<string> Symbols { get; set; } = new() { "XAUUSD", "XAGUSD" };
+    public List<string> Symbols { get; set; } = new();
 
     /// <summary>
     /// K线周期列表 (例如: M5, M15, H1, H4, D1)
     /// </summary>
-    public List<string> TimeFrames { get; set; } = new() { "M5", "M15", "H1" };
+    public List<string> TimeFrames { get; set; } = new();
 
     /// <summary>
     /// EMA周期列表
     /// </summary>
-    public List<int> EmaPeriods { get; set; } = new() { 20, 60, 80, 120, 200 };
+    public List<int> EmaPeriods { get; set; } = new();
 
     /// <summary>
     /// 计算EMA需要的额外历史K线数量（倍数）

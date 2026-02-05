@@ -29,6 +29,13 @@ public class DemoTelegramService : ITelegramService
         return Task.FromResult(true);
     }
 
+    public Task<bool> SendPhotoAsync(Stream photoStream, string? caption = null, long? chatId = null)
+    {
+        _logger.LogInformation("[演示模式] Telegram图片消息: Caption={Caption}, Chat ID: {ChatId}, Stream Length={Length}",
+            caption ?? "无", chatId ?? 0, photoStream?.Length ?? 0);
+        return Task.FromResult(true);
+    }
+
     public Task<bool> TestConnectionAsync()
     {
         _logger.LogInformation("[演示模式] Telegram连接测试 - 演示模式总是返回成功");

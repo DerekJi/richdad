@@ -75,6 +75,35 @@ async function testTradeLocker() {
     }
 }
 
+// 测试 K线图
+async function testChart() {
+    const button = event.target;
+    const symbol = document.getElementById('chartSymbol').value.trim().toUpperCase() || 'XAUUSD';
+
+    button.disabled = true;
+    button.textContent = '生成中...';
+    showResult('chartResult', '⏳ 正在生成K线图并发送到Telegram，请稍候...', 'info');
+
+    try {
+        const response = await fetch(`/api/system/test-chart?symbol=${encodeURIComponent(symbol)}`, {
+            method: 'POST'
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showResult('chartResult', `✅ ${result.message}\n\n📱 请查看Telegram接收的图片（包含M5、M15、H1、H4四个时间周期）`, 'success');
+        } else {
+            showResult('chartResult', `❌ ${result.message}`, 'error');
+        }
+    } catch (error) {
+        showResult('chartResult', `❌ 请求失败: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.textContent = '发送K线图';
+    }
+}
+
 // 立即检查
 async function checkNow() {
     const button = event.target;

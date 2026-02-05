@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMA配置 - 交易告警系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/ema-config.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 EMA 配置管理</h1>
+            <p>配置EMA监测参数，实时监控价格与EMA交叉</p>
+            <nav class="nav-tabs">
+                <a href="index.html" class="nav-tab">告警管理</a>
+                <a href="history.html" class="nav-tab">告警历史</a>
+                <a href="management.html" class="nav-tab">系统管理</a>
+                <a href="ema-config.html" class="nav-tab active">EMA配置</a>
+            </nav>
+        </header>
+
+        <div class="content">
+            <div class="config-section">
+                <div class="section-header">
+                    <h2>启用状态</h2>
+                    <label class="switch">
+                        <input type="checkbox" id="enabledSwitch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p class="help-text">启用后将自动监测配置的品种和EMA组合</p>
+            </div>
+
+            <div class="config-section">
+                <h2>监测品种</h2>
+                <div class="tag-input-container">
+                    <div id="symbolsTags" class="tags"></div>
+                    <input type="text" id="symbolInput" placeholder="输入品种代码，按回车添加..." class="tag-input">
+                </div>
+                <p class="help-text">示例: XAUUSD, EURUSD, GBPUSD</p>
+            </div>
+
+            <div class="config-section">
+                <h2>K线周期</h2>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" value="M1" class="timeframe-check"> M1 (1分钟)</label>
+                    <label><input type="checkbox" value="M5" class="timeframe-check"> M5 (5分钟)</label>
+                    <label><input type="checkbox" value="M15" class="timeframe-check"> M15 (15分钟)</label>
+                    <label><input type="checkbox" value="M30" class="timeframe-check"> M30 (30分钟)</label>
+                    <label><input type="checkbox" value="H1" class="timeframe-check"> H1 (1小时)</label>
+                    <label><input type="checkbox" value="H4" class="timeframe-check"> H4 (4小时)</label>
+                    <label><input type="checkbox" value="D1" class="timeframe-check"> D1 (日线)</label>
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>EMA周期</h2>
+                <div class="tag-input-container">
+                    <div id="emaPeriodsTags" class="tags"></div>
+                    <input type="number" id="emaPeriodInput" placeholder="输入EMA周期，按回车添加..." class="tag-input" min="1" max="500">
+                </div>
+                <p class="help-text">示例: 20, 60, 120, 200（常用EMA周期）</p>
+            </div>
+
+            <div class="config-section">
+                <h2>历史数据倍数</h2>
+                <div class="input-group">
+                    <input type="number" id="historyMultiplier" class="form-control" min="1" max="10" value="3">
+                    <span class="input-suffix">倍</span>
+                </div>
+                <p class="help-text">用于计算需要获取多少根K线数据。例如EMA20，倍数为3，则获取60根K线</p>
+            </div>
+
+            <div class="config-section">
+                <h2>配置信息</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">最后更新:</span>
+                        <span id="updatedAt">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">更新者:</span>
+                        <span id="updatedBy">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="saveConfig()">💾 保存配置</button>
+                <button class="btn btn-secondary" onclick="loadConfig()">🔄 重新加载</button>
+                <button class="btn btn-info" onclick="viewStatus()">📊 查看状态</button>
+            </div>
+
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+
+    <script src="js/ema-config-app.js"></script>
+</body>
+</html>
