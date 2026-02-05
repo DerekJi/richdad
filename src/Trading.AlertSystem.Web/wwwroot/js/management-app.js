@@ -271,8 +271,8 @@ async function cleanupHistory() {
 // 加载系统状态
 async function loadStats() {
     try {
-        // 获取活跃告警数量
-        const alertsResponse = await fetch('/api/alerts');
+        // 获取活跃监控规则数量
+        const alertsResponse = await fetch('/api/pricemonitor');
         if (alertsResponse.ok) {
             const alerts = await alertsResponse.json();
             document.getElementById('activeAlerts').textContent =

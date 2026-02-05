@@ -1,20 +1,20 @@
 // API 调用模块
 const AlertAPI = {
-    // 获取所有告警
+    // 获取所有监控规则
     async getAll() {
-        const response = await fetch(`${API_BASE}/alerts`);
+        const response = await fetch(`${API_BASE}/pricemonitor`);
         return await response.json();
     },
 
-    // 获取单个告警
+    // 获取单个监控规则
     async getById(id) {
-        const response = await fetch(`${API_BASE}/alerts/${id}`);
+        const response = await fetch(`${API_BASE}/pricemonitor/${id}`);
         return await response.json();
     },
 
-    // 创建告警
+    // 创建监控规则
     async create(data) {
-        const response = await fetch(`${API_BASE}/alerts`, {
+        const response = await fetch(`${API_BASE}/pricemonitor`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -22,9 +22,9 @@ const AlertAPI = {
         return response;
     },
 
-    // 更新告警
+    // 更新监控规则
     async update(id, data) {
-        const response = await fetch(`${API_BASE}/alerts/${id}`, {
+        const response = await fetch(`${API_BASE}/pricemonitor/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -32,17 +32,17 @@ const AlertAPI = {
         return response;
     },
 
-    // 删除告警
+    // 删除监控规则
     async delete(id) {
-        const response = await fetch(`${API_BASE}/alerts/${id}`, {
+        const response = await fetch(`${API_BASE}/pricemonitor/${id}`, {
             method: 'DELETE'
         });
         return response;
     },
 
-    // 重置告警
+    // 重置监控规则
     async reset(id) {
-        const response = await fetch(`${API_BASE}/alerts/${id}/reset`, {
+        const response = await fetch(`${API_BASE}/pricemonitor/${id}/reset`, {
             method: 'POST'
         });
         return response;

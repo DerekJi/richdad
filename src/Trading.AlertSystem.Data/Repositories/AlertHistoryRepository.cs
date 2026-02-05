@@ -26,7 +26,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var response = await _context.AlertHistoryContainer.CreateItemAsync(
+            var response = await _context.EmaAlertsContainer.CreateItemAsync(
                 alertHistory,
                 new PartitionKey(alertHistory.Symbol));
 
@@ -46,7 +46,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>()
                 .Where(a => a.Id == id);
 
@@ -76,7 +76,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>();
 
             // 应用筛选条件
@@ -134,7 +134,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>()
                 .OrderByDescending(a => a.AlertTime)
                 .Take(count);
@@ -161,7 +161,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>()
                 .Where(a => a.Symbol == symbol)
                 .OrderByDescending(a => a.AlertTime)
@@ -189,7 +189,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>()
                 .Where(a => a.Type == type)
                 .OrderByDescending(a => a.AlertTime)
@@ -217,7 +217,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
     {
         try
         {
-            var query = _context.AlertHistoryContainer
+            var query = _context.EmaAlertsContainer
                 .GetItemLinqQueryable<AlertHistory>()
                 .Where(a => a.AlertTime < beforeDate);
 
@@ -229,7 +229,7 @@ public class AlertHistoryRepository : IAlertHistoryRepository
                 var response = await iterator.ReadNextAsync();
                 foreach (var item in response)
                 {
-                    await _context.AlertHistoryContainer.DeleteItemAsync<AlertHistory>(
+                    await _context.EmaAlertsContainer.DeleteItemAsync<AlertHistory>(
                         item.Id,
                         new PartitionKey(item.Symbol));
                     deleteCount++;

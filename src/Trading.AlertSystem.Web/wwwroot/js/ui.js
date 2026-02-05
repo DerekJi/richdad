@@ -2,7 +2,7 @@
 const UI = {
     // 显示创建模态框
     showCreateModal() {
-        document.getElementById('modalTitle').textContent = '创建告警规则';
+        document.getElementById('modalTitle').textContent = '创建价格监控';
         document.getElementById('alertForm').reset();
         document.getElementById('alertId').value = '';
         this.updateFormFields();
@@ -27,7 +27,7 @@ const UI = {
                 direction = direction === 'Above' ? 0 : 1;
             }
 
-            document.getElementById('modalTitle').textContent = '编辑规则';
+            document.getElementById('modalTitle').textContent = '编辑价格监控';
             document.getElementById('alertId').value = alert.id;
             document.getElementById('alertName').value = alert.name;
             document.getElementById('alertSymbol').value = alert.symbol;

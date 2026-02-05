@@ -23,7 +23,7 @@ public interface IPriceMonitorService
     Task ExecuteCheckAsync();
 
     /// <summary>
-    /// 检查单个告警
+    /// 检查单个监控规则
     /// </summary>
-    Task<bool> CheckAlertAsync(PriceAlert alert);
+    Task<bool> CheckRuleAsync(PriceMonitorRule rule);
 }

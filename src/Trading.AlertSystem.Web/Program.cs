@@ -43,18 +43,18 @@ if (!string.IsNullOrEmpty(connectionString))
     {
         ConnectionString = connectionString,
         DatabaseName = cosmosConfig["DatabaseName"] ?? "TradingSystem",
-        AlertContainerName = cosmosConfig["AlertContainerName"] ?? "PriceAlerts",
+        PriceMonitorContainerName = cosmosConfig["PriceMonitorContainerName"] ?? "PriceMonitor",
         AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory",
-        EmaConfigContainerName = cosmosConfig["EmaConfigContainerName"] ?? "EmaConfig",
+        EmaMonitorContainerName = cosmosConfig["EmaMonitorContainerName"] ?? "EmaMonitor",
         DataSourceConfigContainerName = cosmosConfig["DataSourceConfigContainerName"] ?? "DataSourceConfig",
         EmailConfigContainerName = cosmosConfig["EmailConfigContainerName"] ?? "EmailConfig"
     };
 
     builder.Services.AddSingleton(cosmosSettings);
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Infrastructure.CosmosDbContext>();
-    builder.Services.AddSingleton<IPriceAlertRepository, PriceAlertRepository>();
+    builder.Services.AddSingleton<IPriceMonitorRepository, PriceMonitorRepository>();
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IAlertHistoryRepository, Trading.AlertSystem.Data.Repositories.AlertHistoryRepository>();
-    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository, Trading.AlertSystem.Data.Repositories.EmaConfigRepository>();
+    builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IEmaMonitorRepository, Trading.AlertSystem.Data.Repositories.EmaMonitorRepository>();
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IDataSourceConfigRepository, Trading.AlertSystem.Data.Repositories.DataSourceConfigRepository>();
     builder.Services.AddSingleton<Trading.AlertSystem.Data.Repositories.IEmailConfigRepository, Trading.AlertSystem.Data.Repositories.EmailConfigRepository>();
 
@@ -100,7 +100,7 @@ if (!string.IsNullOrEmpty(connectionString))
 else
 {
     // 使用内存存储作为后备方案
-    builder.Services.AddSingleton<IPriceAlertRepository, InMemoryPriceAlertRepository>();
+    builder.Services.AddSingleton<IPriceMonitorRepository, InMemoryPriceMonitorRepository>();
     // AlertHistoryRepository 需要 CosmosDB，不提供内存版本
 
     // 如果没有CosmosDB，使用默认配置
@@ -209,11 +209,11 @@ if (cosmosDbContext != null)
     await cosmosDbContext.InitializeAsync();
 
     // 使用 appsettings 中的值初始化 EMA 配置（如果数据库中不存在）
-    var emaConfigRepo = app.Services.GetService<Trading.AlertSystem.Data.Repositories.IEmaConfigRepository>();
+    var emaMonitorRepo = app.Services.GetService<Trading.AlertSystem.Data.Repositories.IEmaMonitorRepository>();
     var emaSettings = app.Services.GetService<EmaMonitoringSettings>();
-    if (emaConfigRepo != null && emaSettings != null)
+    if (emaMonitorRepo != null && emaSettings != null)
     {
-        await emaConfigRepo.InitializeDefaultConfigAsync(
+        await emaMonitorRepo.InitializeDefaultConfigAsync(
             emaSettings.Enabled,
             emaSettings.Symbols,
             emaSettings.TimeFrames,

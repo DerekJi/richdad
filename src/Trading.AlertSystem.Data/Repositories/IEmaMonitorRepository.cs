@@ -3,9 +3,9 @@ using Trading.AlertSystem.Data.Models;
 namespace Trading.AlertSystem.Data.Repositories;
 
 /// <summary>
-/// EMA监测配置仓储接口
+/// EMA监控配置仓储接口
 /// </summary>
-public interface IEmaConfigRepository
+public interface IEmaMonitorRepository
 {
     /// <summary>
     /// 获取配置（单例模式）

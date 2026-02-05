@@ -14,7 +14,7 @@ namespace Trading.AlertSystem.Service.Services;
 /// </summary>
 public class PriceMonitorService : IPriceMonitorService
 {
-    private readonly IPriceAlertRepository _alertRepository;
+    private readonly IPriceMonitorRepository _repository;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
     private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
@@ -24,14 +24,14 @@ public class PriceMonitorService : IPriceMonitorService
     private bool _isRunning;
 
     public PriceMonitorService(
-        IPriceAlertRepository alertRepository,
+        IPriceMonitorRepository repository,
         IAlertHistoryRepository alertHistoryRepository,
         IMarketDataService marketDataService,
         ITelegramService telegramService,
         MonitoringSettings settings,
         ILogger<PriceMonitorService> logger)
     {
-        _alertRepository = alertRepository;
+        _repository = repository;
         _alertHistoryRepository = alertHistoryRepository;
         _marketDataService = marketDataService;
         _telegramService = telegramService;
@@ -91,28 +91,28 @@ public class PriceMonitorService : IPriceMonitorService
         {
             _logger.LogDebug("开始执行价格监控检查");
 
-            var alerts = await _alertRepository.GetEnabledAlertsAsync();
-            var alertList = alerts.ToList();
+            var rules = await _repository.GetEnabledRulesAsync();
+            var ruleList = rules.ToList();
 
-            if (!alertList.Any())
+            if (!ruleList.Any())
             {
-                _logger.LogDebug("没有启用的告警");
+                _logger.LogDebug("没有启用的监控规则");
                 return;
             }
 
-            _logger.LogInformation("检查 {Count} 个告警", alertList.Count);
+            _logger.LogInformation("检查 {Count} 个监控规则", ruleList.Count);
 
             // 按品种分组，批量获取价格
-            var symbols = alertList.Select(a => a.Symbol).Distinct().ToList();
+            var symbols = ruleList.Select(r => r.Symbol).Distinct().ToList();
 
-            // 并行检查告警（限制并发数）
+            // 并行检查监控规则（限制并发数）
             var semaphore = new SemaphoreSlim(_settings.MaxConcurrency);
-            var tasks = alertList.Select(async alert =>
+            var tasks = ruleList.Select(async rule =>
             {
                 await semaphore.WaitAsync();
                 try
                 {
-                    await CheckAlertAsync(alert);
+                    await CheckRuleAsync(rule);
                 }
                 finally
                 {
@@ -130,63 +130,63 @@ public class PriceMonitorService : IPriceMonitorService
         }
     }
 
-    public async Task<bool> CheckAlertAsync(PriceAlert alert)
+    public async Task<bool> CheckRuleAsync(PriceMonitorRule rule)
     {
         try
         {
-            _logger.LogDebug("检查告警: {AlertName} ({Symbol})", alert.Name, alert.Symbol);
+            _logger.LogDebug("检查监控规则: {RuleName} ({Symbol})", rule.Name, rule.Symbol);
 
             // 获取当前价格
-            var currentPrice = await _marketDataService.GetSymbolPriceAsync(alert.Symbol);
+            var currentPrice = await _marketDataService.GetSymbolPriceAsync(rule.Symbol);
             if (currentPrice == null)
             {
-                _logger.LogWarning("无法获取 {Symbol} 的价格", alert.Symbol);
+                _logger.LogWarning("无法获取 {Symbol} 的价格", rule.Symbol);
                 return false;
             }
 
             decimal targetValue;
             string targetDescription;
 
-            // 根据告警类型计算目标值
-            switch (alert.Type)
+            // 根据监控类型计算目标值
+            switch (rule.Type)
             {
                 case AlertType.FixedPrice:
-                    if (!alert.TargetPrice.HasValue)
+                    if (!rule.TargetPrice.HasValue)
                     {
-                        _logger.LogWarning("告警 {AlertId} 未设置目标价格", alert.Id);
+                        _logger.LogWarning("监控规则 {RuleId} 未设置目标价格", rule.Id);
                         return false;
                     }
-                    targetValue = alert.TargetPrice.Value;
+                    targetValue = rule.TargetPrice.Value;
                     targetDescription = $"目标价格 {targetValue}";
                     break;
 
                 case AlertType.EMA:
-                    if (!alert.EmaPeriod.HasValue)
+                    if (!rule.EmaPeriod.HasValue)
                     {
-                        _logger.LogWarning("告警 {AlertId} 未设置EMA周期", alert.Id);
+                        _logger.LogWarning("监控规则 {RuleId} 未设置EMA周期", rule.Id);
                         return false;
                     }
-                    targetValue = await CalculateEmaAsync(alert.Symbol, alert.TimeFrame, alert.EmaPeriod.Value);
-                    targetDescription = $"EMA({alert.EmaPeriod}) {targetValue}";
+                    targetValue = await CalculateEmaAsync(rule.Symbol, rule.TimeFrame, rule.EmaPeriod.Value);
+                    targetDescription = $"EMA({rule.EmaPeriod}) {targetValue}";
                     break;
 
                 case AlertType.MA:
-                    if (!alert.MaPeriod.HasValue)
+                    if (!rule.MaPeriod.HasValue)
                     {
-                        _logger.LogWarning("告警 {AlertId} 未设置MA周期", alert.Id);
+                        _logger.LogWarning("监控规则 {RuleId} 未设置MA周期", rule.Id);
                         return false;
                     }
-                    targetValue = await CalculateMaAsync(alert.Symbol, alert.TimeFrame, alert.MaPeriod.Value);
-                    targetDescription = $"MA({alert.MaPeriod}) {targetValue}";
+                    targetValue = await CalculateMaAsync(rule.Symbol, rule.TimeFrame, rule.MaPeriod.Value);
+                    targetDescription = $"MA({rule.MaPeriod}) {targetValue}";
                     break;
 
                 default:
-                    _logger.LogWarning("不支持的告警类型: {Type}", alert.Type);
+                    _logger.LogWarning("不支持的监控类型: {Type}", rule.Type);
                     return false;
             }
 
             // 检查是否触发条件
-            bool isTriggered = alert.Direction switch
+            bool isTriggered = rule.Direction switch
             {
                 PriceDirection.Above => currentPrice.LastPrice >= targetValue,
                 PriceDirection.Below => currentPrice.LastPrice <= targetValue,
@@ -195,30 +195,30 @@ public class PriceMonitorService : IPriceMonitorService
 
             if (isTriggered)
             {
-                _logger.LogInformation("告警触发: {AlertName} - 当前价格 {Price} {Direction} {Target}",
-                    alert.Name, currentPrice.LastPrice,
-                    alert.Direction == PriceDirection.Above ? "上穿" : "下穿",
+                _logger.LogInformation("监控规则触发: {RuleName} - 当前价格 {Price} {Direction} {Target}",
+                    rule.Name, currentPrice.LastPrice,
+                    rule.Direction == PriceDirection.Above ? "上穿" : "下穿",
                     targetDescription);
 
                 // 发送通知
-                var message = FormatMessage(alert, currentPrice.LastPrice, targetValue, targetDescription);
-                await _telegramService.SendFormattedMessageAsync(message, alert.TelegramChatId);
+                var message = FormatMessage(rule, currentPrice.LastPrice, targetValue, targetDescription);
+                await _telegramService.SendFormattedMessageAsync(message, rule.TelegramChatId);
 
                 // 保存告警历史
                 var alertHistory = new AlertHistory
                 {
                     Type = AlertHistoryType.PriceAlert,
-                    Symbol = alert.Symbol,
+                    Symbol = rule.Symbol,
                     AlertTime = DateTime.UtcNow,
                     Message = message,
                     Details = JsonSerializer.Serialize(new PriceAlertDetails
                     {
                         TargetPrice = targetValue,
                         CurrentPrice = currentPrice.LastPrice,
-                        Direction = alert.Direction == PriceDirection.Above ? "Above" : "Below"
+                        Direction = rule.Direction == PriceDirection.Above ? "Above" : "Below"
                     }),
                     IsSent = true,
-                    SendTarget = alert.TelegramChatId?.ToString()
+                    SendTarget = rule.TelegramChatId?.ToString()
                 };
 
                 try
@@ -231,11 +231,11 @@ public class PriceMonitorService : IPriceMonitorService
                     // 不影响主流程，继续执行
                 }
 
-                //  message = FormatMessage(alert, currentPrice.LastPrice, targetValue, targetDescription);
-                await _telegramService.SendFormattedMessageAsync(message, alert.TelegramChatId);
+                //  message = FormatMessage(rule, currentPrice.LastPrice, targetValue, targetDescription);
+                await _telegramService.SendFormattedMessageAsync(message, rule.TelegramChatId);
 
                 // 标记为已触发
-                await _alertRepository.MarkAsTriggeredAsync(alert.Id);
+                await _repository.MarkAsTriggeredAsync(rule.Id);
 
                 return true;
             }
@@ -244,7 +244,7 @@ public class PriceMonitorService : IPriceMonitorService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "检查告警 {AlertId} 时发生错误", alert.Id);
+            _logger.LogError(ex, "检查监控规则 {RuleId} 时发生错误", rule.Id);
             return false;
         }
     }
@@ -305,16 +305,16 @@ public class PriceMonitorService : IPriceMonitorService
         }
     }
 
-    private string FormatMessage(PriceAlert alert, decimal currentPrice, decimal targetValue, string targetDescription)
+    private string FormatMessage(PriceMonitorRule rule, decimal currentPrice, decimal targetValue, string targetDescription)
     {
-        var directionText = alert.Direction == PriceDirection.Above ? "上穿" : "下穿";
+        var directionText = rule.Direction == PriceDirection.Above ? "上穿" : "下穿";
 
         // 如果有自定义模板，使用模板
-        if (!string.IsNullOrEmpty(alert.MessageTemplate))
+        if (!string.IsNullOrEmpty(rule.MessageTemplate))
         {
-            return alert.MessageTemplate
-                .Replace("{Symbol}", alert.Symbol)
-                .Replace("{Name}", alert.Name)
+            return rule.MessageTemplate
+                .Replace("{Symbol}", rule.Symbol)
+                .Replace("{Name}", rule.Name)
                 .Replace("{Price}", currentPrice.ToString("F5"))
                 .Replace("{Target}", targetDescription)
                 .Replace("{Direction}", directionText)
@@ -322,10 +322,10 @@ public class PriceMonitorService : IPriceMonitorService
         }
 
         // 默认消息格式
-        return $@"🔔 **价格告警触发**
+        return $@"🔔 **价格监控触发**
 
-📊 **品种**: {alert.Symbol}
-📝 **名称**: {alert.Name}
+📊 **品种**: {rule.Symbol}
+📝 **名称**: {rule.Name}
 💰 **当前价格**: {currentPrice:F5}
 🎯 **{directionText}**: {targetDescription}
 ⏰ **时间**: {DateTime.Now:yyyy-MM-dd HH:mm:ss}";

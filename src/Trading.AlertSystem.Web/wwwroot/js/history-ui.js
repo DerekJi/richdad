@@ -30,7 +30,7 @@ const HistoryUI = {
                 <div class="empty-state">
                     <div class="empty-state-icon">📭</div>
                     <div class="empty-state-text">暂无触发记录</div>
-                    <div class="empty-state-hint">当告警规则触发时，记录会显示在这里</div>
+                    <div class="empty-state-hint">当价格监控触发时，记录会显示在这里</div>
                 </div>
             `;
             return;

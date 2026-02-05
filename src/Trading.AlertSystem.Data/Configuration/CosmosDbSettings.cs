@@ -16,9 +16,9 @@ public class CosmosDbSettings
     public string DatabaseName { get; set; } = "TradingSystem";
 
     /// <summary>
-    /// 价格提醒容器名称
+    /// 价格监控容器名称
     /// </summary>
-    public string AlertContainerName { get; set; } = "PriceAlerts";
+    public string PriceMonitorContainerName { get; set; } = "PriceMonitor";
 
     /// <summary>
     /// 告警历史容器名称
@@ -26,9 +26,9 @@ public class CosmosDbSettings
     public string AlertHistoryContainerName { get; set; } = "AlertHistory";
 
     /// <summary>
-    /// EMA配置容器名称
+    /// EMA监控配置容器名称
     /// </summary>
-    public string EmaConfigContainerName { get; set; } = "EmaConfig";
+    public string EmaMonitorContainerName { get; set; } = "EmaMonitor";
 
     /// <summary>
     /// 数据源配置容器名称

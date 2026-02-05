@@ -6,68 +6,68 @@ using Trading.AlertSystem.Service.Services;
 namespace Trading.AlertSystem.Web.Controllers;
 
 /// <summary>
-/// 价格告警管理API
+/// 价格监控管理API
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class AlertsController : ControllerBase
+public class PriceMonitorController : ControllerBase
 {
-    private readonly IPriceAlertRepository _alertRepository;
+    private readonly IPriceMonitorRepository _repository;
     private readonly IStreamingPriceMonitorService? _streamingMonitor;
-    private readonly ILogger<AlertsController> _logger;
+    private readonly ILogger<PriceMonitorController> _logger;
 
-    public AlertsController(
-        IPriceAlertRepository alertRepository,
+    public PriceMonitorController(
+        IPriceMonitorRepository repository,
         IStreamingPriceMonitorService? streamingMonitor,
-        ILogger<AlertsController> logger)
+        ILogger<PriceMonitorController> logger)
     {
-        _alertRepository = alertRepository;
+        _repository = repository;
         _streamingMonitor = streamingMonitor;
         _logger = logger;
     }
 
     /// <summary>
-    /// 获取所有告警
+    /// 获取所有监控规则
     /// </summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PriceAlert>>> GetAll()
+    public async Task<ActionResult<IEnumerable<PriceMonitorRule>>> GetAll()
     {
-        var alerts = await _alertRepository.GetAllAsync();
-        return Ok(alerts);
+        var rules = await _repository.GetAllAsync();
+        return Ok(rules);
     }
 
     /// <summary>
-    /// 获取启用的告警
+    /// 获取启用的监控规则
     /// </summary>
     [HttpGet("enabled")]
-    public async Task<ActionResult<IEnumerable<PriceAlert>>> GetEnabled()
+    public async Task<ActionResult<IEnumerable<PriceMonitorRule>>> GetEnabled()
     {
-        var alerts = await _alertRepository.GetEnabledAlertsAsync();
-        return Ok(alerts);
+        var rules = await _repository.GetEnabledRulesAsync();
+        return Ok(rules);
     }
 
     /// <summary>
-    /// 根据ID获取告警
+    /// 根据ID获取监控规则
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<ActionResult<PriceAlert>> GetById(string id)
+    public async Task<ActionResult<PriceMonitorRule>> GetById(string id)
     {
-        var alert = await _alertRepository.GetByIdAsync(id);
-        if (alert == null)
+        var rule = await _repository.GetByIdAsync(id);
+        if (rule == null)
             return NotFound();
 
-        return Ok(alert);
+        return Ok(rule);
     }
 
     /// <summary>
-    /// 创建新告警
+    /// 创建新监控规则
     /// </summary>
     [HttpPost]
-    public async Task<ActionResult<PriceAlert>> Create([FromBody] CreateAlertRequest request)
+    public async Task<ActionResult<PriceMonitorRule>> Create([FromBody] CreateRuleRequest request)
     {
         try
         {
-            var alert = new PriceAlert
+            var rule = new PriceMonitorRule
             {
                 Symbol = request.Symbol,
                 Name = request.Name,
@@ -82,7 +82,7 @@ public class AlertsController : ControllerBase
                 Enabled = request.Enabled
             };
 
-            var created = await _alertRepository.CreateAsync(alert);
+            var created = await _repository.CreateAsync(rule);
 
             // 刷新 Streaming 订阅
             if (_streamingMonitor != null)
@@ -94,20 +94,20 @@ public class AlertsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "创建告警失败");
-            return StatusCode(500, "创建告警失败");
+            _logger.LogError(ex, "创建监控规则失败");
+            return StatusCode(500, "创建监控规则失败");
         }
     }
 
     /// <summary>
-    /// 更新告警
+    /// 更新监控规则
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<ActionResult<PriceAlert>> Update(string id, [FromBody] UpdateAlertRequest request)
+    public async Task<ActionResult<PriceMonitorRule>> Update(string id, [FromBody] UpdateRuleRequest request)
     {
         try
         {
-            var existing = await _alertRepository.GetByIdAsync(id);
+            var existing = await _repository.GetByIdAsync(id);
             if (existing == null)
                 return NotFound();
 
@@ -123,7 +123,7 @@ public class AlertsController : ControllerBase
             existing.TelegramChatId = request.TelegramChatId ?? existing.TelegramChatId;
             existing.Enabled = request.Enabled ?? existing.Enabled;
 
-            var updated = await _alertRepository.UpdateAsync(existing);
+            var updated = await _repository.UpdateAsync(existing);
 
             // 刷新 Streaming 订阅
             if (_streamingMonitor != null)
@@ -135,18 +135,18 @@ public class AlertsController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "更新告警失败");
-            return StatusCode(500, "更新告警失败");
+            _logger.LogError(ex, "更新监控规则失败");
+            return StatusCode(500, "更新监控规则失败");
         }
     }
 
     /// <summary>
-    /// 删除告警
+    /// 删除监控规则
     /// </summary>
     [HttpDelete("{id}")]
     public async Task<ActionResult> Delete(string id)
     {
-        var success = await _alertRepository.DeleteAsync(id);
+        var success = await _repository.DeleteAsync(id);
         if (!success)
             return NotFound();
 
@@ -160,24 +160,24 @@ public class AlertsController : ControllerBase
     }
 
     /// <summary>
-    /// 重置告警状态
+    /// 重置监控规则状态
     /// </summary>
     [HttpPost("{id}/reset")]
     public async Task<ActionResult> Reset(string id)
     {
-        var alert = await _alertRepository.GetByIdAsync(id);
-        if (alert == null)
+        var rule = await _repository.GetByIdAsync(id);
+        if (rule == null)
             return NotFound();
 
-        await _alertRepository.ResetAlertAsync(id);
+        await _repository.ResetRuleAsync(id);
         return Ok();
     }
 }
 
 /// <summary>
-/// 创建告警请求
+/// 创建监控规则请求
 /// </summary>
-public class CreateAlertRequest
+public class CreateRuleRequest
 {
     public string Symbol { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
@@ -193,9 +193,9 @@ public class CreateAlertRequest
 }
 
 /// <summary>
-/// 更新告警请求
+/// 更新监控规则请求
 /// </summary>
-public class UpdateAlertRequest
+public class UpdateRuleRequest
 {
     public string? Symbol { get; set; }
     public string? Name { get; set; }

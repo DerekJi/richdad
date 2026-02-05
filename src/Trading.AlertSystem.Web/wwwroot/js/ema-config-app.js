@@ -15,15 +15,23 @@ function setupEventListeners() {
     symbolInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+            e.stopPropagation();
             addSymbol();
         }
     });
 
-    // EMA周期输入
+    // EMA周期输入 - 使用 keyup 以确保值已经更新
     const emaPeriodInput = document.getElementById('emaPeriodInput');
     emaPeriodInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
+            e.stopPropagation();
+        }
+    });
+    emaPeriodInput.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
             addEmaPeriod();
         }
     });
@@ -43,7 +51,7 @@ async function loadConfig() {
     try {
         showStatus('正在加载配置...', 'info');
 
-        const response = await fetch('/api/emaconfig');
+        const response = await fetch('/api/emamonitor');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}: ${await response.text()}`);
         }
@@ -184,7 +192,7 @@ async function saveConfig() {
 
         showStatus('正在保存配置...', 'info');
 
-        const response = await fetch('/api/emaconfig', {
+        const response = await fetch('/api/emamonitor', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -213,7 +221,7 @@ async function viewStatus() {
     try {
         showStatus('正在获取状态...', 'info');
 
-        const response = await fetch('/api/emaconfig/status');
+        const response = await fetch('/api/emamonitor/status');
         if (!response.ok) {
             throw new Error(`HTTP ${response.status}`);
         }

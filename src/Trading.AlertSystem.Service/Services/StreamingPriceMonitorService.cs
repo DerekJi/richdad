@@ -15,7 +15,7 @@ namespace Trading.AlertSystem.Service.Services;
 /// </summary>
 public class StreamingPriceMonitorService : IStreamingPriceMonitorService
 {
-    private readonly IPriceAlertRepository _alertRepository;
+    private readonly IPriceMonitorRepository _repository;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
     private readonly IOandaStreamingService _streamingService;
     private readonly ITelegramService _telegramService;
@@ -25,22 +25,22 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
     // 缓存已触发的告警，避免重复触发
     private readonly ConcurrentDictionary<string, DateTime> _triggeredAlerts = new();
 
-    // 缓存告警列表，定期刷新
-    private List<PriceAlert> _cachedAlerts = new();
-    private DateTime _lastAlertRefresh = DateTime.MinValue;
-    private readonly TimeSpan _alertRefreshInterval = TimeSpan.FromSeconds(30);
+    // 缓存监控规则列表，定期刷新
+    private List<PriceMonitorRule> _cachedRules = new();
+    private DateTime _lastRefresh = DateTime.MinValue;
+    private readonly TimeSpan _refreshInterval = TimeSpan.FromSeconds(30);
 
     private bool _isRunning;
 
     public StreamingPriceMonitorService(
-        IPriceAlertRepository alertRepository,
+        IPriceMonitorRepository repository,
         IAlertHistoryRepository alertHistoryRepository,
         IOandaStreamingService streamingService,
         ITelegramService telegramService,
         MonitoringSettings settings,
         ILogger<StreamingPriceMonitorService> logger)
     {
-        _alertRepository = alertRepository;
+        _repository = repository;
         _alertHistoryRepository = alertHistoryRepository;
         _streamingService = streamingService;
         _telegramService = telegramService;
@@ -98,26 +98,26 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
     {
         try
         {
-            // 获取所有启用的固定价格告警
-            var allAlerts = await _alertRepository.GetAllAsync();
-            _cachedAlerts = allAlerts
-                .Where(a => a.Enabled && !a.IsTriggered && a.Type == AlertType.FixedPrice)
+            // 获取所有启用的固定价格监控规则
+            var allRules = await _repository.GetAllAsync();
+            _cachedRules = allRules
+                .Where(r => r.Enabled && !r.IsTriggered && r.Type == AlertType.FixedPrice)
                 .ToList();
 
-            _lastAlertRefresh = DateTime.UtcNow;
+            _lastRefresh = DateTime.UtcNow;
 
-            if (_cachedAlerts.Count == 0)
+            if (_cachedRules.Count == 0)
             {
-                _logger.LogInformation("没有需要监控的固定价格告警");
+                _logger.LogInformation("没有需要监控的固定价格规则");
                 await _streamingService.StopStreamingAsync();
                 return;
             }
 
             // 获取需要订阅的品种
-            var symbols = _cachedAlerts.Select(a => a.Symbol).Distinct().ToList();
+            var symbols = _cachedRules.Select(r => r.Symbol).Distinct().ToList();
 
-            _logger.LogInformation("监控 {Count} 个固定价格告警，品种: {Symbols}",
-                _cachedAlerts.Count, string.Join(", ", symbols));
+            _logger.LogInformation("监控 {Count} 个固定价格规则，品种: {Symbols}",
+                _cachedRules.Count, string.Join(", ", symbols));
 
             // 更新订阅
             if (_streamingService.IsRunning)
@@ -139,20 +139,20 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
     {
         try
         {
-            // 定期刷新告警列表
-            if (DateTime.UtcNow - _lastAlertRefresh > _alertRefreshInterval)
+            // 定期刷新监控规则列表
+            if (DateTime.UtcNow - _lastRefresh > _refreshInterval)
             {
                 await RefreshAlertsAndSubscribeAsync();
             }
 
-            // 检查该品种的所有告警
-            var alertsForSymbol = _cachedAlerts
-                .Where(a => a.Symbol.Equals(e.Symbol, StringComparison.OrdinalIgnoreCase))
+            // 检查该品种的所有监控规则
+            var rulesForSymbol = _cachedRules
+                .Where(r => r.Symbol.Equals(e.Symbol, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            foreach (var alert in alertsForSymbol)
+            foreach (var rule in rulesForSymbol)
             {
-                await CheckAndTriggerAlertAsync(alert, e.MidPrice, e.Timestamp);
+                await CheckAndTriggerRuleAsync(rule, e.MidPrice, e.Timestamp);
             }
         }
         catch (Exception ex)
@@ -161,15 +161,15 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
         }
     }
 
-    private async Task CheckAndTriggerAlertAsync(PriceAlert alert, decimal currentPrice, DateTime timestamp)
+    private async Task CheckAndTriggerRuleAsync(PriceMonitorRule rule, decimal currentPrice, DateTime timestamp)
     {
-        if (!alert.TargetPrice.HasValue)
+        if (!rule.TargetPrice.HasValue)
         {
             return;
         }
 
         // 检查是否已触发（防止短时间内重复触发）
-        if (_triggeredAlerts.TryGetValue(alert.Id, out var lastTriggered))
+        if (_triggeredAlerts.TryGetValue(rule.Id, out var lastTriggered))
         {
             if (DateTime.UtcNow - lastTriggered < TimeSpan.FromMinutes(1))
             {
@@ -177,10 +177,10 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
             }
         }
 
-        var targetPrice = alert.TargetPrice.Value;
+        var targetPrice = rule.TargetPrice.Value;
         var isTriggered = false;
 
-        if (alert.Direction == PriceDirection.Above)
+        if (rule.Direction == PriceDirection.Above)
         {
             // 上穿：当前价格 >= 目标价格
             isTriggered = currentPrice >= targetPrice;
@@ -196,66 +196,66 @@ public class StreamingPriceMonitorService : IStreamingPriceMonitorService
             return;
         }
 
-        _logger.LogInformation("🔔 触发价格告警: {Name} - {Symbol} {Direction} {Target}, 当前: {Current}",
-            alert.Name, alert.Symbol,
-            alert.Direction == PriceDirection.Above ? "上穿" : "下穿",
+        _logger.LogInformation("🔔 触发价格监控: {Name} - {Symbol} {Direction} {Target}, 当前: {Current}",
+            rule.Name, rule.Symbol,
+            rule.Direction == PriceDirection.Above ? "上穿" : "下穿",
             targetPrice, currentPrice);
 
         // 标记为已触发
-        _triggeredAlerts[alert.Id] = DateTime.UtcNow;
+        _triggeredAlerts[rule.Id] = DateTime.UtcNow;
 
         // 发送通知
-        var message = FormatMessage(alert, currentPrice, targetPrice);
-        await _telegramService.SendFormattedMessageAsync(message, alert.TelegramChatId);
+        var message = FormatMessage(rule, currentPrice, targetPrice);
+        await _telegramService.SendFormattedMessageAsync(message, rule.TelegramChatId);
 
         // 保存告警历史
-        await SaveAlertHistoryAsync(alert, currentPrice, targetPrice, message);
+        await SaveAlertHistoryAsync(rule, currentPrice, targetPrice, message);
 
-        // 更新数据库中的告警状态
-        await _alertRepository.MarkAsTriggeredAsync(alert.Id);
+        // 更新数据库中的监控规则状态
+        await _repository.MarkAsTriggeredAsync(rule.Id);
 
         // 从缓存中移除
-        _cachedAlerts.RemoveAll(a => a.Id == alert.Id);
+        _cachedRules.RemoveAll(r => r.Id == rule.Id);
     }
 
-    private string FormatMessage(PriceAlert alert, decimal currentPrice, decimal targetPrice)
+    private string FormatMessage(PriceMonitorRule rule, decimal currentPrice, decimal targetPrice)
     {
-        if (!string.IsNullOrEmpty(alert.MessageTemplate))
+        if (!string.IsNullOrEmpty(rule.MessageTemplate))
         {
-            return alert.MessageTemplate
-                .Replace("{Symbol}", alert.Symbol)
-                .Replace("{Name}", alert.Name)
+            return rule.MessageTemplate
+                .Replace("{Symbol}", rule.Symbol)
+                .Replace("{Name}", rule.Name)
                 .Replace("{Price}", currentPrice.ToString())
                 .Replace("{Target}", targetPrice.ToString())
-                .Replace("{Direction}", alert.Direction == PriceDirection.Above ? "上穿" : "下穿")
+                .Replace("{Direction}", rule.Direction == PriceDirection.Above ? "上穿" : "下穿")
                 .Replace("{Time}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss"));
         }
 
         return $"🔔 价格提示\n\n" +
-               $"品种: {alert.Symbol}\n" +
-               $"名称: {alert.Name}\n" +
-               $"事件: 价格{(alert.Direction == PriceDirection.Above ? "上穿" : "下穿")} {targetPrice}\n" +
+               $"品种: {rule.Symbol}\n" +
+               $"名称: {rule.Name}\n" +
+               $"事件: 价格{(rule.Direction == PriceDirection.Above ? "上穿" : "下穿")} {targetPrice}\n" +
                $"当前价格: {currentPrice}\n" +
                $"时间: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC";
     }
 
-    private async Task SaveAlertHistoryAsync(PriceAlert alert, decimal currentPrice, decimal targetPrice, string message)
+    private async Task SaveAlertHistoryAsync(PriceMonitorRule rule, decimal currentPrice, decimal targetPrice, string message)
     {
         try
         {
             var history = new AlertHistory
             {
                 Type = AlertHistoryType.PriceAlert,
-                Symbol = alert.Symbol,
+                Symbol = rule.Symbol,
                 AlertTime = DateTime.UtcNow,
                 Message = message,
                 Details = JsonSerializer.Serialize(new
                 {
-                    AlertId = alert.Id,
-                    AlertName = alert.Name,
+                    RuleId = rule.Id,
+                    RuleName = rule.Name,
                     TargetPrice = targetPrice,
                     CurrentPrice = currentPrice,
-                    Direction = alert.Direction.ToString(),
+                    Direction = rule.Direction.ToString(),
                     Source = "Streaming"
                 }),
                 IsSent = true

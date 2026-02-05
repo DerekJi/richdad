@@ -4,13 +4,13 @@ using Newtonsoft.Json;
 namespace Trading.AlertSystem.Data.Models;
 
 /// <summary>
-/// 告警规则配置（待触发的告警条件）
+/// 价格监控规则配置（待触发的监控条件）
 /// 当满足条件时触发告警，并生成AlertHistory记录
 /// </summary>
-public class PriceAlert
+public class PriceMonitorRule
 {
     /// <summary>
-    /// 告警ID
+    /// 规则ID
     /// </summary>
     [JsonPropertyName("id")]  // For System.Text.Json
     [JsonProperty("id")]      // For Newtonsoft.Json (CosmosDB)

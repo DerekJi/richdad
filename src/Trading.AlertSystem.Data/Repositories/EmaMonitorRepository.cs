@@ -6,17 +6,17 @@ using Trading.AlertSystem.Data.Models;
 namespace Trading.AlertSystem.Data.Repositories;
 
 /// <summary>
-/// EMA监测配置仓储实现
+/// EMA监控配置仓储实现
 /// </summary>
-public class EmaConfigRepository : IEmaConfigRepository
+public class EmaMonitorRepository : IEmaMonitorRepository
 {
     private readonly CosmosDbContext _context;
-    private readonly ILogger<EmaConfigRepository> _logger;
+    private readonly ILogger<EmaMonitorRepository> _logger;
     private const string ConfigId = "default";
 
-    public EmaConfigRepository(
+    public EmaMonitorRepository(
         CosmosDbContext context,
-        ILogger<EmaConfigRepository> logger)
+        ILogger<EmaMonitorRepository> logger)
     {
         _context = context;
         _logger = logger;
@@ -26,7 +26,7 @@ public class EmaConfigRepository : IEmaConfigRepository
     {
         try
         {
-            var response = await _context.EmaConfigContainer.ReadItemAsync<EmaMonitoringConfig>(
+            var response = await _context.EmaMonitorContainer.ReadItemAsync<EmaMonitoringConfig>(
                 ConfigId,
                 new PartitionKey(ConfigId));
 
@@ -51,7 +51,7 @@ public class EmaConfigRepository : IEmaConfigRepository
             config.Id = ConfigId;
             config.UpdatedAt = DateTime.UtcNow;
 
-            var response = await _context.EmaConfigContainer.UpsertItemAsync(
+            var response = await _context.EmaMonitorContainer.UpsertItemAsync(
                 config,
                 new PartitionKey(ConfigId));
 
@@ -103,7 +103,7 @@ public class EmaConfigRepository : IEmaConfigRepository
     {
         try
         {
-            await _context.EmaConfigContainer.DeleteItemAsync<EmaMonitoringConfig>(
+            await _context.EmaMonitorContainer.DeleteItemAsync<EmaMonitoringConfig>(
                 ConfigId,
                 new PartitionKey(ConfigId));
 

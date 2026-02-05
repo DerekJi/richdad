@@ -16,7 +16,7 @@ public class EmaMonitoringService : IEmaMonitoringService
     private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
     private readonly IAlertHistoryRepository _alertHistoryRepository;
-    private readonly IEmaConfigRepository _emaConfigRepository;
+    private readonly IEmaMonitorRepository _emaMonitorRepository;
     private readonly IChartService _chartService;
     private readonly ILogger<EmaMonitoringService> _logger;
 
@@ -30,14 +30,14 @@ public class EmaMonitoringService : IEmaMonitoringService
         IMarketDataService marketDataService,
         ITelegramService telegramService,
         IAlertHistoryRepository alertHistoryRepository,
-        IEmaConfigRepository emaConfigRepository,
+        IEmaMonitorRepository emaMonitorRepository,
         IChartService chartService,
         ILogger<EmaMonitoringService> logger)
     {
         _marketDataService = marketDataService;
         _telegramService = telegramService;
         _alertHistoryRepository = alertHistoryRepository;
-        _emaConfigRepository = emaConfigRepository;
+        _emaMonitorRepository = emaMonitorRepository;
         _chartService = chartService;
         _logger = logger;
     }
@@ -287,7 +287,7 @@ public class EmaMonitoringService : IEmaMonitoringService
     {
         try
         {
-            var config = await _emaConfigRepository.GetConfigAsync();
+            var config = await _emaMonitorRepository.GetConfigAsync();
             if (config == null)
             {
                 _logger.LogWarning("未找到EMA配置，将使用禁用状态");

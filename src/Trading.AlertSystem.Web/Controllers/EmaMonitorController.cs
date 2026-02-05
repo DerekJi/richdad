@@ -6,20 +6,20 @@ using Trading.AlertSystem.Service.Services;
 namespace Trading.AlertSystem.Web.Controllers;
 
 /// <summary>
-/// EMA配置管理API
+/// EMA监控管理API
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class EmaConfigController : ControllerBase
+public class EmaMonitorController : ControllerBase
 {
-    private readonly IEmaConfigRepository _repository;
+    private readonly IEmaMonitorRepository _repository;
     private readonly IEmaMonitoringService _monitoringService;
-    private readonly ILogger<EmaConfigController> _logger;
+    private readonly ILogger<EmaMonitorController> _logger;
 
-    public EmaConfigController(
-        IEmaConfigRepository repository,
+    public EmaMonitorController(
+        IEmaMonitorRepository repository,
         IEmaMonitoringService monitoringService,
-        ILogger<EmaConfigController> logger)
+        ILogger<EmaMonitorController> logger)
     {
         _repository = repository;
         _monitoringService = monitoringService;
