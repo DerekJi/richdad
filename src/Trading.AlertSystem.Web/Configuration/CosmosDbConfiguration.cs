@@ -3,6 +3,7 @@ using Trading.AlertSystem.Data.Infrastructure;
 using Trading.AlertSystem.Data.Repositories;
 using Trading.AlertSystem.Service.Configuration;
 using Trading.AlertSystem.Service.Repositories;
+using Trading.AlertSystem.Web.Services;
 
 namespace Trading.AlertSystem.Web.Configuration;
 
@@ -37,7 +38,8 @@ public static class CosmosDbConfiguration
             AlertHistoryContainerName = cosmosConfig["AlertHistoryContainerName"] ?? "AlertHistory",
             EmaMonitorContainerName = cosmosConfig["EmaMonitorContainerName"] ?? "EmaMonitor",
             DataSourceConfigContainerName = cosmosConfig["DataSourceConfigContainerName"] ?? "DataSourceConfig",
-            EmailConfigContainerName = cosmosConfig["EmailConfigContainerName"] ?? "EmailConfig"
+            EmailConfigContainerName = cosmosConfig["EmailConfigContainerName"] ?? "EmailConfig",
+            AIAnalysisHistoryContainerName = cosmosConfig["AIAnalysisHistoryContainerName"] ?? "AIAnalysisHistory"
         };
 
         services.AddSingleton(cosmosSettings);
@@ -50,6 +52,7 @@ public static class CosmosDbConfiguration
         services.AddSingleton<IDataSourceConfigRepository, DataSourceConfigRepository>();
         services.AddSingleton<IEmailConfigRepository, EmailConfigRepository>();
         services.AddSingleton<IPinBarMonitorRepository, PinBarMonitorRepository>();
+        services.AddSingleton<IAIAnalysisRepository, CosmosAIAnalysisRepository>();
 
         // 注册延迟初始化的 DataSourceSettings（从数据库加载）
         services.AddSingleton<DataSourceSettings>(serviceProvider =>

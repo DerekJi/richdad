@@ -1,4 +1,5 @@
 using Trading.AlertSystem.Data.Services;
+using Trading.AlertSystem.Web.Services;
 
 namespace Trading.AlertSystem.Web.Configuration;
 

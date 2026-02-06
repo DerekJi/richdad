@@ -39,4 +39,9 @@ public class CosmosDbSettings
     /// 邮件配置容器名称
     /// </summary>
     public string EmailConfigContainerName { get; set; } = "EmailConfig";
+
+    /// <summary>
+    /// AI分析历史容器名称
+    /// </summary>
+    public string AIAnalysisHistoryContainerName { get; set; } = "AIAnalysisHistory";
 }

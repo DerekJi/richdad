@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Trading.AI\Trading.AI.csproj" />
     <ProjectReference Include="..\Trading.AlertSystem.Data\Trading.AlertSystem.Data.csproj" />
     <ProjectReference Include="..\Trading.Core\Trading.Core.csproj" />
   </ItemGroup>

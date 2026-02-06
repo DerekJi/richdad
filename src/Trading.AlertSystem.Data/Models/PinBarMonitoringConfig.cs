@@ -249,6 +249,26 @@ public class PinBarSignalHistory
     public string Message { get; set; } = string.Empty;
 
     /// <summary>
+    /// AI质量评分（0-100），null表示未使用AI验证
+    /// </summary>
+    public int? AiQualityScore { get; set; }
+
+    /// <summary>
+    /// AI风险等级（Low/Medium/High），null表示未使用AI验证
+    /// </summary>
+    public string? AiRiskLevel { get; set; }
+
+    /// <summary>
+    /// AI验证结果（true=通过，false=未通过，null=未使用AI）
+    /// </summary>
+    public bool? AiValidated { get; set; }
+
+    /// <summary>
+    /// AI建议
+    /// </summary>
+    public string? AiRecommendation { get; set; }
+
+    /// <summary>
     /// 创建时间
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
