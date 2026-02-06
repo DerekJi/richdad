@@ -36,7 +36,7 @@ public class OptimizerCommand
             // Pin Bar形态参数
             MaxBodyPercentage = [25], // BEST of ParameterRangeHelper.SetRange(25, 50, 5),
             MinLongerWickPercentage = [45], // BEST of ParameterRangeHelper.SetRange(40, 70, 5),
-            MaxShorterWickPercentage =[35], // BEST of ParameterRangeHelper.SetRange(10, 40, 5),
+            MaxShorterWickPercentage = [35], // BEST of ParameterRangeHelper.SetRange(10, 40, 5),
 
             // EMA相关参数
             NearEmaThreshold = [0.6m], // BEST of ParameterRangeHelper.SetRange(0.5m, 0.8m, 0.1m), // ParameterRangeHelper.SetRange(0.8m, 3.0m, 0.3m),

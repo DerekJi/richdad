@@ -29,7 +29,7 @@ public class FileReportService
         var chartFilePath = Path.Combine(_reportDirectory, $"{baseFileName}.png");
 
         var sb = new StringBuilder();
-        
+
         // 生成报告内容
         AppendStrategyConfig(sb, result.Config);
         AppendOverallMetrics(sb, result, initialCapital, leverage);
@@ -39,7 +39,7 @@ public class FileReportService
         AppendTimeSlotAnalysis(sb, result);
         AppendEquityCurve(sb, result);
         AppendTradeDetails(sb, result);
-        
+
         // 添加诊断信息（如果有）
         if (!string.IsNullOrEmpty(diagnosticInfo))
         {
@@ -50,10 +50,10 @@ public class FileReportService
         }
 
         File.WriteAllText(txtFilePath, sb.ToString(), Encoding.UTF8);
-        
+
         // 生成收益曲线图
         GenerateEquityChart(result, initialCapital, chartFilePath);
-        
+
         return txtFilePath;
     }
 
@@ -70,7 +70,7 @@ public class FileReportService
         }
         sb.AppendLine($"合约规模: {config.ContractSize}");
         sb.AppendLine(new string('-', 80));
-        
+
         sb.AppendLine("Pin Bar 识别参数:");
         sb.AppendLine($"  K线波动阈值: {config.Threshold} USD");
         sb.AppendLine($"  最大实体占比: {config.MaxBodyPercentage}%");
@@ -78,18 +78,18 @@ public class FileReportService
         sb.AppendLine($"  最大短影线占比: {config.MaxShorterWickPercentage}%");
         sb.AppendLine($"  最小下影线ATR倍数: {config.MinLowerWickAtrRatio}");
         sb.AppendLine($"  要求方向匹配: {(config.RequirePinBarDirectionMatch ? "是" : "否")}");
-        
+
         sb.AppendLine("\nEMA 相关参数:");
         sb.AppendLine($"  基准EMA周期: {config.BaseEma}");
         sb.AppendLine($"  EMA列表: {string.Join(", ", config.EmaList)}");
         sb.AppendLine($"  靠近EMA阈值: {config.NearEmaThreshold} USD");
-        
+
         sb.AppendLine("\n风险管理参数:");
         sb.AppendLine($"  ATR周期: {config.AtrPeriod}");
         sb.AppendLine($"  止损ATR倍数: {config.StopLossAtrRatio}");
         sb.AppendLine($"  盈亏比: {config.RiskRewardRatio}");
         sb.AppendLine($"  止损策略: {config.StopLossStrategy}");
-        
+
         sb.AppendLine("\n交易时段:");
         if (config.NoTradingHoursLimit)
         {
@@ -123,7 +123,7 @@ public class FileReportService
         sb.AppendLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
         sb.AppendLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
         sb.AppendLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
-        sb.AppendLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
+        sb.AppendLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown / initialCapital * 100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
         sb.AppendLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
     }
 
@@ -240,85 +240,85 @@ public class FileReportService
         if (!result.Trades.Any()) return;
 
         var plt = new Plot();
-        
+
         // 准备数据
         var times = new List<DateTime>();
         var equity = new List<double>();
         var drawdown = new List<double>();
-        
+
         // 添加起始点
         times.Add(result.StartTime);
         equity.Add((double)initialCapital);
         drawdown.Add(0);
-        
+
         decimal cumulativeProfit = 0;
         decimal peak = initialCapital;
-        
+
         foreach (var trade in result.Trades.OrderBy(t => t.CloseTime))
         {
             if (!trade.CloseTime.HasValue || !trade.ProfitLoss.HasValue) continue;
-            
+
             cumulativeProfit += trade.ProfitLoss.Value;
             var currentEquity = initialCapital + cumulativeProfit;
-            
+
             times.Add(trade.CloseTime.Value);
             equity.Add((double)currentEquity);
-            
+
             // 计算回撤
             if (currentEquity > peak)
                 peak = currentEquity;
             var currentDrawdown = (double)((peak - currentEquity) / initialCapital * 100);
             drawdown.Add(-currentDrawdown); // 负数表示回撤
         }
-        
+
         // 转换为ScottPlot需要的格式
         var xValues = times.Select(t => t.ToOADate()).ToArray();
         var yEquity = equity.ToArray();
         var yDrawdown = drawdown.ToArray();
-        
+
         // 主图：权益曲线
         var equityLine = plt.Add.Scatter(xValues, yEquity);
         equityLine.LegendText = "账户权益";
         equityLine.Color = Color.FromHex("#2E7D32"); // 深绿色
         equityLine.LineWidth = 2;
         equityLine.MarkerSize = 0;
-        
+
         // 添加初始资金参考线
         var initialLine = plt.Add.HorizontalLine((double)initialCapital);
         initialLine.Text = $"初始资金 ({initialCapital:N0} USD)";
         initialLine.Color = Color.FromHex("#757575"); // 灰色
         initialLine.LineWidth = 1;
         initialLine.LinePattern = LinePattern.Dashed;
-        
+
         // 标注最终权益
         var finalEquity = equity.Last();
         var finalTime = xValues.Last();
         var marker = plt.Add.Marker(finalTime, finalEquity);
-        marker.Color = finalEquity >= (double)initialCapital 
+        marker.Color = finalEquity >= (double)initialCapital
             ? Color.FromHex("#2E7D32") // 绿色
             : Color.FromHex("#C62828"); // 红色
         marker.Size = 10;
         marker.Shape = MarkerShape.FilledCircle;
-        
+
         // 设置图表样式
         plt.Title($"{result.Config.StrategyName} - 账户权益曲线");
         plt.XLabel("时间");
         plt.YLabel("权益 (USD)");
-        
+
         // 设置X轴为日期格式
         plt.Axes.DateTimeTicksBottom();
-        
+
         // 添加网格
         plt.Grid.MajorLineColor = Color.FromHex("#E0E0E0");
         plt.Grid.MinorLineColor = Color.FromHex("#F5F5F5");
-        
+
         // 显示图例
         plt.ShowLegend(Alignment.UpperLeft);
-        
+
         // 设置图表尺寸
         plt.FigureBackground.Color = Color.FromHex("#FFFFFF");
         plt.DataBackground.Color = Color.FromHex("#FAFAFA");
-        
+
         // 保存图表
         plt.SavePng(filePath, 1600, 900);
     }

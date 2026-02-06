@@ -15,7 +15,7 @@ public class AnalyzerCommand
 
         // 支持从命令行参数指定文件
         var filePath = args.Length > 0 ? args[0] : FindLatestCheckpointFile();
-        
+
         if (!File.Exists(filePath))
         {
             Console.WriteLine($"❌ 错误: 文件不存在 - {filePath}");
@@ -23,33 +23,33 @@ public class AnalyzerCommand
             Console.WriteLine($"   运行命令: dotnet run");
             return;
         }
-        
+
         Console.WriteLine($"📁 正在读取文件: {filePath}...");
         var json = File.ReadAllText(filePath);
-        
+
         Console.WriteLine("🔄 正在解析JSON...");
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         };
         var results = JsonSerializer.Deserialize<List<OptimizationResult>>(json, options);
-        
+
         if (results == null || results.Count == 0)
         {
             Console.WriteLine("❌ 错误: 无法解析结果文件或文件为空");
             return;
         }
-        
+
         Console.WriteLine($"✓ 共有 {results.Count:N0} 个测试结果\n");
-        
+
         var top10 = results
             .OrderByDescending(r => r.TotalReturnRate)
             .Take(10)
             .ToList();
-        
+
         // 控制台输出
         PrintResults(results.Count, top10);
-        
+
         // 生成报告
         var reportPath = GenerateReport(filePath, results.Count, top10);
         Console.WriteLine($"\n✅ 分析报告已生成: {reportPath}");
@@ -60,23 +60,23 @@ public class AnalyzerCommand
         var resultsDir = "results";
         if (!Directory.Exists(resultsDir))
             return "results/checkpoint_latest.json";
-            
+
         var checkpoints = Directory.GetFiles(resultsDir, "checkpoint_*.json")
             .OrderByDescending(f => File.GetLastWriteTime(f))
             .FirstOrDefault();
-            
+
         return checkpoints ?? "results/checkpoint_latest.json";
     }
-    
+
     private static void PrintResults(int totalCount, List<OptimizationResult> top10)
     {
         Console.WriteLine("收益率最高的前10个参数组合:\n");
-        
+
         for (int i = 0; i < top10.Count; i++)
         {
             var result = top10[i];
             var p = result.Parameters;
-            
+
             Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
             Console.WriteLine($"排名 {i + 1}:");
             Console.WriteLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -99,24 +99,24 @@ public class AnalyzerCommand
             Console.WriteLine();
         }
     }
-    
+
     private static string GenerateReport(string sourceFile, int totalCount, List<OptimizationResult> top10)
     {
         var sb = new StringBuilder();
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
         var fileName = Path.GetFileName(sourceFile);
-        
+
         sb.AppendLine("# Pin Bar策略参数优化分析报告");
         sb.AppendLine();
         sb.AppendLine($"**生成时间**: {timestamp}  ");
         sb.AppendLine($"**数据来源**: `{fileName}`  ");
         sb.AppendLine($"**测试总数**: {totalCount:N0} 组参数  ");
         sb.AppendLine();
-        
+
         // 核心发现
         sb.AppendLine("## 🎯 核心发现");
         sb.AppendLine();
-        
+
         // 分析共同特征
         var commonFeatures = AnalyzeCommonFeatures(top10);
         sb.AppendLine("### Top 10 共同特征");
@@ -130,7 +130,7 @@ public class AnalyzerCommand
         sb.AppendLine($"- ✅ **平均胜率**: {commonFeatures.AvgWinRate:F2}%");
         sb.AppendLine($"- ✅ **平均交易数**: {commonFeatures.AvgTrades:F0}笔");
         sb.AppendLine();
-        
+
         // 排名第一的最佳参数
         var best = top10[0];
         var bestParams = best.Parameters;
@@ -161,7 +161,7 @@ public class AnalyzerCommand
         sb.AppendLine($"  单笔最大亏损: {bestParams.MaxLossPerTradePercent}%");
         sb.AppendLine("```");
         sb.AppendLine();
-        
+
         // 关键洞察
         sb.AppendLine("### 💡 关键洞察");
         sb.AppendLine();
@@ -171,16 +171,16 @@ public class AnalyzerCommand
         sb.AppendLine($"4. **严格的Pin Bar识别标准**: 较小的实体（{commonFeatures.MaxBodyPercentageRange}）和较长的影线（{commonFeatures.MinLongerWickPercentageRange}）能识别出更可靠的信号");
         sb.AppendLine($"5. **交易频率适中**: 平均{commonFeatures.AvgTrades:F0}笔交易，避免了过度交易");
         sb.AppendLine();
-        
+
         // Top 10 详细排名
         sb.AppendLine("## 📊 Top 10 详细排名");
         sb.AppendLine();
-        
+
         for (int i = 0; i < top10.Count; i++)
         {
             var result = top10[i];
             var p = result.Parameters;
-            
+
             sb.AppendLine($"### 排名 {i + 1}");
             sb.AppendLine();
             sb.AppendLine("| 指标 | 数值 |");
@@ -209,7 +209,7 @@ public class AnalyzerCommand
             sb.AppendLine("</details>");
             sb.AppendLine();
         }
-        
+
         // 参数分布统计
         sb.AppendLine("## 📈 参数分布统计");
         sb.AppendLine();
@@ -223,21 +223,21 @@ public class AnalyzerCommand
         sb.AppendLine($"| 风险回报比 | {top10.Min(r => r.Parameters.RiskRewardRatio)} | {top10.Max(r => r.Parameters.RiskRewardRatio)} | {GetMode(top10.Select(r => r.Parameters.RiskRewardRatio))} |");
         sb.AppendLine($"| 单笔最大亏损 | {top10.Min(r => r.Parameters.MaxLossPerTradePercent)}% | {top10.Max(r => r.Parameters.MaxLossPerTradePercent)}% | {GetMode(top10.Select(r => r.Parameters.MaxLossPerTradePercent))}% |");
         sb.AppendLine();
-        
+
         // 保存报告
         var reportFileName = $"optimization_report_{DateTime.Now:yyyyMMdd_HHmmss}.md";
         var reportPath = Path.Combine("results", reportFileName);
         File.WriteAllText(reportPath, sb.ToString());
-        
+
         return reportPath;
     }
-    
+
     private static CommonFeatures AnalyzeCommonFeatures(List<OptimizationResult> top10)
     {
         var riskRewards = top10.Select(r => r.Parameters.RiskRewardRatio).Distinct().ToList();
         var stopLosses = top10.Select(r => r.Parameters.StopLossAtrRatio).Distinct().ToList();
         var maxLosses = top10.Select(r => r.Parameters.MaxLossPerTradePercent).Distinct().ToList();
-        
+
         return new CommonFeatures
         {
             RiskRewardRatio = riskRewards.Count == 1 ? $"**{riskRewards[0]}** (100%一致)" : $"{string.Join(", ", riskRewards)}",
@@ -250,7 +250,7 @@ public class AnalyzerCommand
             AvgTrades = (decimal)top10.Average(r => r.TotalTrades)
         };
     }
-    
+
     private static T GetMode<T>(IEnumerable<T> values)
     {
         return values.GroupBy(v => v)

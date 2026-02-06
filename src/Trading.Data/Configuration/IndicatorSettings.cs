@@ -9,17 +9,17 @@ public class IndicatorSettings
     /// 基准EMA周期
     /// </summary>
     public int BaseEma { get; set; }
-    
+
     /// <summary>
     /// ATR周期
     /// </summary>
     public int AtrPeriod { get; set; }
-    
+
     /// <summary>
     /// 快速EMA周期
     /// </summary>
     public int EmaFastPeriod { get; set; } = 20;
-    
+
     /// <summary>
     /// 慢速EMA周期
     /// </summary>

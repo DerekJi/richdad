@@ -24,24 +24,24 @@ public class ParameterSpace
     public async IAsyncEnumerable<BacktestParameters> GetCombinations()
     {
         foreach (var maxBody in MaxBodyPercentage)
-        foreach (var minWick in MinLongerWickPercentage)
-        foreach (var maxWick in MaxShorterWickPercentage)
-        foreach (var nearEma in NearEmaThreshold)
-        foreach (var stopLoss in StopLossAtrRatio)
-        foreach (var riskReward in RiskRewardRatio)
-        foreach (var maxLoss in MaxLossPerTradePercent)
-        {
-            yield return new BacktestParameters
-            {
-                MaxBodyPercentage = maxBody,
-                MinLongerWickPercentage = minWick,
-                MaxShorterWickPercentage = maxWick,
-                NearEmaThreshold = nearEma,
-                StopLossAtrRatio = stopLoss,
-                RiskRewardRatio = riskReward,
-                MaxLossPerTradePercent = maxLoss
-            };
-            await Task.Yield();
-        }
+            foreach (var minWick in MinLongerWickPercentage)
+                foreach (var maxWick in MaxShorterWickPercentage)
+                    foreach (var nearEma in NearEmaThreshold)
+                        foreach (var stopLoss in StopLossAtrRatio)
+                            foreach (var riskReward in RiskRewardRatio)
+                                foreach (var maxLoss in MaxLossPerTradePercent)
+                                {
+                                    yield return new BacktestParameters
+                                    {
+                                        MaxBodyPercentage = maxBody,
+                                        MinLongerWickPercentage = minWick,
+                                        MaxShorterWickPercentage = maxWick,
+                                        NearEmaThreshold = nearEma,
+                                        StopLossAtrRatio = stopLoss,
+                                        RiskRewardRatio = riskReward,
+                                        MaxLossPerTradePercent = maxLoss
+                                    };
+                                    await Task.Yield();
+                                }
     }
 }

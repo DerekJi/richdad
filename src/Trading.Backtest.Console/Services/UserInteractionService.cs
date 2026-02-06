@@ -14,7 +14,7 @@ public class UserInteractionService
     public string SelectStrategy(List<string> availableStrategies, string? defaultStrategy = null)
     {
         var actualDefault = defaultStrategy ?? availableStrategies[0];
-        
+
         System.Console.WriteLine("可用的策略：");
         for (int i = 0; i < availableStrategies.Count; i++)
         {
