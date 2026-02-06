@@ -102,7 +102,7 @@ public static class TimeSlotAnalyzer
         sb.AppendLine(new string('-', 80));
         sb.AppendLine($"{"时间段",-15} {"交易数",8} {"总盈亏",12} {"平均盈亏",12} {"胜率",10}");
         sb.AppendLine(new string('-', 80));
-        
+
         foreach (var slot in topProfit)
         {
             sb.AppendLine($"{slot.TimeSlot,-15} {slot.TradeCount,8} {slot.TotalProfitLoss,11:N2} " +
@@ -114,7 +114,7 @@ public static class TimeSlotAnalyzer
         sb.AppendLine(new string('-', 80));
         sb.AppendLine($"{"时间段",-15} {"交易数",8} {"总盈亏",12} {"平均盈亏",12} {"胜率",10}");
         sb.AppendLine(new string('-', 80));
-        
+
         foreach (var slot in topLoss)
         {
             sb.AppendLine($"{slot.TimeSlot,-15} {slot.TradeCount,8} {slot.TotalProfitLoss,11:N2} " +

@@ -46,7 +46,7 @@ public class ResultPrinter
         Console.WriteLine($"平均持仓时间: {FormatTimeSpan(metrics.AverageHoldingTime)}");
         Console.WriteLine($"最大连续盈利: {metrics.MaxConsecutiveWins} 单");
         Console.WriteLine($"最大连续亏损: {metrics.MaxConsecutiveLosses} 单");
-        Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown/initialCapital*100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
+        Console.WriteLine($"最大回撤: {metrics.MaxDrawdown:N2} USD ({(metrics.MaxDrawdown / initialCapital * 100):F2}%) ({(metrics.MaxDrawdownEndTime.HasValue ? metrics.MaxDrawdownEndTime.Value.ToString("yyyy-MM-dd") : "N/A")}");
         Console.WriteLine($"平均每月开仓: {metrics.AverageTradesPerMonth:F1} 单");
     }
 
@@ -62,7 +62,7 @@ public class ResultPrinter
         Console.WriteLine(new string('=', 80));
         Console.WriteLine($"{"年份",-8} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
         Console.WriteLine(new string('-', 80));
-        
+
         foreach (var year in result.YearlyMetrics)
         {
             Console.WriteLine(
@@ -89,7 +89,7 @@ public class ResultPrinter
         Console.WriteLine(new string('=', 80));
         Console.WriteLine($"{"月份",-10} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
         Console.WriteLine(new string('-', 80));
-        
+
         foreach (var month in result.MonthlyMetrics.TakeLast(12))
         {
             Console.WriteLine(
@@ -116,7 +116,7 @@ public class ResultPrinter
         Console.WriteLine(new string('=', 80));
         Console.WriteLine($"{"周",-12} {"交易数",8} {"胜率",10} {"盈亏(USD)",15} {"收益率",10} {"持仓时间",15} {"连胜",8} {"连亏",8}");
         Console.WriteLine(new string('-', 80));
-        
+
         foreach (var week in result.WeeklyMetrics.TakeLast(12))
         {
             Console.WriteLine(
@@ -151,7 +151,7 @@ public class ResultPrinter
         Console.WriteLine(new string('=', 80));
         Console.WriteLine($"{"时间",-20} {"累计收益(USD)",20} {"累计收益率",15}");
         Console.WriteLine(new string('-', 80));
-        
+
         foreach (var point in result.EquityCurve.TakeLast(10))
         {
             Console.WriteLine(
@@ -177,7 +177,7 @@ public class ResultPrinter
         foreach (var trade in result.Trades.Take(20))
         {
             var direction = trade.Direction == TradeDirection.Long ? "多单" : "空单";
-            var reason = trade.CloseReason == TradeCloseReason.StopLoss ? "止损" : 
+            var reason = trade.CloseReason == TradeCloseReason.StopLoss ? "止损" :
                         trade.CloseReason == TradeCloseReason.TakeProfit ? "止盈" : "手动";
             var pl = trade.ProfitLoss ?? 0;
             var plPrefix = pl > 0 ? "+" : "";

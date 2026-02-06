@@ -59,7 +59,7 @@ public class CsvDataProvider : IMarketDataProvider
     {
         // 查找包含symbol的文件，如 XAUUSD.a_M15_*.csv
         var files = Directory.GetFiles(_dataDirectory, $"{symbol}*.csv");
-        return files.FirstOrDefault(x => string.IsNullOrEmpty(csvFilter) ||Path.GetFileName(x).Contains(csvFilter, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
+        return files.FirstOrDefault(x => string.IsNullOrEmpty(csvFilter) || Path.GetFileName(x).Contains(csvFilter, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
     }
 
     /// <summary>

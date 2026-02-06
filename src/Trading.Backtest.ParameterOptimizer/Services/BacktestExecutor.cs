@@ -22,24 +22,24 @@ public class BacktestExecutor
             Symbol = "XAUUSD",
             CsvFilter = "",
             ContractSize = 100,
-            
+
             // Pin Bar参数
             MaxBodyPercentage = parameters.MaxBodyPercentage,
             MinLongerWickPercentage = parameters.MinLongerWickPercentage,
             MaxShorterWickPercentage = parameters.MaxShorterWickPercentage,
             MinLowerWickAtrRatio = 0,
             Threshold = 0.8m,
-            
+
             // EMA参数
             BaseEma = 200,
             EmaList = new List<int> { 20, 60, 80, 100, 200 },
             NearEmaThreshold = parameters.NearEmaThreshold,
             AtrPeriod = 14,
-            
+
             // 止损止盈参数
             StopLossAtrRatio = parameters.StopLossAtrRatio,
             RiskRewardRatio = parameters.RiskRewardRatio,
-            
+
             // 交易时间
             NoTradingHoursLimit = true,
             StartTradingHour = 5,

@@ -36,7 +36,7 @@ public class ResultsManager
     public void ShowTopResults(int topN)
     {
         Console.WriteLine($"\n=== Top {topN} 参数组合 (按收益率排序) ===\n");
-        
+
         var topResults = _results
             .Where(r => r.TotalTrades >= 50) // 至少50笔交易
             .OrderByDescending(r => r.TotalReturnRate)

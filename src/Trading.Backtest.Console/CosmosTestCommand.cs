@@ -50,7 +50,7 @@ public class CosmosTestCommand
     private static async Task GenerateTestJson()
     {
         System.Console.WriteLine("正在运行回测生成完整数据...");
-        
+
         // 这里需要实际运行一次回测来获取真实数据
         // 暂时生成一个简化的测试结构
         var testResult = new BacktestResult
@@ -102,7 +102,7 @@ public class CosmosTestCommand
         var json = JsonSerializer.Serialize(testResult, options);
         var filePath = "cosmos_test_data.json";
         File.WriteAllText(filePath, json);
-        
+
         System.Console.WriteLine($"✓ 测试数据已生成: {Path.GetFullPath(filePath)}");
         System.Console.WriteLine($"  包含 {testResult.Trades.Count} 笔交易");
     }

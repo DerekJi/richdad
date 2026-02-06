@@ -1,4 +1,4 @@
-﻿using Trading.Backtest.Console.Services;
+using Trading.Backtest.Console.Services;
 using Trading.Backtest.Services;
 using Trading.Data.Configuration;
 using Trading.Data.Infrastructure;
@@ -17,6 +17,13 @@ class Program
 {
     static async Task Main(string[] args)
     {
+        // 检查是否是position-calc命令
+        if (args.Length > 0 && args[0].ToLower() == "position-calc")
+        {
+            await PositionCalcCommand.RunAsync(args);
+            return;
+        }
+
         // 检查是否是cosmos-test命令
         if (args.Length > 0 && args[0].ToLower() == "cosmos-test")
         {

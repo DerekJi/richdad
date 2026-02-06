@@ -27,21 +27,21 @@ public class ParameterOptimizer
         await foreach (var parameters in parameterSpace.GetCombinations())
         {
             tested++;
-            
+
             try
             {
                 var result = _executor.RunBacktest(parameters);
-                
+
                 if (tested <= 5)
                 {
                     Console.WriteLine($"  测试#{tested}: MaxBody={parameters.MaxBodyPercentage}%, MinWick={parameters.MinLongerWickPercentage}%");
                     Console.WriteLine($"    结果: 交易数={result.TotalTrades}, 收益率={result.TotalReturnRate:F2}%");
                 }
-                
+
                 if (result != null)
                 {
                     _resultsManager.AddResult(result);
-                    
+
                     if (tested % 100 == 0)
                     {
                         Console.WriteLine($"  最新: 收益率={result.TotalReturnRate:F2}%, 胜率={result.WinRate:F2}%, 交易数={result.TotalTrades}");
@@ -66,7 +66,7 @@ public class ParameterOptimizer
                     }
                 }
             }
-            
+
             if (tested % 100 == 0)
             {
                 var elapsedSec = (DateTime.Now - startTime).TotalSeconds;

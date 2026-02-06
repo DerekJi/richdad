@@ -22,7 +22,7 @@ public class DatabaseService
     public async Task<string> SaveResultAsync(BacktestResult result)
     {
         System.Console.WriteLine("\n正在保存到Cosmos DB...");
-        
+
         var id = await _repository.SaveBacktestResultAsync(result);
 
         System.Console.WriteLine($"保存成功! ID: {id}");

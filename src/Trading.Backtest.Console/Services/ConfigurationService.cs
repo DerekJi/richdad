@@ -35,8 +35,8 @@ public class ConfigurationService
         }
 
         return settings.ToStrategyConfig(
-            strategyName, 
-            _appSettings.Indicators.BaseEma, 
+            strategyName,
+            _appSettings.Indicators.BaseEma,
             _appSettings.Indicators.AtrPeriod);
     }
 
@@ -54,7 +54,7 @@ public class ConfigurationService
     public string GetDataDirectory()
     {
         var dataPath = _appSettings.DataPath;
-        
+
         // 处理相对路径
         if (!Path.IsPathRooted(dataPath))
         {
