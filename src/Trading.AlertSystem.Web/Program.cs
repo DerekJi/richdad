@@ -15,6 +15,7 @@ builder.Services.AddApplicationSettings(builder.Configuration);
 builder.Services.AddCosmosDbServices(builder.Configuration);
 builder.Services.AddDataSourceServices(builder.Configuration);
 builder.Services.AddNotificationServices(builder.Configuration);
+builder.Services.AddAIServices(builder.Configuration);  // 添加AI服务（可选）
 builder.Services.AddBusinessServices();
 builder.Services.AddBackgroundServices();
 builder.Services.AddWebServices();

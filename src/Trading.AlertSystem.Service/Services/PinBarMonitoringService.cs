@@ -4,6 +4,8 @@ using Trading.AlertSystem.Data.Models;
 using Trading.AlertSystem.Data.Repositories;
 using Trading.Core.Strategies;
 using Trading.AlertSystem.Data.Services;
+using Trading.AI.Services;
+using Trading.AI.Models;
 using AlertCandle = Trading.AlertSystem.Data.Services.Candle;
 using CoreCandle = Trading.Data.Models.Candle;
 
@@ -15,6 +17,7 @@ public class PinBarMonitoringService : BackgroundService
     private readonly IPinBarMonitorRepository _repository;
     private readonly IMarketDataService _marketDataService;
     private readonly ITelegramService _telegramService;
+    private readonly IMarketAnalysisService? _aiAnalysisService;
     private readonly TimeSpan _checkInterval = TimeSpan.FromMinutes(1);
     private readonly Dictionary<string, DateTime> _lastSignalTimes = new();
 
@@ -22,12 +25,23 @@ public class PinBarMonitoringService : BackgroundService
         ILogger<PinBarMonitoringService> logger,
         IPinBarMonitorRepository repository,
         IMarketDataService marketDataService,
-        ITelegramService telegramService)
+        ITelegramService telegramService,
+        IMarketAnalysisService? aiAnalysisService = null)
     {
         _logger = logger;
         _repository = repository;
         _marketDataService = marketDataService;
         _telegramService = telegramService;
+        _aiAnalysisService = aiAnalysisService;
+
+        if (_aiAnalysisService != null)
+        {
+            _logger.LogInformation("✅ PinBar监控服务已启用AI增强功能");
+        }
+        else
+        {
+            _logger.LogInformation("ℹ️ PinBar监控服务运行在传统模式（AI未配置）");
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -195,9 +209,46 @@ public class PinBarMonitoringService : BackgroundService
         // 获取ADX值（暂时使用0）
         decimal adx = 0m;
 
-        // 构建消息
+        // AI验证信号（如果启用）
+        SignalValidation? aiValidation = null;
+        if (_aiAnalysisService != null)
+        {
+            try
+            {
+                _logger.LogInformation("🤖 开始AI验证信号: {Symbol} {TimeFrame} {Direction}",
+                    symbol, timeFrame, direction);
+
+                var tradeDirection = direction == "Long"
+                    ? Trading.Data.Models.TradeDirection.Long
+                    : Trading.Data.Models.TradeDirection.Short;
+
+                aiValidation = await _aiAnalysisService.ValidatePinBarSignalAsync(
+                    symbol: symbol,
+                    pinBar: pinBarCandle,
+                    direction: tradeDirection
+                );
+
+                _logger.LogInformation("✅ AI验证完成: {Symbol} 质量分数={Score}/100, 有效={IsValid}, 风险={Risk}",
+                    symbol, aiValidation.QualityScore, aiValidation.IsValid, aiValidation.Risk);
+
+                // 过滤低质量信号（质量分数低于60分）
+                if (!aiValidation.IsValid || aiValidation.QualityScore < 60)
+                {
+                    _logger.LogWarning("⚠️ AI验证未通过，跳过信号: {Symbol} 分数={Score} 原因={Reason}",
+                        symbol, aiValidation.QualityScore, aiValidation.Reason);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "⚠️ AI验证失败，继续发送信号（降级处理）: {Symbol}", symbol);
+                // AI失败不影响信号发送，继续执行
+            }
+        }
+
+        // 构建消息（包含AI分析）
         var message = BuildSignalMessage(symbol, timeFrame, direction, pinBarCandle,
-            entryPrice, stopLoss, takeProfit, rrRatio, adx);
+            entryPrice, stopLoss, takeProfit, rrRatio, adx, aiValidation);
 
         // 发送Telegram消息
         try
@@ -220,7 +271,12 @@ public class PinBarMonitoringService : BackgroundService
                 RiskRewardRatio = rrRatio,
                 Adx = adx,
                 IsSent = true,
-                Message = message
+                Message = message,
+                // AI评分信息
+                AiQualityScore = aiValidation?.QualityScore,
+                AiRiskLevel = aiValidation?.Risk.ToString(),
+                AiValidated = aiValidation?.IsValid,
+                AiRecommendation = aiValidation?.Recommendation ?? null
             };
 
             await _repository.SaveSignalAsync(signal);
@@ -274,12 +330,13 @@ public class PinBarMonitoringService : BackgroundService
         decimal stopLoss,
         decimal takeProfit,
         decimal rrRatio,
-        decimal adx)
+        decimal adx,
+        SignalValidation? aiValidation = null)
     {
         var emoji = direction == "Long" ? "🟢" : "🔴";
         var directionCn = direction == "Long" ? "做多" : "做空";
 
-        return $@"{emoji} **PinBar {directionCn}信号**
+        var message = $@"{emoji} **PinBar {directionCn}信号**
 
 **品种**: {symbol}
 **周期**: {timeFrame}
@@ -297,9 +354,36 @@ public class PinBarMonitoringService : BackgroundService
 • 开盘: {pinBarCandle.Open:F5}
 • 最高: {pinBarCandle.High:F5}
 • 最低: {pinBarCandle.Low:F5}
-• 收盘: {pinBarCandle.Close:F5}
+• 收盘: {pinBarCandle.Close:F5}";
 
-⚠️ 请结合实际市场情况进行判断！";
+        // 添加AI分析结果
+        if (aiValidation != null)
+        {
+            var riskEmoji = aiValidation.Risk switch
+            {
+                Trading.AI.Models.RiskLevel.Low => "🟢",
+                Trading.AI.Models.RiskLevel.Medium => "🟡",
+                Trading.AI.Models.RiskLevel.High => "🔴",
+                _ => "⚪"
+            };
+
+            message += $@"
+
+🤖 **AI质量评估**:
+• 质量分数: {aiValidation.QualityScore}/100
+• 风险等级: {riskEmoji} {aiValidation.Risk}
+• AI建议: {aiValidation.Recommendation}
+• 分析理由: {aiValidation.Reason}";
+
+            if (!string.IsNullOrEmpty(aiValidation.Details))
+            {
+                message += $"\n• 详细信息: {aiValidation.Details}";
+            }
+        }
+
+        message += "\n\n⚠️ 请结合实际市场情况进行判断！";
+
+        return message;
     }
 
     private int GetTimeFrameMinutes(string timeFrame)

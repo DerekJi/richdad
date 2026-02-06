@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI分析历史查询</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e1e8ed;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            background: #3498db;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filters input, .filters select, .filters button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filters button {
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        .filters button:hover {
+            background: #2980b9;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+        }
+        .error {
+            background: #fee;
+            color: #c00;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow: auto;
+        }
+        .modal-close {
+            float: right;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+            line-height: 1.6;
+            border: 1px solid #3e4451;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .json-key {
+            color: #e06c75;
+        }
+        .json-value {
+            color: #98c379;
+        }
+        .json-string {
+            color: #61afef;
+        }
+        .json-number {
+            color: #d19a66;
+        }
+        .json-boolean {
+            color: #c678dd;
+        }
+        .json-null {
+            color: #c678dd;
+        }
+        .detail-section {
+            margin-bottom: 25px;
+        }
+        .detail-section h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+            font-size: 16px;
+        }
+        .detail-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        .detail-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #495057;
+        }
+        .detail-info strong {
+            color: #2c3e50;
+            min-width: 80px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI分析历史查询</h1>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('recent')">最近分析</button>
+            <button class="tab" onclick="switchTab('statistics')">统计信息</button>
+            <button class="tab" onclick="switchTab('bySymbol')">按品种查询</button>
+            <button class="tab" onclick="switchTab('byType')">按类型查询</button>
+        </div>
+
+        <!-- 最近分析 -->
+        <div id="recent" class="tab-content active">
+            <div class="filters">
+                <input type="number" id="recentCount" placeholder="记录数量" value="50" min="1" max="500">
+                <button onclick="loadRecent()">查询</button>
+            </div>
+            <div id="recentContent" class="loading">正在加载...</div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div id="statistics" class="tab-content">
+            <div class="filters">
+                <input type="date" id="statsStartDate">
+                <input type="date" id="statsEndDate">
+                <button onclick="loadStatistics()">查询</button>
+            </div>
+            <div id="statsContent" class="loading">正在加载...</div>
+        </div>
+
+        <!-- 按品种查询 -->
+        <div id="bySymbol" class="tab-content">
+            <div class="filters">
+                <input type="text" id="symbolInput" placeholder="品种代码 (如 XAUUSD)" value="XAUUSD">
+                <input type="date" id="symbolStartDate">
+                <input type="date" id="symbolEndDate">
+                <button onclick="loadBySymbol()">查询</button>
+            </div>
+            <div id="symbolContent" class="loading">正在加载...</div>
+        </div>
+
+        <!-- 按类型查询 -->
+        <div id="byType" class="tab-content">
+            <div class="filters">
+                <select id="typeSelect">
+                    <option value="TrendAnalysis">趋势分析</option>
+                    <option value="KeyLevels">关键价格位</option>
+                    <option value="SignalValidation">信号验证</option>
+                </select>
+                <input type="date" id="typeStartDate">
+                <input type="date" id="typeEndDate">
+                <button onclick="loadByType()">查询</button>
+            </div>
+            <div id="typeContent" class="loading">正在加载...</div>
+        </div>
+    </div>
+
+    <!-- 详情模态框 -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/aianalysis';
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+
+            // 自动加载数据
+            if (tabName === 'recent') loadRecent();
+            if (tabName === 'statistics') loadStatistics();
+        }
+
+        async function loadRecent() {
+            const count = document.getElementById('recentCount').value;
+            const content = document.getElementById('recentContent');
+            content.innerHTML = '<div class="loading">正在加载...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/recent?count=${count}`);
+                const data = await response.json();
+                content.innerHTML = renderAnalysisTable(data.analyses);
+            } catch (error) {
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        async function loadStatistics() {
+            const startDate = document.getElementById('statsStartDate').value;
+            const endDate = document.getElementById('statsEndDate').value;
+            const content = document.getElementById('statsContent');
+            content.innerHTML = '<div class="loading">正在加载...</div>';
+
+            try {
+                let url = `${API_BASE}/statistics`;
+                const params = [];
+                if (startDate) params.push(`startDate=${startDate}`);
+                if (endDate) params.push(`endDate=${endDate}`);
+                if (params.length) url += '?' + params.join('&');
+
+                const response = await fetch(url);
+                const data = await response.json();
+                content.innerHTML = renderStatistics(data);
+            } catch (error) {
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        async function loadBySymbol() {
+            const symbol = document.getElementById('symbolInput').value;
+            const startDate = document.getElementById('symbolStartDate').value;
+            const endDate = document.getElementById('symbolEndDate').value;
+            const content = document.getElementById('symbolContent');
+            content.innerHTML = '<div class="loading">正在加载...</div>';
+
+            try {
+                let url = `${API_BASE}/symbol/${symbol}`;
+                const params = [];
+                if (startDate) params.push(`startDate=${startDate}`);
+                if (endDate) params.push(`endDate=${endDate}`);
+                if (params.length) url += '?' + params.join('&');
+
+                const response = await fetch(url);
+                const data = await response.json();
+                content.innerHTML = `<h3>${symbol} - ${data.count} 条记录</h3>` + renderAnalysisTable(data.analyses);
+            } catch (error) {
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        async function loadByType() {
+            const type = document.getElementById('typeSelect').value;
+            const startDate = document.getElementById('typeStartDate').value;
+            const endDate = document.getElementById('typeEndDate').value;
+            const content = document.getElementById('typeContent');
+            content.innerHTML = '<div class="loading">正在加载...</div>';
+
+            try {
+                let url = `${API_BASE}/type/${type}`;
+                const params = [];
+                if (startDate) params.push(`startDate=${startDate}`);
+                if (endDate) params.push(`endDate=${endDate}`);
+                if (params.length) url += '?' + params.join('&');
+
+                const response = await fetch(url);
+                const data = await response.json();
+                content.innerHTML = `<h3>${data.analysisType} - ${data.count} 条记录</h3>` + renderAnalysisTable(data.analyses);
+            } catch (error) {
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        function renderAnalysisTable(analyses) {
+            if (!analyses || analyses.length === 0) {
+                return '<p>没有找到数据</p>';
+            }
+
+            return `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>类型</th>
+                            <th>品种</th>
+                            <th>周期</th>
+                            <th>状态</th>
+                            <th>响应时间</th>
+                            <th>Tokens</th>
+                            <th>缓存</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${analyses.map(a => `
+                            <tr>
+                                <td>${new Date(a.analysisTime).toLocaleString('zh-CN')}</td>
+                                <td>${a.analysisType}</td>
+                                <td>${a.symbol}</td>
+                                <td>${a.timeFrame || '-'}</td>
+                                <td><span class="badge ${a.isSuccess ? 'badge-success' : 'badge-danger'}">${a.isSuccess ? '成功' : '失败'}</span></td>
+                                <td>${a.responseTimeMs}ms</td>
+                                <td>${a.estimatedTokens}</td>
+                                <td>${a.fromCache ? '✓' : '-'}</td>
+                                <td><button onclick="showDetail('${a.id}')">详情</button></td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function renderStatistics(data) {
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">总分析次数</div>
+                        <div class="stat-value">${data.overview.totalAnalyses}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">成功率</div>
+                        <div class="stat-value">${data.overview.successRate}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">缓存命中率</div>
+                        <div class="stat-value">${data.overview.cacheHitRate}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均响应时间</div>
+                        <div class="stat-value">${data.performance.averageResponseTimeSec.toFixed(2)}s</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">总Token消耗</div>
+                        <div class="stat-value">${data.tokenUsage.totalEstimatedTokens.toLocaleString()}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">预估成本</div>
+                        <div class="stat-value">${data.tokenUsage.estimatedCostUSD}</div>
+                    </div>
+                </div>
+                <h3>按类型分布</h3>
+                <table>
+                    <thead>
+                        <tr><th>类型</th><th>数量</th><th>占比</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.byType.map(t => `
+                            <tr>
+                                <td>${t.type}</td>
+                                <td>${t.count}</td>
+                                <td>${t.percentage}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <h3>按品种分布</h3>
+                <table>
+                    <thead>
+                        <tr><th>品种</th><th>数量</th><th>占比</th></tr>
+                    </thead>
+                    <tbody>
+                        ${data.bySymbol.map(s => `
+                            <tr>
+                                <td>${s.symbol}</td>
+                                <td>${s.count}</td>
+                                <td>${s.percentage}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        async function showDetail(id) {
+            const modal = document.getElementById('detailModal');
+            const content = document.getElementById('modalContent');
+            content.innerHTML = '<div class="loading">正在加载...</div>';
+            modal.classList.add('active');
+
+            try {
+                const response = await fetch(`${API_BASE}/${id}`);
+                const data = await response.json();
+
+                const formatJson = (jsonStr) => {
+                    try {
+                        const obj = JSON.parse(jsonStr);
+                        return syntaxHighlight(JSON.stringify(obj, null, 2));
+                    } catch {
+                        return jsonStr;
+                    }
+                };
+
+                content.innerHTML = `
+                    <h2>分析详情</h2>
+                    <div class="detail-info">
+                        <p><strong>类型:</strong> ${data.analysisType}</p>
+                        <p><strong>品种:</strong> ${data.symbol}</p>
+                        <p><strong>时间:</strong> ${new Date(data.analysisTime).toLocaleString('zh-CN')}</p>
+                        <p><strong>状态:</strong> <span class="badge ${data.isSuccess ? 'badge-success' : 'badge-danger'}">${data.isSuccess ? '成功' : '失败'}</span></p>
+                        ${data.errorMessage ? `<p><strong>错误:</strong> ${data.errorMessage}</p>` : ''}
+                    </div>
+                    <div class="detail-section">
+                        <h3>输入数据</h3>
+                        <pre>${formatJson(data.inputData)}</pre>
+                    </div>
+                    ${data.parsedResult ? `
+                        <div class="detail-section">
+                            <h3>分析结果</h3>
+                            <pre>${formatJson(data.parsedResult)}</pre>
+                        </div>
+                    ` : ''}
+                    ${data.rawResponse ? `
+                        <div class="detail-section">
+                            <h3>原始响应</h3>
+                            <pre>${escapeHtml(data.rawResponse)}</pre>
+                        </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                content.innerHTML = `<div class="error">加载失败: ${error.message}</div>`;
+            }
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        // 初始加载
+        loadRecent();
+    </script>
+</body>
+</html>
