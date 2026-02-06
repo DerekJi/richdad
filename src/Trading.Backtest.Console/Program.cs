@@ -4,6 +4,8 @@ using Trading.Data.Configuration;
 using Trading.Data.Infrastructure;
 using Trading.Data.Interfaces;
 using Trading.Data.Repositories;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace Trading.Backtest.Console;
 

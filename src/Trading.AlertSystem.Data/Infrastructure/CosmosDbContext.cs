@@ -16,6 +16,8 @@ public class CosmosDbContext
     private Container? _emaMonitorContainer;
     private Container? _dataSourceConfigContainer;
     private Container? _emailConfigContainer;
+    private Container? _pinBarMonitorConfigContainer;
+    private Container? _pinBarSignalHistoryContainer;
 
     public CosmosDbContext(CosmosDbSettings settings)
     {
@@ -61,6 +63,14 @@ public class CosmosDbContext
         _emailConfigContainer = await _database.CreateContainerIfNotExistsAsync(
             _settings.EmailConfigContainerName,
             "/id");
+
+        _pinBarMonitorConfigContainer = await _database.CreateContainerIfNotExistsAsync(
+            "PinBarMonitorConfig",
+            "/id");
+
+        _pinBarSignalHistoryContainer = await _database.CreateContainerIfNotExistsAsync(
+            "PinBarSignalHistory",
+            "/symbol");
     }
 
     /// <summary>
@@ -123,6 +133,8 @@ public class CosmosDbContext
             var name when name == _settings.EmaMonitorContainerName => EmaMonitorContainer,
             var name when name == _settings.DataSourceConfigContainerName => DataSourceConfigContainer,
             var name when name == _settings.EmailConfigContainerName => EmailConfigContainer,
+            "PinBarMonitorConfig" => _pinBarMonitorConfigContainer ?? throw new InvalidOperationException("PinBarMonitorConfig容器未初始化"),
+            "PinBarSignalHistory" => _pinBarSignalHistoryContainer ?? throw new InvalidOperationException("PinBarSignalHistory容器未初始化"),
             _ => throw new ArgumentException($"未知的容器名称: {containerName}")
         };
     }
