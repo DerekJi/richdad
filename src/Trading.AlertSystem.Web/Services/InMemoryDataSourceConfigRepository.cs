@@ -33,13 +33,13 @@ public class InMemoryDataSourceConfigRepository : IDataSourceConfigRepository
         }
     }
 
-    public Task<DataSourceConfig> UpdateConfigAsync(DataSourceConfig config)
+    public Task UpdateConfigAsync(DataSourceConfig config)
     {
         lock (_lock)
         {
             _config = config;
             _logger.LogInformation("数据源配置已更新为: {Provider}（内存）", config.Provider);
-            return Task.FromResult(config);
+            return Task.CompletedTask;
         }
     }
 

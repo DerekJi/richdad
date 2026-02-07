@@ -1,3 +1,5 @@
+// 临时禁用 - 需要修复 Signal 和 PinBarStrategy API 更改
+#if FALSE
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Trading.AlertSystem.Data.Models;
@@ -413,3 +415,4 @@ public class DualTierPinBarMonitoringService : BackgroundService
         };
     }
 }
+#endif

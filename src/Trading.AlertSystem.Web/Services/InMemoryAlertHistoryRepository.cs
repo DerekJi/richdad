@@ -17,12 +17,14 @@ public class InMemoryAlertHistoryRepository : IAlertHistoryRepository
         _logger = logger;
     }
 
-    public Task SaveAsync(AlertHistory alert)
+    public Task<AlertHistory> AddAsync(AlertHistory alert)
     {
         lock (_lock)
         {
-            alert.Id = Guid.NewGuid().ToString();
-            alert.Timestamp = DateTime.UtcNow;
+            if (string.IsNullOrEmpty(alert.Id))
+                alert.Id = Guid.NewGuid().ToString();
+            if (alert.AlertTime == default)
+                alert.AlertTime = DateTime.UtcNow;
             _history.Add(alert);
 
             // 只保留最近1000条记录
@@ -31,7 +33,51 @@ public class InMemoryAlertHistoryRepository : IAlertHistoryRepository
                 _history.RemoveAt(0);
             }
         }
-        return Task.CompletedTask;
+        return Task.FromResult(alert);
+    }
+
+    public Task<AlertHistory?> GetByIdAsync(string id)
+    {
+        lock (_lock)
+        {
+            var alert = _history.FirstOrDefault(h => h.Id == id);
+            return Task.FromResult(alert);
+        }
+    }
+
+    public Task<(IEnumerable<AlertHistory> Items, int TotalCount)> GetAllAsync(
+        int pageNumber = 1,
+        int pageSize = 50,
+        AlertHistoryType? type = null,
+        string? symbol = null,
+        DateTime? startTime = null,
+        DateTime? endTime = null)
+    {
+        lock (_lock)
+        {
+            var query = _history.AsEnumerable();
+
+            if (type.HasValue)
+                query = query.Where(h => h.Type == type.Value);
+
+            if (!string.IsNullOrEmpty(symbol))
+                query = query.Where(h => h.Symbol == symbol);
+
+            if (startTime.HasValue)
+                query = query.Where(h => h.AlertTime >= startTime.Value);
+
+            if (endTime.HasValue)
+                query = query.Where(h => h.AlertTime <= endTime.Value);
+
+            var totalCount = query.Count();
+            var items = query
+                .OrderByDescending(h => h.AlertTime)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return Task.FromResult((Items: (IEnumerable<AlertHistory>)items, TotalCount: totalCount));
+        }
     }
 
     public Task<IEnumerable<AlertHistory>> GetRecentAsync(int count = 100)
@@ -39,42 +85,45 @@ public class InMemoryAlertHistoryRepository : IAlertHistoryRepository
         lock (_lock)
         {
             var recent = _history
-                .OrderByDescending(h => h.Timestamp)
+                .OrderByDescending(h => h.AlertTime)
                 .Take(count)
                 .ToList();
             return Task.FromResult<IEnumerable<AlertHistory>>(recent);
         }
     }
 
-    public Task<IEnumerable<AlertHistory>> GetBySymbolAsync(string symbol, DateTime? startDate = null, DateTime? endDate = null)
+    public Task<IEnumerable<AlertHistory>> GetBySymbolAsync(string symbol, int limit = 100)
     {
         lock (_lock)
         {
-            var query = _history.Where(h => h.Symbol == symbol);
-
-            if (startDate.HasValue)
-                query = query.Where(h => h.Timestamp >= startDate.Value);
-
-            if (endDate.HasValue)
-                query = query.Where(h => h.Timestamp <= endDate.Value);
-
-            return Task.FromResult<IEnumerable<AlertHistory>>(query.ToList());
+            var query = _history
+                .Where(h => h.Symbol == symbol)
+                .OrderByDescending(h => h.AlertTime)
+                .Take(limit)
+                .ToList();
+            return Task.FromResult<IEnumerable<AlertHistory>>(query);
         }
     }
 
-    public Task<int> GetCountAsync(DateTime? startDate = null, DateTime? endDate = null)
+    public Task<IEnumerable<AlertHistory>> GetByTypeAsync(AlertHistoryType type, int limit = 100)
     {
         lock (_lock)
         {
-            var query = _history.AsEnumerable();
+            var query = _history
+                .Where(h => h.Type == type)
+                .OrderByDescending(h => h.AlertTime)
+                .Take(limit)
+                .ToList();
+            return Task.FromResult<IEnumerable<AlertHistory>>(query);
+        }
+    }
 
-            if (startDate.HasValue)
-                query = query.Where(h => h.Timestamp >= startDate.Value);
-
-            if (endDate.HasValue)
-                query = query.Where(h => h.Timestamp <= endDate.Value);
-
-            return Task.FromResult(query.Count());
+    public Task<int> DeleteOldRecordsAsync(DateTime beforeDate)
+    {
+        lock (_lock)
+        {
+            var count = _history.RemoveAll(h => h.AlertTime < beforeDate);
+            return Task.FromResult(count);
         }
     }
 }
