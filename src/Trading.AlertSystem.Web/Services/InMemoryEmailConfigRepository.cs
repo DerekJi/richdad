@@ -40,7 +40,7 @@ public class InMemoryEmailConfigRepository : IEmailConfigRepository
         }
     }
 
-    public Task<EmailConfig> UpdateConfigAsync(EmailConfig config)
+    public Task<EmailConfig> SaveConfigAsync(EmailConfig config)
     {
         lock (_lock)
         {

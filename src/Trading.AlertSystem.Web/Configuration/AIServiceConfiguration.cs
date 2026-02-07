@@ -30,12 +30,17 @@ public static class AIServiceConfiguration
         // 注册配置
         services.Configure<AzureOpenAISettings>(configuration.GetSection(AzureOpenAISettings.SectionName));
         services.Configure<MarketAnalysisSettings>(configuration.GetSection(MarketAnalysisSettings.SectionName));
+        services.Configure<DualTierAISettings>(configuration.GetSection(DualTierAISettings.SectionName));
 
         // 注册内存缓存
         services.AddMemoryCache();
 
         // 注册底层AI服务
         services.AddSingleton<IAzureOpenAIService, AzureOpenAIService>();
+
+        // 注册双级AI服务
+        services.AddSingleton<IDualTierAIService, DualTierAIService>();
+        services.AddSingleton<IDualTierMonitoringService, DualTierMonitoringService>();
 
         // 注册内部的MarketAnalysisService（不直接暴露）
         services.AddSingleton<MarketAnalysisService>();

@@ -1,5 +1,5 @@
 using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Service.Repositories;
+using Trading.AlertSystem.Data.Repositories;
 
 namespace Trading.AlertSystem.Web.Services;
 
@@ -9,7 +9,7 @@ namespace Trading.AlertSystem.Web.Services;
 public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
 {
     private PinBarMonitoringConfig? _config;
-    private readonly List<PinBarSignal> _signals = new();
+    private readonly List<PinBarSignalHistory> _signals = new();
     private readonly ILogger<InMemoryPinBarMonitorRepository> _logger;
     private readonly object _lock = new();
 
@@ -18,7 +18,7 @@ public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
         _logger = logger;
     }
 
-    public Task<PinBarMonitoringConfig> GetConfigAsync()
+    public Task<PinBarMonitoringConfig?> GetConfigAsync()
     {
         lock (_lock)
         {
@@ -32,21 +32,15 @@ public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
                     TimeFrames = new List<string> { "M15", "H1" },
                     StrategySettings = new PinBarStrategySettings
                     {
-                        MinBodyToWickRatio = 0.33m,
-                        MinWickToBodyRatio = 2.0m,
-                        MaxBodySize = 0.3m,
-                        RiskRewardRatio = 2.0m,
-                        UseAdxFilter = false,
-                        MinAdx = 20m,
-                        AdxPeriod = 14
+                        RiskRewardRatio = 2.0m
                     }
                 };
             }
-            return Task.FromResult(_config);
+            return Task.FromResult<PinBarMonitoringConfig?>(_config);
         }
     }
 
-    public Task<PinBarMonitoringConfig> UpdateConfigAsync(PinBarMonitoringConfig config)
+    public Task<PinBarMonitoringConfig> SaveConfigAsync(PinBarMonitoringConfig config)
     {
         lock (_lock)
         {
@@ -56,10 +50,12 @@ public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
         }
     }
 
-    public Task SaveSignalAsync(PinBarSignal signal)
+    public Task<PinBarSignalHistory> SaveSignalAsync(PinBarSignalHistory signal)
     {
         lock (_lock)
         {
+            if (string.IsNullOrEmpty(signal.Id))
+                signal.Id = Guid.NewGuid().ToString();
             _signals.Add(signal);
 
             // 只保留最近500条记录
@@ -68,11 +64,11 @@ public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
                 _signals.RemoveAt(0);
             }
 
-            return Task.CompletedTask;
+            return Task.FromResult(signal);
         }
     }
 
-    public Task<IEnumerable<PinBarSignal>> GetRecentSignalsAsync(int count = 100)
+    public Task<List<PinBarSignalHistory>> GetRecentSignalsAsync(int count = 100)
     {
         lock (_lock)
         {
@@ -80,23 +76,32 @@ public class InMemoryPinBarMonitorRepository : IPinBarMonitorRepository
                 .OrderByDescending(s => s.SignalTime)
                 .Take(count)
                 .ToList();
-            return Task.FromResult<IEnumerable<PinBarSignal>>(recent);
+            return Task.FromResult(recent);
         }
     }
 
-    public Task<IEnumerable<PinBarSignal>> GetSignalsBySymbolAsync(string symbol, DateTime? startDate = null, DateTime? endDate = null)
+    public Task<List<PinBarSignalHistory>> GetSignalsBySymbolAsync(string symbol, int count = 50)
     {
         lock (_lock)
         {
-            var query = _signals.Where(s => s.Symbol == symbol);
+            var query = _signals
+                .Where(s => s.Symbol == symbol)
+                .OrderByDescending(s => s.SignalTime)
+                .Take(count)
+                .ToList();
+            return Task.FromResult(query);
+        }
+    }
 
-            if (startDate.HasValue)
-                query = query.Where(s => s.SignalTime >= startDate.Value);
-
-            if (endDate.HasValue)
-                query = query.Where(s => s.SignalTime <= endDate.Value);
-
-            return Task.FromResult<IEnumerable<PinBarSignal>>(query.ToList());
+    public Task<PinBarSignalHistory?> GetLastSignalAsync(string symbol, string timeFrame, DateTime afterTime)
+    {
+        lock (_lock)
+        {
+            var signal = _signals
+                .Where(s => s.Symbol == symbol && s.TimeFrame == timeFrame && s.SignalTime > afterTime)
+                .OrderByDescending(s => s.SignalTime)
+                .FirstOrDefault();
+            return Task.FromResult(signal);
         }
     }
 }

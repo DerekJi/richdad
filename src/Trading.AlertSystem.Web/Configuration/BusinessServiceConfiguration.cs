@@ -34,8 +34,8 @@ public static class BusinessServiceConfiguration
         // EMA 监测后台服务
         services.AddHostedService<EmaMonitoringHostedService>();
 
-        // PinBar 监控后台服务
-        services.AddHostedService<PinBarMonitoringService>();
+        // PinBar 监控后台服务 - 使用双级AI版本（成本优化）
+        services.AddHostedService<DualTierPinBarMonitoringService>();
 
         return services;
     }

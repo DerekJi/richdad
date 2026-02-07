@@ -120,18 +120,26 @@ public class DualTierPinBarMonitoringService : BackgroundService
 
         // 2. 检测PinBar信号
         var strategy = BuildPinBarStrategy(config.StrategySettings);
-        var signals = strategy.GenerateSignals(candles);
 
-        if (signals == null || signals.Count == 0)
+        if (candles.Count < 2)
+        {
+            _logger.LogWarning("⚠️ K线数据不足: {Symbol} {TimeFrame}", symbol, timeFrame);
+            return;
+        }
+
+        var current = candles[^1];
+        var previous = candles[^2];
+
+        // 检查开多或开空信号
+        bool isLongSignal = strategy.CanOpenLong(current, previous, false);
+        bool isShortSignal = strategy.CanOpenShort(current, previous, false);
+
+        if (!isLongSignal && !isShortSignal)
         {
             return;
         }
 
-        var latestSignal = signals.Last();
-        if (latestSignal.Type == Trading.Data.Models.SignalType.None)
-        {
-            return;
-        }
+        string direction = isLongSignal ? "Long" : "Short";
 
         // 3. 检查信号冷却期
         if (IsInCooldownPeriod(symbol, timeFrame))
@@ -147,7 +155,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         if (_dualTierAI == null)
         {
             // 降级处理：无AI时直接发送信号
-            await SendTraditionalSignalAsync(symbol, timeFrame, latestSignal, candles.Last(), config);
+            await SendTraditionalSignalAsync(symbol, timeFrame, direction, previous, config);
             return;
         }
 
@@ -159,7 +167,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         catch (Exception ex)
         {
             _logger.LogError(ex, "❌ 双级AI分析失败，降级为传统模式");
-            await SendTraditionalSignalAsync(symbol, timeFrame, latestSignal, candles.Last(), config);
+            await SendTraditionalSignalAsync(symbol, timeFrame, direction, previous, config);
             return;
         }
 
@@ -193,9 +201,8 @@ public class DualTierPinBarMonitoringService : BackgroundService
         }
 
         // 9. 构建并发送消息
-        var direction = latestSignal.Type == Trading.Data.Models.SignalType.Buy ? "Long" : "Short";
         var message = TradingMessageBuilder.BuildDualTierSignalMessage(
-            symbol, timeFrame, direction, candles.Last(), aiResult);
+            symbol, timeFrame, direction, previous, aiResult);
 
         try
         {
@@ -214,7 +221,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
             RecordSignalTime(symbol, timeFrame);
 
             // 保存到数据库
-            await SaveSignalToDatabase(symbol, timeFrame, direction, candles.Last(),
+            await SaveSignalToDatabase(symbol, timeFrame, direction, previous,
                 aiResult, config);
         }
         catch (Exception ex)
@@ -228,32 +235,38 @@ public class DualTierPinBarMonitoringService : BackgroundService
         string timeFrame,
         PinBarMonitoringConfig config)
     {
-        var strategy = BuildPinBarStrategy(config.StrategySettings);
-        var requiredCandles = strategy.RequiredCandles * 3; // 获取足够的历史数据
-        var timeFrameMinutes = GetTimeFrameMinutes(timeFrame);
+        // 计算需要的历史数据数量
+        var maxEma = Math.Max(config.StrategySettings.BaseEma,
+            config.StrategySettings.EmaList.Any() ? config.StrategySettings.EmaList.Max() : 0);
+        var requiredBars = maxEma * config.HistoryMultiplier;
 
-        var startTime = DateTime.UtcNow.AddMinutes(-requiredCandles * timeFrameMinutes);
-        var endTime = DateTime.UtcNow;
+        // 获取历史数据（返回 AlertCandle）
+        var alertCandles = await _marketDataService.GetHistoricalDataAsync(
+            symbol,
+            timeFrame,
+            requiredBars);
 
-        var alertCandles = await _marketDataService.GetCandlesAsync(
-            symbol, timeFrame, startTime, endTime);
+        if (alertCandles == null || alertCandles.Count < requiredBars)
+        {
+            return new List<CoreCandle>();
+        }
 
         // 转换为CoreCandle
-        return alertCandles.Select(c => new CoreCandle
+        return alertCandles.Select(ac => new CoreCandle
         {
-            DateTime = c.DateTime,
-            Open = c.Open,
-            High = c.High,
-            Low = c.Low,
-            Close = c.Close,
-            Volume = c.Volume
+            DateTime = ac.Time,
+            Open = ac.Open,
+            High = ac.High,
+            Low = ac.Low,
+            Close = ac.Close,
+            TickVolume = (long)ac.Volume
         }).ToList();
     }
 
     private string PrepareMarketDataForAI(List<CoreCandle> candles, string symbol, string timeFrame)
     {
         // 压缩市场数据为CSV格式
-        var csvData = "DateTime,Open,High,Low,Close,Volume\n";
+        var csvData = "DateTime,Open,High,Low,Close,TickVolume\n";
 
         // 只取最近100根K线以节省Token
         var recentCandles = candles.TakeLast(100);
@@ -261,7 +274,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         foreach (var candle in recentCandles)
         {
             csvData += $"{candle.DateTime:yyyy-MM-dd HH:mm},{candle.Open:F5}," +
-                      $"{candle.High:F5},{candle.Low:F5},{candle.Close:F5},{candle.Volume}\n";
+                      $"{candle.High:F5},{candle.Low:F5},{candle.Close:F5},{candle.TickVolume}\n";
         }
 
         return csvData;
@@ -295,17 +308,17 @@ public class DualTierPinBarMonitoringService : BackgroundService
     private async Task SendTraditionalSignalAsync(
         string symbol,
         string timeFrame,
-        Trading.Data.Models.Signal signal,
+        string direction,
         CoreCandle pinBar,
         PinBarMonitoringConfig config)
     {
         // 降级处理：使用传统方式计算交易参数
-        var direction = signal.Type == Trading.Data.Models.SignalType.Buy ? "Long" : "Short";
-        var entryPrice = signal.Type == Trading.Data.Models.SignalType.Buy ? pinBar.High : pinBar.Low;
-        var stopLoss = signal.Type == Trading.Data.Models.SignalType.Buy ? pinBar.Low : pinBar.High;
+        var isLong = direction == "Long";
+        var entryPrice = isLong ? pinBar.High : pinBar.Low;
+        var stopLoss = isLong ? pinBar.Low : pinBar.High;
         var rrRatio = config.StrategySettings.RiskRewardRatio;
         var riskPips = Math.Abs(entryPrice - stopLoss);
-        var takeProfit = signal.Type == Trading.Data.Models.SignalType.Buy
+        var takeProfit = isLong
             ? entryPrice + (riskPips * rrRatio)
             : entryPrice - (riskPips * rrRatio);
 
@@ -338,24 +351,24 @@ public class DualTierPinBarMonitoringService : BackgroundService
     {
         try
         {
-            var signal = new PinBarSignal
+            var signal = new PinBarSignalHistory
             {
-                Id = Guid.NewGuid().ToString(),
                 Symbol = symbol,
                 TimeFrame = timeFrame,
                 Direction = direction,
                 SignalTime = DateTime.UtcNow,
+                PinBarTime = pinBar.DateTime,
                 EntryPrice = aiResult.Tier2Result?.EntryPrice ?? 0m,
                 StopLoss = aiResult.Tier2Result?.StopLoss ?? 0m,
                 TakeProfit = aiResult.Tier2Result?.TakeProfit ?? 0m,
                 RiskRewardRatio = aiResult.Tier2Result?.RiskRewardRatio ?? 0m,
-                PinBarHigh = pinBar.High,
-                PinBarLow = pinBar.Low,
-                PinBarClose = pinBar.Close,
-                AIQualityScore = aiResult.Tier1Result?.OpportunityScore ?? 0,
-                AIAnalysis = aiResult.Tier2Result?.Reasoning ?? "",
-                ProcessingTimeMs = aiResult.TotalProcessingTimeMs,
-                CostUsd = aiResult.TotalCostUsd
+                Adx = 0m,
+                IsSent = true,
+                Message = null,
+                AiQualityScore = aiResult.Tier1Result?.OpportunityScore,
+                AiRiskLevel = null,
+                AiValidated = true,
+                AiRecommendation = aiResult.Tier2Result?.Reasoning
             };
 
             await _repository.SaveSignalAsync(signal);
@@ -386,16 +399,32 @@ public class DualTierPinBarMonitoringService : BackgroundService
 
     private PinBarStrategy BuildPinBarStrategy(PinBarStrategySettings settings)
     {
-        return new PinBarStrategy
+        var config = new Trading.Data.Models.StrategyConfig
         {
-            MinBodyToWickRatio = settings.MinBodyToWickRatio,
-            MinWickToBodyRatio = settings.MinWickToBodyRatio,
-            MaxBodySize = settings.MaxBodySize,
-            RiskRewardRatio = settings.RiskRewardRatio,
-            UseAdxFilter = settings.UseAdxFilter,
+            StrategyName = settings.StrategyName,
+            BaseEma = settings.BaseEma,
+            EmaList = settings.EmaList,
+            NearEmaThreshold = settings.NearEmaThreshold,
+            Threshold = settings.Threshold,
+            MinLowerWickAtrRatio = settings.MinLowerWickAtrRatio,
+            MaxBodyPercentage = settings.MaxBodyPercentage,
+            MinLongerWickPercentage = settings.MinLongerWickPercentage,
+            MaxShorterWickPercentage = settings.MaxShorterWickPercentage,
+            RequirePinBarDirectionMatch = settings.RequirePinBarDirectionMatch,
             MinAdx = settings.MinAdx,
-            AdxPeriod = settings.AdxPeriod
+            LowAdxRiskRewardRatio = settings.LowAdxRiskRewardRatio,
+            RiskRewardRatio = settings.RiskRewardRatio,
+            NoTradingHoursLimit = settings.NoTradingHoursLimit,
+            StartTradingHour = settings.StartTradingHour,
+            EndTradingHour = settings.EndTradingHour,
+            NoTradeHours = settings.NoTradeHours,
+            StopLossStrategy = settings.StopLossStrategy == "PinbarEndPlusAtr"
+                ? Trading.Data.Models.StopLossStrategy.PinbarEndPlusAtr
+                : Trading.Data.Models.StopLossStrategy.PinbarEndPlusAtr,
+            StopLossAtrRatio = settings.StopLossAtrRatio
         };
+
+        return new PinBarStrategy(config);
     }
 
     private int GetTimeFrameMinutes(string timeFrame)
