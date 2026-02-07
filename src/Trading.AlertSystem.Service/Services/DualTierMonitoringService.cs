@@ -11,7 +11,7 @@ public class DualTierMonitoringService : IDualTierMonitoringService
 {
     private readonly ILogger<DualTierMonitoringService> _logger;
     private readonly IDualTierAIService _dualTierAI;
-    
+
     // 今日统计
     private int _todayTier1Calls = 0;
     private int _todayTier2Calls = 0;

@@ -88,9 +88,9 @@ public async Task AnalyzeMarketAsync()
 {
     var marketData = PrepareMarketData(); // 准备市场数据
     var symbol = "XAUUSD";
-    
+
     var result = await _dualTierAI.AnalyzeAsync(marketData, symbol);
-    
+
     // 检查是否通过Tier1
     if (!result.PassedTier1)
     {
@@ -99,7 +99,7 @@ public async Task AnalyzeMarketAsync()
             result.Tier1Result.RejectionReason);
         return;
     }
-    
+
     // 检查是否建议入场
     if (result.ShouldEnter && result.Tier2Result != null)
     {
@@ -107,7 +107,7 @@ public async Task AnalyzeMarketAsync()
             result.Tier2Result.EntryPrice,
             result.Tier2Result.StopLoss,
             result.Tier2Result.TakeProfit);
-        
+
         // 发送Telegram通知或执行交易
         await SendTradingSignalAsync(result);
     }
@@ -173,7 +173,7 @@ DateTime,Open,High,Low,Close,Volume
 ### Tier1拦截日志
 
 ```
-🚫 Tier1拦截 - XAUUSD M15 | 评分: 45/100 | 趋势: Neutral | 
+🚫 Tier1拦截 - XAUUSD M15 | 评分: 45/100 | 趋势: Neutral |
 原因: 市场横盘震荡，无明显趋势 | 成本: $0.0003 | 耗时: 1850ms
 📊 今日统计 - Tier1调用: 25, Tier2调用: 5, 拦截: 20, 成本: $0.15
 ```
@@ -181,8 +181,8 @@ DateTime,Open,High,Low,Close,Volume
 ### Tier2通过日志
 
 ```
-✅ Tier2完成 - XAUUSD M15 | Tier1评分: 85 | 动作: BUY | 
-入场: 2755.50 | 止损: 2750.00 | 止盈: 2770.00 | 
+✅ Tier2完成 - XAUUSD M15 | Tier1评分: 85 | 动作: BUY |
+入场: 2755.50 | 止损: 2750.00 | 止盈: 2770.00 |
 风险: $35.00 | RR比: 2.64 | 总成本: $0.0250 | 总耗时: 8500ms
 📊 今日统计 - Tier1调用: 26, Tier2调用: 6, 拦截: 20, 成本: $0.18
 ```
@@ -200,7 +200,7 @@ DateTime,Open,High,Low,Close,Volume
 
 假设每天分析96次（每15分钟一次）：
 - **传统方式**: 96次 × $0.025 = $2.40/天 × 30天 = **$72/月**
-- **双级架构**: 
+- **双级架构**:
   - Tier1: 96次 × $0.0003 = $0.03/天
   - Tier2: 20次 × $0.022 = $0.44/天
   - 总计: $0.47/天 × 30天 = **$14/月**

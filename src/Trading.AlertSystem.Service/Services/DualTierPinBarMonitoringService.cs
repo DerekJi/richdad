@@ -48,7 +48,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("🚀 双级AI PinBar监控服务已启动 - 检查间隔: {Interval}分钟", 
+        _logger.LogInformation("🚀 双级AI PinBar监控服务已启动 - 检查间隔: {Interval}分钟",
             _checkInterval.TotalMinutes);
 
         while (!stoppingToken.IsCancellationRequested)
@@ -99,7 +99,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         {
             var usage = _dualTierAI.GetTodayUsageCount();
             var cost = _dualTierAI.GetEstimatedMonthlyCost();
-            _logger.LogInformation("📊 今日AI使用统计 - 调用次数: {Count}, 本月成本: ${Cost:F2}", 
+            _logger.LogInformation("📊 今日AI使用统计 - 调用次数: {Count}, 本月成本: ${Cost:F2}",
                 usage, cost);
         }
     }
@@ -121,7 +121,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         // 2. 检测PinBar信号
         var strategy = BuildPinBarStrategy(config.StrategySettings);
         var signals = strategy.GenerateSignals(candles);
-        
+
         if (signals == null || signals.Count == 0)
         {
             return;
@@ -200,7 +200,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
         try
         {
             await _telegramService.SendMessageAsync(message);
-            
+
             _logger.LogInformation(
                 "✅ 双级AI验证通过，信号已发送 - {Symbol} {TimeFrame} | " +
                 "Tier1Score: {T1Score} | Action: {Action} | Entry: {Entry} | Cost: ${Cost:F4}",
@@ -214,7 +214,7 @@ public class DualTierPinBarMonitoringService : BackgroundService
             RecordSignalTime(symbol, timeFrame);
 
             // 保存到数据库
-            await SaveSignalToDatabase(symbol, timeFrame, direction, candles.Last(), 
+            await SaveSignalToDatabase(symbol, timeFrame, direction, candles.Last(),
                 aiResult, config);
         }
         catch (Exception ex)
@@ -254,10 +254,10 @@ public class DualTierPinBarMonitoringService : BackgroundService
     {
         // 压缩市场数据为CSV格式
         var csvData = "DateTime,Open,High,Low,Close,Volume\n";
-        
+
         // 只取最近100根K线以节省Token
         var recentCandles = candles.TakeLast(100);
-        
+
         foreach (var candle in recentCandles)
         {
             csvData += $"{candle.DateTime:yyyy-MM-dd HH:mm},{candle.Open:F5}," +
@@ -282,8 +282,8 @@ public class DualTierPinBarMonitoringService : BackgroundService
         }
 
         // 验证必要的价格信息存在
-        if (!tier2Result.EntryPrice.HasValue || 
-            !tier2Result.StopLoss.HasValue || 
+        if (!tier2Result.EntryPrice.HasValue ||
+            !tier2Result.StopLoss.HasValue ||
             !tier2Result.TakeProfit.HasValue)
         {
             return false;

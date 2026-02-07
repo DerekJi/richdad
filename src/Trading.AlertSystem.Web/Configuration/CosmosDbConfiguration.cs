@@ -24,8 +24,26 @@ public static class CosmosDbConfiguration
         {
             // 使用内存存储作为后备方案
             services.AddSingleton<IPriceMonitorRepository, InMemoryPriceMonitorRepository>();
-            // 如果没有CosmosDB，使用默认配置
+            services.AddSingleton<IAlertHistoryRepository, InMemoryAlertHistoryRepository>();
+            services.AddSingleton<IEmaMonitorRepository, InMemoryEmaMonitorRepository>();
+            services.AddSingleton<IDataSourceConfigRepository, InMemoryDataSourceConfigRepository>();
+            services.AddSingleton<IEmailConfigRepository, InMemoryEmailConfigRepository>();
+            services.AddSingleton<IPinBarMonitorRepository, InMemoryPinBarMonitorRepository>();
+            services.AddSingleton<IAIAnalysisRepository, InMemoryAIAnalysisRepository>();
+
+            // 使用默认配置（不依赖数据库）
             services.AddSingleton(new DataSourceSettings { Provider = "Oanda" });
+            services.AddSingleton(new EmailSettings
+            {
+                Enabled = false,
+                SmtpServer = "smtp.gmail.com",
+                SmtpPort = 587,
+                UseSsl = true,
+                FromEmail = "noreply@example.com",
+                FromName = "Trading System",
+                OnlyOnTelegramFailure = true
+            });
+
             return services;
         }
 
@@ -102,6 +120,9 @@ public static class CosmosDbConfiguration
         var cosmosDbContext = app.Services.GetService<CosmosDbContext>();
         if (cosmosDbContext == null)
         {
+            // 没有 Cosmos DB 配置，跳过初始化
+            var logger = app.Services.GetService<ILogger<Program>>();
+            logger?.LogInformation("⚠️ Cosmos DB 未配置，使用内存存储模式");
             return;
         }
 

@@ -68,7 +68,7 @@ public static class TradingMessageBuilder
 • 总处理时间: {dualTierResult.TotalProcessingTimeMs}ms
 • 总成本: ${dualTierResult.TotalCostUsd:F4}
 
-⚠️ **风险提示**: 
+⚠️ **风险提示**:
 • 本信号已通过双级AI验证（Tier1过滤 + Tier2深度分析）
 • 单笔风险已控制在$40以内
 • 请结合实际市场情况和资金管理进行决策！";
