@@ -2,7 +2,10 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
+using Telegram.Bot.Types.ReplyMarkups;
+using Telegram.Bot.Polling;
 using Trading.AlertSystem.Data.Configuration;
+using Trading.AlertSystem.Data.Models;
 
 namespace Trading.AlertSystem.Data.Services;
 
@@ -16,6 +19,12 @@ public class TelegramService : ITelegramService
     private readonly ILogger<TelegramService> _logger;
     private readonly IEmailService? _emailService;
     private readonly EmailSettings? _emailSettings;
+    private CancellationTokenSource? _cancellationTokenSource;
+
+    /// <summary>
+    /// 当用户点击按钮时触发的事件
+    /// </summary>
+    public event EventHandler<TelegramCallbackQueryEventArgs>? OnCallbackQueryReceived;
 
     public TelegramService(
         TelegramSettings settings,
@@ -155,6 +164,175 @@ public class TelegramService : ITelegramService
         }
     }
 
+    public async Task<bool> SendMessageWithButtonsAsync(
+        string message,
+        List<TelegramButtonRow> buttonRows,
+        long? chatId = null,
+        string parseMode = "Markdown")
+    {
+        if (!_settings.Enabled)
+        {
+            _logger.LogInformation("Telegram通知已禁用，跳过发送消息");
+            return false;
+        }
+
+        try
+        {
+            var targetChatId = chatId ?? _settings.DefaultChatId;
+            if (targetChatId == null)
+            {
+                _logger.LogError("未指定Telegram Chat ID");
+                return false;
+            }
+
+            var parseModeEnum = parseMode.ToLower() switch
+            {
+                "markdown" => ParseMode.Markdown,
+                "html" => ParseMode.Html,
+                _ => ParseMode.Markdown
+            };
+
+            // 构建InlineKeyboard
+            var keyboard = BuildInlineKeyboard(buttonRows);
+
+            await _botClient.SendMessage(
+                chatId: targetChatId.Value,
+                text: message,
+                parseMode: parseModeEnum,
+                replyMarkup: keyboard
+            );
+
+            _logger.LogInformation("成功发送带按钮的Telegram消息到Chat ID: {ChatId}", targetChatId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "发送带按钮的Telegram消息失败");
+            return false;
+        }
+    }
+
+    public async Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, bool showAlert = false)
+    {
+        try
+        {
+            await _botClient.AnswerCallbackQuery(
+                callbackQueryId: callbackQueryId,
+                text: text,
+                showAlert: showAlert
+            );
+
+            _logger.LogInformation("成功回复回调查询: {CallbackQueryId}", callbackQueryId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "回复回调查询失败: {CallbackQueryId}", callbackQueryId);
+            return false;
+        }
+    }
+
+    public async Task<bool> EditMessageButtonsAsync(long chatId, int messageId, List<TelegramButtonRow> buttonRows)
+    {
+        try
+        {
+            var keyboard = BuildInlineKeyboard(buttonRows);
+
+            await _botClient.EditMessageReplyMarkup(
+                chatId: chatId,
+                messageId: messageId,
+                replyMarkup: keyboard
+            );
+
+            _logger.LogInformation("成功编辑消息按钮: Chat ID={ChatId}, Message ID={MessageId}", chatId, messageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "编辑消息按钮失败: Chat ID={ChatId}, Message ID={MessageId}", chatId, messageId);
+            return false;
+        }
+    }
+
+    public async Task<bool> EditMessageTextAsync(
+        long chatId,
+        int messageId,
+        string newText,
+        List<TelegramButtonRow>? buttonRows = null,
+        string parseMode = "Markdown")
+    {
+        try
+        {
+            var parseModeEnum = parseMode.ToLower() switch
+            {
+                "markdown" => ParseMode.Markdown,
+                "html" => ParseMode.Html,
+                _ => ParseMode.Markdown
+            };
+
+            var keyboard = buttonRows != null ? BuildInlineKeyboard(buttonRows) : null;
+
+            await _botClient.EditMessageText(
+                chatId: chatId,
+                messageId: messageId,
+                text: newText,
+                parseMode: parseModeEnum,
+                replyMarkup: keyboard
+            );
+
+            _logger.LogInformation("成功编辑消息文本: Chat ID={ChatId}, Message ID={MessageId}", chatId, messageId);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "编辑消息文本失败: Chat ID={ChatId}, Message ID={MessageId}", chatId, messageId);
+            return false;
+        }
+    }
+
+    public void StartReceivingUpdates()
+    {
+        if (_cancellationTokenSource != null)
+        {
+            _logger.LogWarning("Bot更新监听已在运行中");
+            return;
+        }
+
+        _cancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = _cancellationTokenSource.Token;
+
+        // 配置接收选项
+        var receiverOptions = new ReceiverOptions
+        {
+            AllowedUpdates = new[] { UpdateType.CallbackQuery } // 只接收回调查询
+        };
+
+        // 启动长轮询
+        _botClient.StartReceiving(
+            updateHandler: HandleUpdateAsync,
+            errorHandler: HandlePollingErrorAsync,
+            receiverOptions: receiverOptions,
+            cancellationToken: cancellationToken
+        );
+
+        _logger.LogInformation("Telegram Bot更新监听已启动");
+    }
+
+    public void StopReceivingUpdates()
+    {
+        if (_cancellationTokenSource == null)
+        {
+            _logger.LogWarning("Bot更新监听未运行");
+            return;
+        }
+
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource.Dispose();
+        _cancellationTokenSource = null;
+
+        _logger.LogInformation("Telegram Bot更新监听已停止");
+    }
+
     public async Task<bool> TestConnectionAsync()
     {
         try
@@ -217,5 +395,70 @@ public class TelegramService : ITelegramService
             _logger.LogError(ex, "邮件备用通知也失败了");
             return false;
         }
+    }
+
+    /// <summary>
+    /// 构建InlineKeyboard
+    /// </summary>
+    private InlineKeyboardMarkup BuildInlineKeyboard(List<TelegramButtonRow> buttonRows)
+    {
+        var keyboard = buttonRows.Select(row =>
+            row.Buttons.Select(button =>
+            {
+                if (!string.IsNullOrEmpty(button.Url))
+                {
+                    return InlineKeyboardButton.WithUrl(button.Text, button.Url);
+                }
+                else
+                {
+                    return InlineKeyboardButton.WithCallbackData(button.Text, button.CallbackData);
+                }
+            }).ToArray()
+        ).ToArray();
+
+        return new InlineKeyboardMarkup(keyboard);
+    }
+
+    /// <summary>
+    /// 处理接收到的更新
+    /// </summary>
+    private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (update.CallbackQuery != null)
+            {
+                var callbackQuery = update.CallbackQuery;
+                _logger.LogInformation("收到回调查询: Data={Data}, From={User}",
+                    callbackQuery.Data, callbackQuery.From.Username ?? callbackQuery.From.Id.ToString());
+
+                // 触发事件
+                var eventArgs = new TelegramCallbackQueryEventArgs
+                {
+                    CallbackQueryId = callbackQuery.Id,
+                    CallbackData = callbackQuery.Data ?? string.Empty,
+                    MessageId = callbackQuery.Message?.MessageId ?? 0,
+                    ChatId = callbackQuery.Message?.Chat.Id ?? 0,
+                    UserId = callbackQuery.From.Id,
+                    Username = callbackQuery.From.Username,
+                    MessageText = callbackQuery.Message?.Text
+                };
+
+                OnCallbackQueryReceived?.Invoke(this, eventArgs);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "处理Telegram更新时发生错误");
+        }
+    }
+
+    /// <summary>
+    /// 处理轮询错误
+    /// </summary>
+    private Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    {
+        _logger.LogError(exception, "Telegram Bot轮询发生错误");
+        return Task.CompletedTask;
     }
 }
