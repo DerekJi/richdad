@@ -1,6 +1,15 @@
 namespace Trading.AI.Configuration;
 
 /// <summary>
+/// AI提供商类型
+/// </summary>
+public enum AIProvider
+{
+    AzureOpenAI,
+    DeepSeek
+}
+
+/// <summary>
 /// 双级AI模型配置
 /// </summary>
 public class DualTierAISettings
@@ -11,6 +20,11 @@ public class DualTierAISettings
     /// 是否启用双级AI架构
     /// </summary>
     public bool Enabled { get; set; } = true;
+
+    /// <summary>
+    /// AI提供商（AzureOpenAI, DeepSeek）
+    /// </summary>
+    public string Provider { get; set; } = "AzureOpenAI";
 
     /// <summary>
     /// Tier1最小通过分数（0-100）

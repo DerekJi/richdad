@@ -17,11 +17,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Backtest.Web", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Backtest.ParameterOptimizer", "src\Trading.Backtest.ParameterOptimizer\Trading.Backtest.ParameterOptimizer.csproj", "{B4D08A56-C87F-4998-B4FD-F02EA030ABEF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.AlertSystem.Data", "src\Trading.AlertSystem.Data\Trading.AlertSystem.Data.csproj", "{BB400B30-A7E3-43EC-B408-DAF4DD30EE7E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Infras.Data", "src\Trading.Infras.Data\Trading.Infras.Data.csproj", "{BB400B30-A7E3-43EC-B408-DAF4DD30EE7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.AlertSystem.Service", "src\Trading.AlertSystem.Service\Trading.AlertSystem.Service.csproj", "{D33DD917-D343-4C80-8A92-0C14EFF3AED0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Infras.Service", "src\Trading.Infras.Service\Trading.Infras.Service.csproj", "{D33DD917-D343-4C80-8A92-0C14EFF3AED0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.AlertSystem.Web", "src\Trading.AlertSystem.Web\Trading.AlertSystem.Web.csproj", "{031D8107-E8C5-417D-9E31-59CE09AF0836}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Infras.Web", "src\Trading.Infras.Web\Trading.Infras.Web.csproj", "{031D8107-E8C5-417D-9E31-59CE09AF0836}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Trading.Strategy.Analyzer", "src\Trading.Strategy.Analyzer\Trading.Strategy.Analyzer.csproj", "{3B6A916B-B2C1-4713-B9A0-B3F01CD66DD3}"
 EndProject

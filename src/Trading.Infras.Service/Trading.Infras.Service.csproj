@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Trading.AI\Trading.AI.csproj" />
+    <ProjectReference Include="..\Trading.Infras.Data\Trading.Infras.Data.csproj" />
+    <ProjectReference Include="..\Trading.Core\Trading.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Skender.Stock.Indicators" Version="2.7.1" />
+    <PackageReference Include="ScottPlot" Version="5.0.53" />
+    <PackageReference Include="SkiaSharp" Version="3.116.1" />
+  </ItemGroup>
+
+</Project>
