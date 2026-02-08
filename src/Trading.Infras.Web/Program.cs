@@ -19,10 +19,12 @@ builder.Services.AddAzureTableStorageServices(builder.Configuration);
 builder.Services.AddStorageFallback(builder.Configuration);
 
 builder.Services.AddDataSourceServices(builder.Configuration);
-builder.Services.AddOrderExecutionService(builder.Configuration);  // 添加订单执行服务
 builder.Services.AddNotificationServices(builder.Configuration);
 builder.Services.AddAIServices(builder.Configuration);  // 添加AI服务（可选）
-builder.Services.AddOrderExecutionService(builder.Configuration);  // 添加订单执行服务
+
+// 订单执行服务 - 根据配置选择交易平台
+builder.Services.AddOrderExecutionService(builder.Configuration);
+
 builder.Services.AddBusinessServices();
 builder.Services.AddBackgroundServices();
 builder.Services.AddWebServices();

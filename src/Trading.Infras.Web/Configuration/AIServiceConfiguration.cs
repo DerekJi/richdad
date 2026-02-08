@@ -13,33 +13,44 @@ namespace Trading.Infras.Web.Configuration;
 public static class AIServiceConfiguration
 {
     /// <summary>
-    /// 注册AI服务（可选）
+    /// 注册AI服务（支持多提供商：Azure OpenAI / DeepSeek）
     /// </summary>
     public static IServiceCollection AddAIServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // 检查是否启用AI功能
-        var enabledValue = configuration["AzureOpenAI:Enabled"];
-        var isEnabled = bool.TryParse(enabledValue, out var enabled) && enabled;
-
-        if (!isEnabled)
+        // 检查双级AI是否启用
+        var dualTierEnabled = configuration.GetValue<bool>("DualTierAI:Enabled");
+        if (!dualTierEnabled)
         {
             // AI未启用，不注册任何服务
             return services;
         }
 
+        // 获取AI提供商
+        var provider = configuration["DualTierAI:Provider"] ?? "AzureOpenAI";
+
         // 注册配置
         services.Configure<AzureOpenAISettings>(configuration.GetSection(AzureOpenAISettings.SectionName));
+        services.Configure<DeepSeekSettings>(configuration.GetSection(DeepSeekSettings.SectionName));
         services.Configure<MarketAnalysisSettings>(configuration.GetSection(MarketAnalysisSettings.SectionName));
         services.Configure<DualTierAISettings>(configuration.GetSection(DualTierAISettings.SectionName));
 
         // 注册内存缓存
         services.AddMemoryCache();
 
-        // 注册底层AI服务
-        services.AddSingleton<IAzureOpenAIService, AzureOpenAIService>();
+        // 根据提供商注册统一AI客户端
+        if (provider.Equals("DeepSeek", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton<IUnifiedAIClient, DeepSeekClientAdapter>();
+            services.AddSingleton<IDeepSeekService, DeepSeekService>();
+        }
+        else // 默认使用 AzureOpenAI
+        {
+            services.AddSingleton<IUnifiedAIClient, AzureOpenAIClientAdapter>();
+            services.AddSingleton<IAzureOpenAIService, AzureOpenAIService>();
+        }
 
-        // 注册双级AI服务
-        services.AddSingleton<IDualTierAIService, DualTierAIService>();
+        // 注册双级AI服务（支持多提供商）
+        services.AddSingleton<IDualTierAIService, MultiProviderDualTierAIService>();
         services.AddSingleton<IDualTierMonitoringService, DualTierMonitoringService>();
 
         // 注册内部的MarketAnalysisService（不直接暴露）
