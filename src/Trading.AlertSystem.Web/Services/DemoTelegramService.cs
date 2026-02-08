@@ -1,4 +1,5 @@
 using Trading.AlertSystem.Data.Services;
+using Trading.AlertSystem.Data.Models;
 
 namespace Trading.AlertSystem.Web.Services;
 
@@ -8,6 +9,8 @@ namespace Trading.AlertSystem.Web.Services;
 public class DemoTelegramService : ITelegramService
 {
     private readonly ILogger<DemoTelegramService> _logger;
+
+    public event EventHandler<TelegramCallbackQueryEventArgs>? OnCallbackQueryReceived;
 
     public DemoTelegramService(ILogger<DemoTelegramService> logger)
     {
@@ -33,6 +36,63 @@ public class DemoTelegramService : ITelegramService
         _logger.LogInformation("[演示模式] Telegram图片消息: Caption={Caption}, Chat ID: {ChatId}, Stream Length={Length}",
             caption ?? "无", chatId ?? 0, photoStream?.Length ?? 0);
         return Task.FromResult(true);
+    }
+
+    public Task<bool> SendMessageWithButtonsAsync(
+        string message,
+        List<TelegramButtonRow> buttonRows,
+        long? chatId = null,
+        string parseMode = "Markdown")
+    {
+        var buttonInfo = string.Join(", ", buttonRows.SelectMany(row =>
+            row.Buttons.Select(btn => $"{btn.Text}({btn.CallbackData})")));
+
+        _logger.LogInformation("[演示模式] Telegram带按钮的消息 ({ParseMode}): {Message}, 按钮: [{Buttons}], Chat ID: {ChatId}",
+            parseMode, message, buttonInfo, chatId ?? 0);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> AnswerCallbackQueryAsync(string callbackQueryId, string? text = null, bool showAlert = false)
+    {
+        _logger.LogInformation("[演示模式] 回复回调查询: ID={CallbackQueryId}, Text={Text}, ShowAlert={ShowAlert}",
+            callbackQueryId, text ?? "无", showAlert);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> EditMessageButtonsAsync(long chatId, int messageId, List<TelegramButtonRow> buttonRows)
+    {
+        var buttonInfo = string.Join(", ", buttonRows.SelectMany(row =>
+            row.Buttons.Select(btn => $"{btn.Text}({btn.CallbackData})")));
+
+        _logger.LogInformation("[演示模式] 编辑消息按钮: Chat ID={ChatId}, Message ID={MessageId}, 新按钮: [{Buttons}]",
+            chatId, messageId, buttonInfo);
+        return Task.FromResult(true);
+    }
+
+    public Task<bool> EditMessageTextAsync(
+        long chatId,
+        int messageId,
+        string newText,
+        List<TelegramButtonRow>? buttonRows = null,
+        string parseMode = "Markdown")
+    {
+        var buttonInfo = buttonRows != null
+            ? string.Join(", ", buttonRows.SelectMany(row => row.Buttons.Select(btn => $"{btn.Text}({btn.CallbackData})")))
+            : "无";
+
+        _logger.LogInformation("[演示模式] 编辑消息文本 ({ParseMode}): Chat ID={ChatId}, Message ID={MessageId}, 新文本={Text}, 按钮: [{Buttons}]",
+            parseMode, chatId, messageId, newText, buttonInfo);
+        return Task.FromResult(true);
+    }
+
+    public void StartReceivingUpdates()
+    {
+        _logger.LogInformation("[演示模式] 启动Bot更新监听 - 演示模式不实际监听");
+    }
+
+    public void StopReceivingUpdates()
+    {
+        _logger.LogInformation("[演示模式] 停止Bot更新监听 - 演示模式不实际监听");
     }
 
     public Task<bool> TestConnectionAsync()
