@@ -1,15 +1,15 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
 using Trading.Core.Strategies;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Services;
 using Trading.AI.Services;
 using Trading.AI.Models;
-using AlertCandle = Trading.AlertSystem.Data.Services.Candle;
+using AlertCandle = Trading.Infras.Data.Services.Candle;
 using CoreCandle = Trading.Data.Models.Candle;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 public class PinBarMonitoringService : BackgroundService
 {

@@ -1,11 +1,11 @@
 using Azure;
 using Azure.Data.Tables;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Infrastructure;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Infrastructure;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Repositories;
+namespace Trading.Infras.Data.Repositories;
 
 /// <summary>
 /// Azure Table Storage 告警历史仓储

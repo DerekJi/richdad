@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace Trading.AlertSystem.Data.Models;
+namespace Trading.Infras.Data.Models;
 
 /// <summary>
 /// 邮件配置（存储在数据库）

@@ -3,11 +3,11 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Trading.AI.Models;
 using Trading.AI.Services;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
 using Trading.Data.Models;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 带持久化功能的市场分析服务包装器

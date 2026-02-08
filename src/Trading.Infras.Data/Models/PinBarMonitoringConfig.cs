@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace Trading.AlertSystem.Data.Models;
+namespace Trading.Infras.Data.Models;
 
 /// <summary>
 /// PinBar监控配置（持久化到数据库）

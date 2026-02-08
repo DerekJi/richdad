@@ -1,7 +1,7 @@
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// 演示模式的Telegram服务（不实际发送消息，仅记录日志）

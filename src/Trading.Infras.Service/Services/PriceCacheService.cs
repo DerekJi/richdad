@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 价格缓存服务 - 避免频繁调用数据源API

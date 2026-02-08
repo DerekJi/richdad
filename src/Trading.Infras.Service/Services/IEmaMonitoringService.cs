@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Service.Models;
+using Trading.Infras.Service.Models;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// EMA监测服务接口

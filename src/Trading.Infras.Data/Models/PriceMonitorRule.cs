@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace Trading.AlertSystem.Data.Models;
+namespace Trading.Infras.Data.Models;
 
 /// <summary>
 /// 价格监控规则配置（待触发的监控条件）

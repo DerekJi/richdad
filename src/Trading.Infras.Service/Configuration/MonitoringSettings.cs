@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Service.Configuration;
+namespace Trading.Infras.Service.Configuration;
 
 /// <summary>
 /// 监控服务配置

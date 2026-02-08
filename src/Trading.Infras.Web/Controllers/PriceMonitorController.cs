@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Service.Repositories;
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Service.Repositories;
+using Trading.Infras.Service.Services;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 /// <summary>
 /// 价格监控管理API

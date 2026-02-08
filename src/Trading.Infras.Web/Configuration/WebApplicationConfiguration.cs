@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// Web应用程序配置扩展方法

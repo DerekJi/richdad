@@ -1,7 +1,7 @@
-using Trading.AlertSystem.Service.Configuration;
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Service.Configuration;
+using Trading.Infras.Service.Services;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// EMA监测后台服务

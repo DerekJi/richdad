@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// K线图生成服务接口

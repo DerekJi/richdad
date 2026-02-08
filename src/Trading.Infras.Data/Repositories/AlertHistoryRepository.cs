@@ -1,10 +1,10 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Infrastructure;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Infrastructure;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Repositories;
+namespace Trading.Infras.Data.Repositories;
 
 /// <summary>
 /// 告警历史仓储实现

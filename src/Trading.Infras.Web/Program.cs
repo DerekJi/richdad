@@ -1,4 +1,4 @@
-using Trading.AlertSystem.Web.Configuration;
+using Trading.Infras.Web.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 

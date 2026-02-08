@@ -1,9 +1,9 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Infrastructure;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Infrastructure;
 
-namespace Trading.AlertSystem.Data.Repositories;
+namespace Trading.Infras.Data.Repositories;
 
 /// <summary>
 /// AI分析历史记录仓储实现

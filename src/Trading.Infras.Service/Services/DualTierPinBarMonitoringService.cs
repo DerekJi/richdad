@@ -1,14 +1,14 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Services;
 using Trading.Core.Strategies;
 using Trading.AI.Models;
 using Trading.AI.Services;
 using CoreCandle = Trading.Data.Models.Candle;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 使用双级AI架构的PinBar监控服务

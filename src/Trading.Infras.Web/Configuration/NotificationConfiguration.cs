@@ -1,8 +1,8 @@
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Web.Services;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Web.Services;
 
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// 通知服务配置扩展方法

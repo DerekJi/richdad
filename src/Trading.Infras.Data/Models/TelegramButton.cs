@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Data.Models;
+namespace Trading.Infras.Data.Models;
 
 /// <summary>
 /// Telegram按钮配置

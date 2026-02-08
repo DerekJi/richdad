@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Web;
+namespace Trading.Infras.Web;
 
 public class ListSymbolsCommand
 {

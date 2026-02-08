@@ -2,9 +2,9 @@ using Microsoft.Extensions.Logging;
 using ScottPlot;
 using Skender.Stock.Indicators;
 using SkiaSharp;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// K线图生成服务实现

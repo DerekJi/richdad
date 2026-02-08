@@ -1,7 +1,7 @@
-using Trading.AlertSystem.Service.Services;
-using Trading.AlertSystem.Web.Services;
+using Trading.Infras.Service.Services;
+using Trading.Infras.Web.Services;
 
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// 业务服务和后台服务配置扩展方法

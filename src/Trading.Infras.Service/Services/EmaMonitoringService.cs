@@ -1,12 +1,12 @@
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Text.Json;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Service.Models;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Service.Models;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// EMA监测服务实现

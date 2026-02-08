@@ -1,9 +1,9 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Infrastructure;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Infrastructure;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Service.Repositories;
+namespace Trading.Infras.Service.Repositories;
 
 /// <summary>
 /// 价格监控仓储（使用CosmosDB存储）

@@ -1,11 +1,11 @@
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Infrastructure;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Service.Configuration;
-using Trading.AlertSystem.Service.Repositories;
-using Trading.AlertSystem.Web.Services;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Infrastructure;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Service.Configuration;
+using Trading.Infras.Service.Repositories;
+using Trading.Infras.Web.Services;
 
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// Azure Table Storage 配置和初始化扩展方法

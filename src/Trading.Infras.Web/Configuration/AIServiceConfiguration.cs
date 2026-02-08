@@ -1,11 +1,11 @@
 using Trading.AI;
 using Trading.AI.Services;
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Service.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Trading.AI.Configuration;
 
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// AI服务配置扩展方法
@@ -49,7 +49,7 @@ public static class AIServiceConfiguration
         services.AddSingleton<IMarketAnalysisService>(serviceProvider =>
         {
             var innerService = serviceProvider.GetRequiredService<MarketAnalysisService>();
-            var repository = serviceProvider.GetRequiredService<Trading.AlertSystem.Data.Repositories.IAIAnalysisRepository>();
+            var repository = serviceProvider.GetRequiredService<Trading.Infras.Data.Repositories.IAIAnalysisRepository>();
             var logger = serviceProvider.GetRequiredService<ILogger<MarketAnalysisServiceWithPersistence>>();
 
             return new MarketAnalysisServiceWithPersistence(innerService, repository, logger);

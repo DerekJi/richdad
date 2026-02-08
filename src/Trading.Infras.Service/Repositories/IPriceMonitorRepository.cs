@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Service.Repositories;
+namespace Trading.Infras.Service.Repositories;
 
 /// <summary>
 /// 价格监控仓储接口

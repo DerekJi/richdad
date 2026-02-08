@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// TradeLocker启动测试服务

@@ -1,7 +1,7 @@
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Service.Repositories;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Service.Repositories;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// 内存版本的价格监控仓储（用于演示，无需数据库）

@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Service.Services;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// 价格监控后台服务

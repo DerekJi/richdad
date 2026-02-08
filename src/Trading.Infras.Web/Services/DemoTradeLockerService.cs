@@ -1,7 +1,7 @@
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// 演示模式的TradeLocker服务（返回模拟数据）

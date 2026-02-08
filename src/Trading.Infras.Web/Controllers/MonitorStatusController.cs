@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Service.Repositories;
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Service.Repositories;
+using Trading.Infras.Service.Services;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 /// <summary>
 /// 监控状态API控制器 - 获取所有有效监控规则的实时状态

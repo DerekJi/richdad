@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// Telegram消息服务接口

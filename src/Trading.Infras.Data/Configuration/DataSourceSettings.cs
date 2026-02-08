@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Data.Configuration;
+namespace Trading.Infras.Data.Configuration;
 
 /// <summary>
 /// 数据源配置（从数据库动态加载）

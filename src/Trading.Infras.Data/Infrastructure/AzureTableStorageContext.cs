@@ -1,8 +1,8 @@
 using Azure.Data.Tables;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
+using Trading.Infras.Data.Configuration;
 
-namespace Trading.AlertSystem.Data.Infrastructure;
+namespace Trading.Infras.Data.Infrastructure;
 
 /// <summary>
 /// Azure Table Storage 上下文

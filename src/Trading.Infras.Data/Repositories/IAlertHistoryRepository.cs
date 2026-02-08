@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Repositories;
+namespace Trading.Infras.Data.Repositories;
 
 /// <summary>
 /// 告警历史仓储接口

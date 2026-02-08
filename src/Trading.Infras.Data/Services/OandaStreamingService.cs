@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
+using Trading.Infras.Data.Configuration;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// OANDA Streaming API服务实现

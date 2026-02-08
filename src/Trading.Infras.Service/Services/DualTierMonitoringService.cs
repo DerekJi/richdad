@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Trading.AI.Models;
 using Trading.AI.Services;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 双级AI监控服务实现

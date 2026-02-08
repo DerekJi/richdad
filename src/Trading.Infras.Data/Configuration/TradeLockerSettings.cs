@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Data.Configuration;
+namespace Trading.Infras.Data.Configuration;
 
 /// <summary>
 /// TradeLocker API配置

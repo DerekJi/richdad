@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Trading.AlertSystem.Data.Configuration;
+using Trading.Infras.Data.Configuration;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 /// <summary>
 /// 配置诊断API

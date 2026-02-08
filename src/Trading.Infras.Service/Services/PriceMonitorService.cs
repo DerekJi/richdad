@@ -1,13 +1,13 @@
 using Microsoft.Extensions.Logging;
 using Skender.Stock.Indicators;
 using System.Text.Json;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Service.Configuration;
-using Trading.AlertSystem.Service.Repositories;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Service.Configuration;
+using Trading.Infras.Service.Repositories;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 价格监控服务实现

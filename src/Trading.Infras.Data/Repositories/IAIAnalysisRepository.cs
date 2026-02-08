@@ -1,6 +1,6 @@
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Repositories;
+namespace Trading.Infras.Data.Repositories;
 
 /// <summary>
 /// AI分析历史记录仓储接口

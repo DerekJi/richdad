@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 /// <summary>
 /// 邮件配置管理控制器

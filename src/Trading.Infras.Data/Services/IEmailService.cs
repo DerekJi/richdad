@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// 邮件通知服务接口

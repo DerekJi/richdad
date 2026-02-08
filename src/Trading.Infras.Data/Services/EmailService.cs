@@ -1,9 +1,9 @@
 using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
+using Trading.Infras.Data.Configuration;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// 邮件通知服务实现

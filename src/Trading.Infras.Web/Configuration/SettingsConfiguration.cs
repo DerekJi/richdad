@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Options;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Service.Configuration;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Service.Configuration;
 
-namespace Trading.AlertSystem.Web.Configuration;
+namespace Trading.Infras.Web.Configuration;
 
 /// <summary>
 /// 应用程序设置配置扩展方法

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using Trading.AlertSystem.Data.Services;
-using Trading.AlertSystem.Service.Services;
+using Trading.Infras.Data.Services;
+using Trading.Infras.Service.Services;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 /// <summary>
 /// 系统监控与测试API

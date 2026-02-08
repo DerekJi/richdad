@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Trading.AlertSystem.Service\Trading.AlertSystem.Service.csproj" />
+    <ProjectReference Include="..\Trading.Infras.Service\Trading.Infras.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>

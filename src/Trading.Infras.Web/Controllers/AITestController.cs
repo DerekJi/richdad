@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Trading.AI.Services;
 using Trading.AI.Configuration;
 using Microsoft.Extensions.Options;
-using Trading.AlertSystem.Data.Repositories;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Repositories;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Web.Controllers;
+namespace Trading.Infras.Web.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

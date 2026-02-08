@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Services;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Services;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// Telegram交互式消息服务示例

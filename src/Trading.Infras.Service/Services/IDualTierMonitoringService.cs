@@ -1,6 +1,6 @@
 using Trading.AI.Models;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 双级AI监控服务接口

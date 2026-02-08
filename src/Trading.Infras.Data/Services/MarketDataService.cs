@@ -1,8 +1,8 @@
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// 市场数据服务实现（根据配置自动路由到TradeLocker或OANDA）

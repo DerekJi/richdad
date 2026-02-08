@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Data.Models;
+namespace Trading.Infras.Data.Models;
 
 /// <summary>
 /// 交易品种实时价格数据

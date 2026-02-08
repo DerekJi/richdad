@@ -1,10 +1,10 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// OANDA API服务实现

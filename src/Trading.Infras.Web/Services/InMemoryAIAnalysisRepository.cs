@@ -1,8 +1,8 @@
 using Trading.AI.Models;
-using Trading.AlertSystem.Data.Models;
-using Trading.AlertSystem.Data.Repositories;
+using Trading.Infras.Data.Models;
+using Trading.Infras.Data.Repositories;
 
-namespace Trading.AlertSystem.Web.Services;
+namespace Trading.Infras.Web.Services;
 
 /// <summary>
 /// 内存版本的AI分析历史仓储（无需数据库）

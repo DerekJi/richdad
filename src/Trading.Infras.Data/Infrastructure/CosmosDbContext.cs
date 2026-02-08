@@ -1,7 +1,7 @@
 using Microsoft.Azure.Cosmos;
-using Trading.AlertSystem.Data.Configuration;
+using Trading.Infras.Data.Configuration;
 
-namespace Trading.AlertSystem.Data.Infrastructure;
+namespace Trading.Infras.Data.Infrastructure;
 
 /// <summary>
 /// Cosmos DB 上下文

@@ -4,10 +4,10 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 using Telegram.Bot.Polling;
-using Trading.AlertSystem.Data.Configuration;
-using Trading.AlertSystem.Data.Models;
+using Trading.Infras.Data.Configuration;
+using Trading.Infras.Data.Models;
 
-namespace Trading.AlertSystem.Data.Services;
+namespace Trading.Infras.Data.Services;
 
 /// <summary>
 /// Telegram Bot服务实现

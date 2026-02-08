@@ -1,7 +1,7 @@
 using Trading.AI.Models;
 using CoreCandle = Trading.Data.Models.Candle;
 
-namespace Trading.AlertSystem.Service.Services;
+namespace Trading.Infras.Service.Services;
 
 /// <summary>
 /// 消息构建辅助类

@@ -1,4 +1,4 @@
-namespace Trading.AlertSystem.Service.Models;
+namespace Trading.Infras.Service.Models;
 
 /// <summary>
 /// EMA监测状态
