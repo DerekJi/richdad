@@ -1156,13 +1156,73 @@ else
 
 ---
 
-## Issue 6: 实现数据持久化与智能缓存层
+## Issue 6: 实现数据持久化与智能缓存层 ✅ 已完成
 
 ### 标题
 🗄️ Implement Data Persistence Layer with Smart Caching for Market Data
 
+### 状态
+✅ **已完成** - 2026-02-09
+
 ### 描述
 建立基于 Azure Table Storage 的低成本、高性能数据持久化层，解决 OANDA API 重复调用问题，为回测和 AI 分析提供数据基础。
+
+### 实际实现
+
+#### ✅ 核心功能（已实现）
+
+1. **数据模型 - CandleEntity**
+   - PartitionKey: Symbol（品种）
+   - RowKey: `{TimeFrame}_{yyyyMMdd_HHmm}`
+   - 支持 IsComplete 字段（实时K线更新）
+   - UTC 时间标准化
+
+2. **Repository 层 - CandleRepository**
+   - ✅ SaveBatchAsync - 批量保存（UpsertReplace自动更新）
+   - ✅ GetRangeAsync - 按时间范围查询
+   - ✅ GetLatestTimeAsync - 获取最新时间（UTC修复）
+   - ✅ GetEarliestTimeAsync - 获取最早时间（UTC修复）
+   - ✅ GetCountAsync - 统计记录数
+   - ✅ DeleteRangeAsync - 批量删除
+
+3. **Service 层 - CandleInitializationService**
+   - ✅ InitializeHistoricalDataAsync - 批量初始化多品种多周期
+   - ✅ InitializeSymbolTimeFrameAsync - 单品种单周期初始化
+   - ✅ IncrementalUpdateAsync - **增量更新（支持实时K线更新）**
+   - ✅ 智能时间差检测（避免重复更新）
+   - ✅ 自动更新未完成K线（IsComplete=false）
+
+4. **API 层 - CandleController**
+   - ✅ POST /api/candle/initialize - 初始化历史数据
+   - ✅ POST /api/candle/update - 增量更新
+   - ✅ GET /api/candle/candles - 查询K线数据
+   - ✅ GET /api/candle/stats - 统计信息
+   - ✅ DELETE /api/candle/candles - 删除数据
+
+5. **关键修复**
+   - ✅ **UTC 时区统一处理**
+     - OandaService: DateTimeStyles.AdjustToUniversal
+     - CandleRepository: SpecifyKind(UTC) for queries
+     - CandleEntity.ToCandle: 确保返回UTC时间
+   - ✅ **增量更新逻辑修复**
+     - 过滤条件: `>= latestTime`（包含未完成K线）
+     - 时间差计算正确（UTC vs UTC）
+     - UpsertReplace 自动更新同RowKey记录
+
+### 技术亮点
+
+- **成本优化**：Azure Table Storage 成本极低（$1-3/月）
+- **实时更新**：IsComplete 字段支持未完成K线的自动更新
+- **智能增量**：只获取缺失的数据，避免重复API调用
+- **批量操作**：优化性能，支持大数据量初始化
+- **时区安全**：全链路 UTC 时间处理，避免时区混乱
+
+### 测试验证
+
+✅ 初始化功能测试通过（1000根K线）
+✅ 增量更新测试通过（自动更新未完成K线）
+✅ 时区处理验证通过（UTC统一）
+✅ 统计API测试通过
 
 ### 背景
 当前系统每次分析都需要从 OANDA API 获取数据，存在以下问题：

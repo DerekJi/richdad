@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Trading.Infrastructure.Configuration;
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -122,7 +123,7 @@ public class OandaService : IOandaService
         }
     }
 
-    public async Task<List<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count)
+    public async Task<List<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count)
     {
         try
         {
@@ -141,7 +142,7 @@ public class OandaService : IOandaService
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogWarning("获取{Symbol} {TimeFrame}历史数据失败: {StatusCode} - {Error}",
                     symbol, timeFrame, response.StatusCode, errorContent);
-                return new List<Candle>();
+                return new List<Trading.Models.Candle>();
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -151,26 +152,25 @@ public class OandaService : IOandaService
             var result = JsonSerializer.Deserialize<JsonElement>(content);
             var candlesData = result.GetProperty("candles");
 
-            var candles = new List<Candle>();
+            var candles = new List<Trading.Models.Candle>();
             foreach (var candleData in candlesData.EnumerateArray())
             {
-                // 跳过未完成的K线
-                if (!candleData.GetProperty("complete").GetBoolean())
-                {
-                    continue;
-                }
-
+                var isComplete = candleData.GetProperty("complete").GetBoolean();
                 var mid = candleData.GetProperty("mid");
-                var time = DateTime.Parse(candleData.GetProperty("time").GetString()!);
+                var timeString = candleData.GetProperty("time").GetString()!;
 
-                candles.Add(new Candle
+                // OANDA 返回的时间是 UTC 格式（如 "2026-02-09T15:50:00.000000000Z"）
+                // 使用 AdjustToUniversal 确保解析为 UTC 时间
+                var time = DateTime.Parse(timeString, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
+                candles.Add(new Trading.Models.Candle
                 {
-                    Time = time,
+                    DateTime = time,
                     Open = decimal.Parse(mid.GetProperty("o").GetString()!),
                     High = decimal.Parse(mid.GetProperty("h").GetString()!),
                     Low = decimal.Parse(mid.GetProperty("l").GetString()!),
                     Close = decimal.Parse(mid.GetProperty("c").GetString()!),
-                    Volume = candleData.GetProperty("volume").GetInt32()
+                    TickVolume = candleData.GetProperty("volume").GetInt32(),
+                    IsComplete = isComplete
                 });
             }
 
@@ -182,7 +182,7 @@ public class OandaService : IOandaService
         catch (Exception ex)
         {
             _logger.LogError(ex, "获取{Symbol} {TimeFrame}历史数据时发生错误", symbol, timeFrame);
-            return new List<Candle>();
+            return new List<Trading.Models.Candle>();
         }
     }
 

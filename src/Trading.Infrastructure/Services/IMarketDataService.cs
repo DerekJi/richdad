@@ -1,4 +1,5 @@
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -20,7 +21,7 @@ public interface IMarketDataService
     /// <summary>
     /// 获取历史K线数据
     /// </summary>
-    Task<List<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count);
+    Task<List<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count);
 
     /// <summary>
     /// 获取账户信息

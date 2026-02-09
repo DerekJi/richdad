@@ -6,7 +6,6 @@ using Trading.Core.Strategies;
 using Trading.Infrastructure.Services;
 using Trading.Infrastructure.AI.Services;
 using Trading.Infrastructure.AI.Models;
-using AlertCandle = Trading.Infrastructure.Services.Candle;
 using CoreCandle = Trading.Models.Candle;
 
 namespace Trading.Services.Services;
@@ -102,7 +101,7 @@ public class PinBarMonitoringService : BackgroundService
             config.StrategySettings.EmaList.Any() ? config.StrategySettings.EmaList.Max() : 0);
         var requiredBars = maxEma * config.HistoryMultiplier;
 
-        // 获取历史数据（返回 AlertCandle）
+        // 获取历史数据（返回 CoreCandle）
         var alertCandles = await _marketDataService.GetHistoricalDataAsync(
             symbol,
             timeFrame,
@@ -140,16 +139,16 @@ public class PinBarMonitoringService : BackgroundService
         }
     }
 
-    private List<CoreCandle> ConvertToCoreCandlesList(List<AlertCandle> alertCandles)
+    private List<CoreCandle> ConvertToCoreCandlesList(List<CoreCandle> alertCandles)
     {
         return alertCandles.Select(ac => new CoreCandle
         {
-            DateTime = ac.Time,
+            DateTime = ac.DateTime,
             Open = ac.Open,
             High = ac.High,
             Low = ac.Low,
             Close = ac.Close,
-            TickVolume = (long)ac.Volume
+            TickVolume = (long)ac.TickVolume
         }).ToList();
     }
 

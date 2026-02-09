@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Trading.Infrastructure.Configuration;
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -47,15 +48,15 @@ public class MarketDataService : IMarketDataService
         };
     }
 
-    public async Task<List<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count)
+    public async Task<List<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count)
     {
         var result = GetCurrentProvider().ToLower() switch
         {
-            "oanda" => _oandaService != null ? await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count) : new List<Candle>(),
+            "oanda" => _oandaService != null ? await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count) : new List<Trading.Models.Candle>(),
             _ => await _tradeLockerService.GetHistoricalDataAsync(symbol, timeFrame, count)
         };
 
-        return result?.ToList() ?? new List<Candle>();
+        return result?.ToList() ?? new List<Trading.Models.Candle>();
     }
 
     public async Task<AccountInfo?> GetAccountInfoAsync()

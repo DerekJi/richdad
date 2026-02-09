@@ -254,12 +254,12 @@ public class DualTierPinBarMonitoringService : BackgroundService
         // 转换为CoreCandle
         return alertCandles.Select(ac => new CoreCandle
         {
-            DateTime = ac.Time,
+            DateTime = ac.DateTime,
             Open = ac.Open,
             High = ac.High,
             Low = ac.Low,
             Close = ac.Close,
-            TickVolume = (long)ac.Volume
+            TickVolume = (long)ac.TickVolume
         }).ToList();
     }
 

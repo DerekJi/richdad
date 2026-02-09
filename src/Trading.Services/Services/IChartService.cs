@@ -1,4 +1,5 @@
 using Trading.Infrastructure.Services;
+using Trading.Models;
 
 namespace Trading.Services.Services;
 

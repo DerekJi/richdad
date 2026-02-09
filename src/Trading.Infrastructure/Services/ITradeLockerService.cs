@@ -1,4 +1,5 @@
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -25,7 +26,7 @@ public interface ITradeLockerService
     /// <summary>
     /// 获取历史K线数据（用于计算指标）
     /// </summary>
-    Task<IEnumerable<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars);
+    Task<IEnumerable<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars);
 
     /// <summary>
     /// 获取账户信息
@@ -45,17 +46,4 @@ public class AccountInfo
     public decimal Margin { get; set; }
     public decimal FreeMargin { get; set; }
     public string Currency { get; set; } = "USD";
-}
-
-/// <summary>
-/// K线数据
-/// </summary>
-public class Candle
-{
-    public DateTime Time { get; set; }
-    public decimal Open { get; set; }
-    public decimal High { get; set; }
-    public decimal Low { get; set; }
-    public decimal Close { get; set; }
-    public decimal Volume { get; set; }
 }
