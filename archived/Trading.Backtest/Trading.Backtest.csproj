@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Trading.Core\Trading.Core.csproj" />
+    <ProjectReference Include="..\Trading.Backtest.Data\Trading.Backtest.Data.csproj" />
+    <ProjectReference Include="..\..\src\Trading.Models\Trading.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ScottPlot" Version="5.0.54" />
+  </ItemGroup>
+
+</Project>

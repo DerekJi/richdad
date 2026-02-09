@@ -821,8 +821,8 @@ public class MarketDataProcessor
 - `Trading.Core/Analysis/TechnicalIndicatorService.cs`
 - `Trading.Core/Analysis/PatternRecognitionService.cs`
 - `Trading.Core/Analysis/MarkdownTableGenerator.cs`
-- `Trading.Infras.Service/Services/MarketDataProcessor.cs`
-- `Trading.Infras.Data/Repositories/ProcessedDataRepository.cs`
+- `Trading.Services/Services/MarketDataProcessor.cs`
+- `Trading.Infrastructure/Repositories/ProcessedDataRepository.cs`
 
 **文档：**
 - `docs/AL_BROOKS_PATTERNS.md` - 形态识别详解

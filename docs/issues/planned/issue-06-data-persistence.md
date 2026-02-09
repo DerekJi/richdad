@@ -443,11 +443,11 @@ var results = await Task.WhenAll(tasks);
 ### 相关文件
 
 **新增文件：**
-- `Trading.Infras.Data/Models/MarketDataEntity.cs` - 数据模型
-- `Trading.Infras.Data/Models/ProcessedDataEntity.cs` - 预处理数据模型
-- `Trading.Infras.Data/Repositories/MarketDataRepository.cs` - 数据访问层
-- `Trading.Infras.Service/Services/MarketDataCacheService.cs` - 缓存服务
-- `Trading.Infras.Service/Services/DataInitializationService.cs` - 初始化服务
+- `Trading.Infrastructure/Models/MarketDataEntity.cs` - 数据模型
+- `Trading.Infrastructure/Models/ProcessedDataEntity.cs` - 预处理数据模型
+- `Trading.Infrastructure/Repositories/MarketDataRepository.cs` - 数据访问层
+- `Trading.Services/Services/MarketDataCacheService.cs` - 缓存服务
+- `Trading.Services/Services/DataInitializationService.cs` - 初始化服务
 - `Trading.Infras.Web/Controllers/MarketDataController.cs` - API 控制器
 
 **文档：**

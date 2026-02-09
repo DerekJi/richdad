@@ -48,8 +48,8 @@
 在 `src/Trading.AlertSystem.Web/Program.cs` 中添加：
 
 ```csharp
-using Trading.AI.Configuration;
-using Trading.AI.Services;
+using Trading.Infrastructure.AI.Configuration;
+using Trading.Infrastructure.AI.Services;
 using Trading.AlertSystem.Service.Services;
 
 // ... 现有代码 ...

@@ -1,4 +1,4 @@
-using Trading.Data.Models;
+using Trading.Models;
 using Skender.Stock.Indicators;
 
 namespace Trading.Core.Indicators;

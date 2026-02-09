@@ -25,7 +25,7 @@ PinBar策略监控系统会自动检测市场中的PinBar形态信号，当满�
 ### 1. 启动Web服务
 
 ```bash
-cd /d/source/richdad/src/Trading.AlertSystem.Web
+cd /d/source/richdad/src/Trading.Web
 dotnet run
 ```
 

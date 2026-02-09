@@ -24,15 +24,15 @@
 
 **重命名映射：**
 ```
-Trading.AlertSystem.Data       → Trading.Infras.Data
-Trading.AlertSystem.Service    → Trading.Infras.Service
+Trading.AlertSystem.Data       → Trading.Infrastructure
+Trading.AlertSystem.Service    → Trading.Services
 Trading.AlertSystem.Web        → Trading.Infras.Web
 Trading.AlertSystem.Mobile     → Trading.Infras.Mobile (如果存在)
 ```
 
 **保持不变的项目：**
 - `Trading.Core` - 核心领域逻辑
-- `Trading.Data` - 数据模型
+- `Trading.Models` - 数据模型
 - `Trading.AI` - AI分析服务
 - `Trading.Backtest.*` - 回测相关
 
@@ -150,7 +150,7 @@ public class Position
 
 #### ✅ 3. 实现平台适配器
 
-**新增适配器：** `Trading.Infras.Service/Adapters/`
+**新增适配器：** `Trading.Services/Adapters/`
 
 **OandaOrderAdapter.cs:**
 ```csharp
@@ -290,9 +290,9 @@ else
 
 1. **重命名项目文件夹和文件**
    ```bash
-   git mv src/Trading.AlertSystem.Data src/Trading.Infras.Data
-   git mv src/Trading.AlertSystem.Service src/Trading.Infras.Service
-   git mv src/Trading.AlertSystem.Web src/Trading.Infras.Web
+   git mv src/Trading.AlertSystem.Data src/Trading.Infrastructure
+   git mv src/Trading.AlertSystem.Service src/Trading.Services
+   git mv src/Trading.AlertSystem.Web src/Trading.Web
    ```
 
 2. **更新项目文件（.csproj）**
@@ -310,8 +310,8 @@ else
    grep -r "Trading.AlertSystem" src/ --include="*.cs"
 
    # 批量替换（需要小心测试）
-   Trading.AlertSystem.Data → Trading.Infras.Data
-   Trading.AlertSystem.Service → Trading.Infras.Service
+   Trading.AlertSystem.Data → Trading.Infrastructure
+   Trading.AlertSystem.Service → Trading.Services
    Trading.AlertSystem.Web → Trading.Infras.Web
    ```
 
@@ -409,9 +409,9 @@ else
 
 **新增文件：**
 - `Trading.Core/Trading/IOrderExecutionService.cs`
-- `Trading.Infras.Service/Adapters/OandaOrderAdapter.cs`
-- `Trading.Infras.Service/Adapters/TradeLockerOrderAdapter.cs`
-- `Trading.Infras.Service/Adapters/MockOrderExecutionService.cs`
+- `Trading.Services/Adapters/OandaOrderAdapter.cs`
+- `Trading.Services/Adapters/TradeLockerOrderAdapter.cs`
+- `Trading.Services/Adapters/MockOrderExecutionService.cs`
 
 ### 标签
 `refactoring`, `architecture`, `breaking-change`, `enhancement`

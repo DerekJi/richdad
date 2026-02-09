@@ -1,4 +1,4 @@
-using Trading.Data.Models;
+using Trading.Models;
 
 namespace Trading.Core.Strategies;
 

@@ -1,139 +1,148 @@
 # 快速开始指南
 
-## 项目已完成
+## 当前项目状态
 
-✅ 完整的三层架构回测系统已搭建完成：
-- 数据层：CSV读取、Cosmos DB持久化
-- 业务层：Pin Bar策略、技术指标计算、回测引擎
-- 应用层：Console应用
+✅ 智能交易系统已完成主要功能：
+- **实时监控**：价格监控、EMA监控、Pin Bar形态监控
+- **AI智能分析**：双级AI架构（Azure OpenAI + DeepSeek）
+- **风险管理**：智能仓位计算器，支持Prop Firm规则
+- **数据持久化**：Azure Table Storage / Cosmos DB / 内存存储
+- **告警通知**：Telegram Bot + 邮件通知
+- **回测系统**：已归档至 `archived/` 目录
 
 ## 快速运行
 
-### 1. 运行回测
+### 1. 运行实时监控系统
 
 ```bash
-cd src/Trading.Backtest.Console
+cd src/Trading.Web
 dotnet run
 ```
 
+访问：`http://localhost:5000`
+
 程序将：
-1. 自动读取 `data/XAUUSD*.csv` 文件
-2. 计算EMA和ATR指标
-3. 执行Pin Bar策略回测
-4. 显示详细的统计结果
+1. 启动价格监控后台服务
+2. 启动Pin Bar形态监控服务
+3. 启动AI分析服务（如已配置）
+4. 提供Web界面进行配置管理
 
-### 2. 修改策略参数
+### 2. 配置监控规则
 
-编辑 `src/Trading.Backtest.Console/Program.cs`:
+通过Web界面配置：
+- **价格监控**：`http://localhost:5000/`
+- **Pin Bar监控**：`http://localhost:5000/pinbar-config.html`
 
-```csharp
-var config = StrategyConfig.CreateXauDefault();
-// 修改参数
-config.RiskRewardRatio = 2.0m;          // 盈亏比 2:1
-config.StopLossAtrRatio = 0.5m;         // 止损 0.5 ATR
-config.MinLongerWickPercentage = 70;    // 长影线最小70%
-config.StartTradingHour = 6;            // UTC 6点开始交易
-```
+### 3. 测试告警（可选）
+
+创建一个测试告警，验证Telegram通知是否正常。
 
 ## 项目结构
 
 ```
 TradingSystem/
 ├── src/
-│   ├── Trading.Data/                # 数据层
-│   │   ├── Models/                   # Candle, Trade, BacktestResult等
-│   │   ├── Providers/                # CsvDataProvider
-│   │   ├── Repositories/             # CosmosBacktestRepository
-│   │   └── Interfaces/               # IMarketDataProvider
+│   ├── Trading.Models/              # 核心数据模型
+│   │   └── Models/                   # 数据模型（Candle、Trade等）
 │   │
-│   ├── Trading.Core/                # 核心策略层（可复用于实盘）
-│   │   ├── Strategies/               # PinBarStrategy
-│   │   └── Indicators/               # IndicatorCalculator (EMA/ATR)
+│   ├── Trading.Core/                # 核心交易逻辑
+│   │   ├── Strategies/               # 交易策略
+│   │   ├── Indicators/               # 技术指标
+│   │   └── RiskManagement/           # 风险管理
 │   │
-│   ├── Trading.Backtest/            # 回测引擎层
-│   │   ├── Engine/                   # BacktestEngine
-│   │   └── Services/                 # BacktestRunner, ResultPrinter
+│   ├── Trading.Infrastructure/      # 基础设施层
+│   │   ├── AI/                       # AI分析服务（集成在基础设施层）
+│   │   ├── CosmosDB/                 # Cosmos DB实现
+│   │   ├── AzureTable/               # Azure Table Storage实现
+│   │   ├── Telegram/                 # Telegram Bot集成
+│   │   └── Email/                    # 邮件服务
 │   │
-│   ├── Trading.Backtest.Console/    # Console应用
-│   └── Trading.Backtest.Web/        # Web应用（待完善）
+│   ├── Trading.Services/            # 业务服务层
+│   │   ├── Services/                 # 业务服务（监控、告警）
+│   │   └── BackgroundJobs/           # 后台任务
+│   │
+│   └── Trading.Web/                 # Web应用
+│       ├── Controllers/              # REST API
+│       └── wwwroot/                  # 前端界面
+│
+├── archived/                        # 已归档的回测和分析工具
+│   ├── TradingBacktest.sln           # 回测系统独立解决方案
+│   ├── Trading.Backtest.Data/        # 回测数据基础设施
+│   ├── Trading.Backtest/             # 回测引擎
+│   ├── Trading.Backtest.Console/     # 回测控制台工具
+│   ├── Trading.Backtest.Web/         # Web回测界面
+│   ├── Trading.Backtest.ParameterOptimizer/ # 参数优化器
+│   └── Trading.Strategy.Analyzer/    # 策略分析器
 │
 ├── data/                             # CSV历史数据
-│   └── XAUUSD*.csv
 ├── docs/                             # 文档
-└── README.md                         # 详细文档
+│   ├── setup/                        # 配置指南
+│   ├── guides/                       # 使用指南
+│   ├── strategies/                   # 策略文档
+│   └── maintenance/                  # 维护文档
+├── TradingSystem.sln                 # 主系统解决方案
+└── README.md                         # 项目说明
 ```
 
-## 回测输出示例
+## 主要功能
 
+### 实时监控
+- **价格监控**：固定价格、EMA交叉、MA交叉
+- **形态监控**：Pin Bar形态自动识别
+- **多渠道告警**：Telegram Bot + 邮件通知
+
+### AI智能分析
+- **双级AI架构**：成本优化的智能决策
+- **多提供商**：Azure OpenAI、DeepSeek
+- **自动过滤**：筛选高质量交易信号
+
+### 风险管理
+- **智能仓位计算**：基于风险百分比自动计算
+- **Prop Firm规则**：预设FTMO、Blue Guardian等规则
+- **单日风险控制**：自动追踪限制单日亏损
+
+## 配置要求
+
+### 必需配置
+- **Telegram Bot**：用于告警通知
+- **OANDA API**：用于实时数据
+
+### 可选配置
+- **Azure Table Storage**：低成本持久化（推荐，$1-3/月）
+- **Cosmos DB**：高性能数据库（可选）
+- **Azure OpenAI**：GPT-4o智能分析
+- **DeepSeek API**：低成本AI分析
+
+## 快速配置
+
+详细配置说明参见：
+- [用户密钥配置](docs/setup/USER_SECRETS_SETUP.md)
+- [告警系统快速入门](docs/ALERT_SYSTEM_QUICKSTART.md)
+- [Pin Bar监控快速入门](docs/PINBAR_QUICKSTART.md)
+- [双级AI快速入门](docs/DUAL_TIER_AI_QUICKSTART.md)
+
+## 回测功能（已归档）
+
+历史回测功能已移至 `archived/` 目录，如需使用：
+
+```bash
+cd archived
+dotnet build TradingBacktest.sln
+cd Trading.Backtest.Console
+dotnet run
 ```
-=== 交易策略回测系统 ===
 
-数据目录: d:\tmp\pinbar\data
+回测系统支持：
+- CSV历史数据导入
+- Pin Bar策略回测
+- 参数优化
+- 详细统计报告
 
-正在加载 XAUUSD 的历史数据...
-加载完成，共 47288 根K线
-数据范围: 2024-01-15 01:00 至 2026-01-14 02:00
+## 更多信息
 
-开始执行回测...
+完整文档请参见：[README.md](README.md)
 
-============================================================
-总体统计
-============================================================
-策略名称: PinBar-XAUUSD-v1
-回测周期: 2024-01-15 至 2026-01-14
-总交易数: 156
-盈利交易: 89
-亏损交易: 67
-胜率: 57.05%
-总收益: 342.50 点
-总收益率: 23.45R
-平均持仓时间: 18:32:15
-最大连续盈利: 7 单
-最大连续亏损: 5 单
-最大回撤: 45.80 点 (2024-08-23)
-盈亏比: 1.85
-平均每月开仓: 6.5 单
-```
-
-## 策略逻辑
-
-### 多单开仓条件：
-1. ✅ 前一根K线是看涨Pin Bar
-   - 下影线 ≥ 60%
-   - 实体 ≤ 30%
-   - 上影线 ≤ 20%
-2. ✅ 前一根K线收盘在EMA200上方
-3. ✅ 前一根K线底部靠近EMA（20/60/80/100/200）
-4. ✅ 当前K线收盘突破Pin Bar高点
-5. ✅ 交易时间：UTC 5:00-11:00
-
-### 止损止盈：
-- 止损：Pin Bar低点 - 1.0 * ATR
-- 止盈：按盈亏比1.5:1计算
-
-## 关键配置参数
-
-| 参数 | 默认值(XAUUSD) | 说明 |
-|------|---------------|------|
-| BaseEma | 200 | 趋势判断EMA |
-| Threshold | 1.0 美元 | Pin Bar最小波动 |
-| MaxBodyPercentage | 30% | 实体最大占比 |
-| MinLongerWickPercentage | 60% | 长影线最小占比 |
-| MaxShorterWickPercentage | 20% | 短影线最大占比 |
-| NearEmaThreshold | 0.8 美元 | 靠近EMA的距离 |
-| RiskRewardRatio | 1.5 | 盈亏比 |
-| StopLossAtrRatio | 1.0 | 止损ATR倍数 |
-| MinLowerWickAtrRatio | 1.2 | 长影线最小ATR倍数 |
-
-## 数据库配置（可选）
-
-如果要保存回测结果到Cosmos DB：
-
-1. 启动Cosmos DB Emulator
-2. 运行程序后选择 "y" 保存结果
-3. 数据将保存到：
-   - 数据库：`TradingBacktest`
-   - 容器：`BacktestResults`
+核心策略说明：[Pin Bar策略](docs/strategies/pin-bar.strategy.md)
 
 ## 下一步
 

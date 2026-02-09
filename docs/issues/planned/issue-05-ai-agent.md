@@ -54,11 +54,11 @@ AI Agent 自动:
 
 #### ✅ 1. 创建 AI Agent 项目
 
-**新项目：** `Trading.AI.Agent`
+**新项目：** `Trading.Infrastructure.AI.Agent`
 
 ```
-src/Trading.AI.Agent/
-├── Trading.AI.Agent.csproj
+src/Trading.Infrastructure.AI.Agent/
+├── Trading.Infrastructure.AI.Agent.csproj
 ├── Services/
 │   ├── TradingAgentService.cs          # 核心Agent服务
 │   ├── DataFormatterService.cs         # 数据格式化
@@ -79,9 +79,9 @@ src/Trading.AI.Agent/
   <PackageReference Include="Azure.AI.OpenAI" Version="2.1.0" />
   <PackageReference Include="Skender.Stock.Indicators" Version="2.7.1" />
 
-  <ProjectReference Include="..\Trading.AI\Trading.AI.csproj" />
-  <ProjectReference Include="..\Trading.Infras.Data\Trading.Infras.Data.csproj" />
-  <ProjectReference Include="..\Trading.Infras.Service\Trading.Infras.Service.csproj" />
+  <ProjectReference Include="..\Trading.AI\Trading.Infrastructure.AI.csproj" />
+  <ProjectReference Include="..\Trading.Infrastructure\Trading.Infrastructure.csproj" />
+  <ProjectReference Include="..\Trading.Services\Trading.Services.csproj" />
   <ProjectReference Include="..\Trading.Core\Trading.Core.csproj" />
 </ItemGroup>
 ```
@@ -668,17 +668,17 @@ builder.Services.AddControllers()
 
 1. **创建项目**
    ```bash
-   dotnet new classlib -n Trading.AI.Agent -o src/Trading.AI.Agent
-   cd src/Trading.AI.Agent
+   dotnet new classlib -n Trading.Infrastructure.AI.Agent -o src/Trading.Infrastructure.AI.Agent
+   cd src/Trading.Infrastructure.AI.Agent
    dotnet add package Azure.AI.OpenAI --version 2.1.0
    dotnet add package Skender.Stock.Indicators --version 2.7.1
    ```
 
 2. **添加项目引用**
    ```bash
-   dotnet add reference ../Trading.AI/Trading.AI.csproj
-   dotnet add reference ../Trading.Infras.Data/Trading.Infras.Data.csproj
-   dotnet add reference ../Trading.Infras.Service/Trading.Infras.Service.csproj
+   dotnet add reference ../Trading.AI/Trading.Infrastructure.AI.csproj
+   dotnet add reference ../Trading.Infrastructure/Trading.Infrastructure.csproj
+   dotnet add reference ../Trading.Services/Trading.Services.csproj
    dotnet add reference ../Trading.Core/Trading.Core.csproj
    ```
 

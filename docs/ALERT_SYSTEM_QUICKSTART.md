@@ -15,23 +15,20 @@
 2. 启动对话
 3. 复制显示的Chat ID
 
-#### 配置TradeLocker
-- 准备你的TradeLocker账户信息
-- 可以使用AccessToken或用户名/密码
+#### 配置OANDA API
+- 准备你的OANDA账户信息
+- 注册并获取API Key: https://www.oanda.com/
 
 ### 2. 配置应用
 
 **推荐使用 User Secrets 存储敏感信息：**
 
 ```bash
-cd src/Trading.AlertSystem.Web
+cd src/Trading.Web
 dotnet user-secrets init
-dotnet user-secrets set "TradeLocker:Environment" "demo"
-dotnet user-secrets set "TradeLocker:Email" "你的TradeLocker邮箱"
-dotnet user-secrets set "TradeLocker:Password" "你的密码"
-dotnet user-secrets set "TradeLocker:Server" "你的服务器名称"
-dotnet user-secrets set "TradeLocker:AccountId" "123456"
-dotnet user-secrets set "TradeLocker:AccountNumber" "1"
+dotnet user-secrets set "Oanda:Environment" "practice"
+dotnet user-secrets set "Oanda:ApiKey" "你的OANDA API Key"
+dotnet user-secrets set "Oanda:AccountId" "你的账户ID"
 dotnet user-secrets set "Telegram:BotToken" "你的Bot Token"
 dotnet user-secrets set "Telegram:DefaultChatId" "你的Chat ID"
 dotnet user-secrets set "CosmosDb:ConnectionString" "AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5..."
@@ -55,24 +52,23 @@ dotnet user-secrets set "CosmosDb:ConnectionString" "AccountEndpoint=https://loc
 }
 ```
 
-**注意：** TradeLocker和Telegram的配置必须通过User Secrets配置，不要直接写在appsettings.json中！
+**注意：** OANDA和Telegram的配置必须通过User Secrets配置，不要直接写在appsettings.json中！
 
-**获取TradeLocker信息：**
-- Environment: demo（测试环境）或 live（实盘环境）
-- Email: 你的TradeLocker账户邮箱
-- Password: 你的TradeLocker密码
-- Server: 登录TradeLocker时选择的服务器名称
-- AccountId: 在TradeLocker平台点击账户切换器（圆形图标），找到#后面的数字
+**获取OANDA信息：**
+- Environment: practice（模拟环境）或 live（实盘环境）
+- ApiKey: 在OANDA平台生成的API密钥
+- AccountId: 你的OANDA账户ID
 
-**CosmosDB配置（可选）：**
+**CosmosDB或Azure Table Storage配置（可选）：**
 - 本地开发可使用 Cosmos DB Emulator
 - ConnectionString示例：`AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==`
-- 不配置CosmosDB会自动使用内存存储（重启后数据丢失）
+- 推荐使用Azure Table Storage（成本更低）
+- 不配置数据库会自动使用内存存储（重启后数据丢失）
 
 ### 3. 运行应用
 
 ```bash
-cd src/Trading.AlertSystem.Web
+cd src/Trading.Web
 dotnet run
 ```
 
@@ -136,10 +132,11 @@ A:
 - 确认已向机器人发送过 `/start` 命令
 - 检查Chat ID是否正确
 
-### Q: TradeLocker连接失败？
+### Q: OANDA连接失败？
 A:
-- 检查API凭证是否正确
+- 检查API Key是否正确
 - 确认账户ID正确
+- 检查Environment设置（practice/live）
 - 查看应用日志获取详细错误
 
 ### Q: 告警不触发？
@@ -156,8 +153,8 @@ A: 在Web界面中点击告警卡片的"重置"按钮
 
 1. **告警触发机制**: 告警触发后会自动标记为"已触发"，需要手动重置
 2. **监控间隔**: 建议设置在30-300秒之间
-3. **API限制**: 注意TradeLocker的API调用限制
-4. **数据存储**: 告警配置存储在CosmosDB中
+3. **API限制**: 注意OANDA的API调用限制
+4. **数据存储**: 告警配置存储在Azure Table Storage或CosmosDB中
 
 ## 🎯 最佳实践
 
@@ -169,9 +166,10 @@ A: 在Web界面中点击告警卡片的"重置"按钮
 
 ## 🔗 相关资源
 
-- [完整文档](README.md)
-- [TradeLocker API文档](https://tradelocker.com/api)
+- [完整文档](../README.md)
+- [OANDA API文档](https://developer.oanda.com/)
 - [Telegram Bot API文档](https://core.telegram.org/bots/api)
+- [Azure Table Storage指南](setup/AZURE_TABLE_STORAGE_GUIDE.md)
 
 ## 💡 提示
 
