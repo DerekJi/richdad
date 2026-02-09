@@ -30,7 +30,7 @@ $hasBreakout = $false
 foreach ($item in $data.data) {
     $tags = $item.Tags -join ", "
     Write-Host "  Time: $($item.Time) | Close: $($item.Close) | Tags: [$tags]"
-    
+
     if ($item.Tags -contains "BO") {
         $hasBreakout = $true
     }

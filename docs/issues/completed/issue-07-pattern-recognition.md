@@ -823,8 +823,8 @@ public class MarketDataProcessor
 
 ### 验证结果
 
-**测试环境：** XAUUSD M5  
-**处理记录数：** 2007条  
+**测试环境：** XAUUSD M5
+**处理记录数：** 2007条
 **验证时间：** 2026-02-10
 
 **成功识别的形态：**
@@ -947,7 +947,7 @@ curl "http://localhost:5000/api/pattern/processed/XAUUSD/M5/20260209_0720"
 ```
 原始数据: Open=5013.71, High=5013.75, Low=4997.855, Close=5004.25
 
-预处理后: 
+预处理后:
 - Tags: ["BO", "BO_Bear", "Gap_EMA_Below", "L1"]
 - Body%: 40%
 - Distance to EMA20: -1999.4 Ticks
@@ -972,8 +972,8 @@ AI 可以直接理解："这是一个熊市突破，价格在 EMA20 下方约 20
 ### 👨‍💻 维护者
 GitHub Copilot + User
 
-**完成日期：** 2026-02-10  
-**验证状态：** ✅ 通过  
+**完成日期：** 2026-02-10
+**验证状态：** ✅ 通过
 **生产就绪：** ✅ 是
 
 ---

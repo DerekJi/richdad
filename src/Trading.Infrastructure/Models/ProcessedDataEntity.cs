@@ -12,7 +12,7 @@ namespace Trading.Infrastructure.Models;
 /// 1. 减少 AI 分析时的计算负担
 /// 2. 提供 100% 准确的形态识别结果
 /// 3. 支持历史数据回测和分析
-/// 
+///
 /// 存储结构：
 /// - PartitionKey: "{Symbol}_{TimeFrame}" (如 "XAUUSD_M5")
 /// - RowKey: "yyyyMMdd_HHmm" (如 "20260209_1550")
