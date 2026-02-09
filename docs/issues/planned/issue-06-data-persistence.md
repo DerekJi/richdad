@@ -1,5 +1,9 @@
 ﻿## Issue 6: 实现数据持久化与智能缓存层
 
+### 状态：✅ 已完成 (2025-01-14)
+- 提交: dea8eb2 - feat: 实现Issue 6 - K线数据持久化系统 (Azure Table Storage)
+- 分支: feature/issue-06-data-persistence
+
 ### 标题
 🗄️ Implement Data Persistence Layer with Smart Caching for Market Data
 
@@ -19,14 +23,23 @@
 - **支持回测**：存储完整历史数据
 - **成本优化**：Azure Table Storage 成本极低（$1-3/月）
 
+### 命名约定 (重构说明)
+初始实现使用 "MarketData" 和 "ProcessedData" 命名，后重构为更明确的术语：
+- **CandleEntity** (原 CandleEntity) - 明确表示K线/蜡烛图数据
+- **CandleIndicatorEntity** (原 CandleIndicatorEntity) - 明确表示技术指标数据
+- **CandleCacheService** (原 CandleCacheService) - 保持命名一致性
+- **CandleInitializationService** (原 CandleInitializationService) - 明确服务职责
+- **API路由**: `/api/candle` (原 `/api/candle`)
+- **配置节**: `CandleCache` (原 `MarketDataCache`)
+
 ### 实现功能
 
 #### ✅ 1. 数据模型设计
 
-**表1: MarketData - 原始 OHLC 数据**
+**表1: CandleData - 原始 OHLC 数据**
 
 ```csharp
-public class MarketDataEntity : ITableEntity
+public class CandleEntity : ITableEntity
 {
     // PartitionKey: Symbol (如 "XAUUSD", "EURUSD")
     // RowKey: TimeFrame_DateTime (如 "M5_20260208_1015")
@@ -56,10 +69,10 @@ public class MarketDataEntity : ITableEntity
 }
 ```
 
-**表2: ProcessedData - 预处理指标数据**
+**表2: CandleIndicatorData - 预处理指标数据**
 
 ```csharp
-public class ProcessedDataEntity : ITableEntity
+public class CandleIndicatorEntity : ITableEntity
 {
     // PartitionKey: Symbol_TimeFrame (如 "XAUUSD_M5")
     // RowKey: DateTime (如 "20260208_1015")
@@ -91,14 +104,14 @@ public class ProcessedDataEntity : ITableEntity
 
 #### ✅ 2. 智能缓存服务
 
-**新增服务：** `MarketDataCacheService`
+**新增服务：** `CandleCacheService`
 
 ```csharp
-public class MarketDataCacheService
+public class CandleCacheService
 {
     private readonly IOandaService _oandaService;
-    private readonly IMarketDataRepository _repository;
-    private readonly ILogger<MarketDataCacheService> _logger;
+    private readonly ICandleRepository _repository;
+    private readonly ILogger<CandleCacheService> _logger;
 
     /// <summary>
     /// 智能获取 K 线数据：优先从数据库查询，仅补充缺失部分
@@ -171,13 +184,13 @@ public class MarketDataCacheService
 
 #### ✅ 3. Repository 实现
 
-**MarketDataRepository.cs:**
+**CandleRepository.cs:**
 
 ```csharp
-public class MarketDataRepository : IMarketDataRepository
+public class CandleRepository : ICandleRepository
 {
     private readonly TableClient _tableClient;
-    private readonly ILogger<MarketDataRepository> _logger;
+    private readonly ILogger<CandleRepository> _logger;
 
     public async Task<List<Candle>> GetRangeAsync(
         string symbol,
@@ -191,7 +204,7 @@ public class MarketDataRepository : IMarketDataRepository
                      $"RowKey le '{timeFrame}_{endTime:yyyyMMdd_HHmm}'";
 
         var results = new List<Candle>();
-        await foreach (var entity in _tableClient.QueryAsync<MarketDataEntity>(filter))
+        await foreach (var entity in _tableClient.QueryAsync<CandleEntity>(filter))
         {
             results.Add(MapToCandle(entity));
         }
@@ -226,7 +239,7 @@ public class MarketDataRepository : IMarketDataRepository
         var filter = $"PartitionKey eq '{symbol}' and " +
                      $"RowKey ge '{timeFrame}_'";
 
-        await foreach (var entity in _tableClient.QueryAsync<MarketDataEntity>(
+        await foreach (var entity in _tableClient.QueryAsync<CandleEntity>(
             filter, maxPerPage: 1,
             select: new[] { "Time" }))
         {
@@ -240,18 +253,18 @@ public class MarketDataRepository : IMarketDataRepository
 
 #### ✅ 4. 查询 API
 
-**新增控制器：** `MarketDataController`
+**新增控制器：** `CandleController`
 
 ```csharp
 [ApiController]
 [Route("api/[controller]")]
-public class MarketDataController : ControllerBase
+public class CandleController : ControllerBase
 {
-    private readonly MarketDataCacheService _cacheService;
+    private readonly CandleCacheService _cacheService;
 
     /// <summary>
     /// 获取 K 线数据（智能缓存）
-    /// GET /api/marketdata/candles?symbol=XAUUSD&timeFrame=M5&count=200
+    /// GET /api/candle/candles?symbol=XAUUSD&timeFrame=M5&count=200
     /// </summary>
     [HttpGet("candles")]
     public async Task<ActionResult<List<Candle>>> GetCandles(
@@ -268,7 +281,7 @@ public class MarketDataController : ControllerBase
 
     /// <summary>
     /// 获取最新数据时间
-    /// GET /api/marketdata/latest?symbol=XAUUSD&timeFrame=M5
+    /// GET /api/candle/latest?symbol=XAUUSD&timeFrame=M5
     /// </summary>
     [HttpGet("latest")]
     public async Task<ActionResult<DateTime?>> GetLatestTime(
@@ -281,7 +294,7 @@ public class MarketDataController : ControllerBase
 
     /// <summary>
     /// 手动刷新缓存
-    /// POST /api/marketdata/refresh
+    /// POST /api/candle/refresh
     /// </summary>
     [HttpPost("refresh")]
     public async Task<ActionResult> RefreshCache(
@@ -304,7 +317,7 @@ public class MarketDataController : ControllerBase
 
     /// <summary>
     /// 获取缓存统计信息
-    /// GET /api/marketdata/stats
+    /// GET /api/candle/stats
     /// </summary>
     [HttpGet("stats")]
     public async Task<ActionResult> GetStats()
@@ -323,11 +336,11 @@ public class MarketDataController : ControllerBase
 {
   "AzureTableStorage": {
     "ConnectionString": "UseDevelopmentStorage=true",
-    "MarketDataTableName": "MarketData",
-    "ProcessedDataTableName": "ProcessedData",
+    "CandleTableName": "MarketData",
+    "CandleIndicatorTableName": "ProcessedData",
     "Enabled": true
   },
-  "MarketDataCache": {
+  "CandleCache": {
     "EnableSmartCache": true,
     "MaxCacheAgeDays": 90,
     "AutoRefreshEnabled": true,
@@ -342,7 +355,7 @@ public class MarketDataController : ControllerBase
 #### 初始化历史数据
 
 ```csharp
-public class DataInitializationService
+public class CandleInitializationService
 {
     /// <summary>
     /// 初始化历史数据（首次运行）
@@ -419,9 +432,9 @@ var results = await Task.WhenAll(tasks);
 - [ ] 缓存失效机制正常工作
 
 **API 接口：**
-- [ ] GET /api/marketdata/candles 正常工作
-- [ ] GET /api/marketdata/latest 返回正确时间
-- [ ] POST /api/marketdata/refresh 刷新成功
+- [ ] GET /api/candle/candles 正常工作
+- [ ] GET /api/candle/latest 返回正确时间
+- [ ] POST /api/candle/refresh 刷新成功
 - [ ] 错误处理和日志记录完善
 
 **数据完整性：**
@@ -443,12 +456,12 @@ var results = await Task.WhenAll(tasks);
 ### 相关文件
 
 **新增文件：**
-- `Trading.Infrastructure/Models/MarketDataEntity.cs` - 数据模型
-- `Trading.Infrastructure/Models/ProcessedDataEntity.cs` - 预处理数据模型
-- `Trading.Infrastructure/Repositories/MarketDataRepository.cs` - 数据访问层
-- `Trading.Services/Services/MarketDataCacheService.cs` - 缓存服务
-- `Trading.Services/Services/DataInitializationService.cs` - 初始化服务
-- `Trading.Infras.Web/Controllers/MarketDataController.cs` - API 控制器
+- `Trading.Infrastructure/Models/CandleEntity.cs` - 数据模型
+- `Trading.Infrastructure/Models/CandleIndicatorEntity.cs` - 预处理数据模型
+- `Trading.Infrastructure/Repositories/CandleRepository.cs` - 数据访问层
+- `Trading.Services/Services/CandleCacheService.cs` - 缓存服务
+- `Trading.Services/Services/CandleInitializationService.cs` - 初始化服务
+- `Trading.Infras.Web/Controllers/CandleController.cs` - API 控制器
 
 **文档：**
 - `docs/MARKET_DATA_CACHE_GUIDE.md` - 使用指南
