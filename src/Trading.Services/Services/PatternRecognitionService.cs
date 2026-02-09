@@ -5,8 +5,17 @@ namespace Trading.Services.Services;
 
 /// <summary>
 /// Al Brooks 形态识别服务
-/// 识别 Inside Bar, Outside Bar, Spike, Follow Through, 趋势计数等形态
 /// </summary>
+/// <remarks>
+/// 实现 Al Brooks 价格行为学的核心形态识别，包括：
+/// - 内包线（ii/iii）：波动收缩，潜在突破信号
+/// - 外包线（Outside Bar）：大幅波动，可能反转
+/// - 突破（Breakout）：突破 20 根 K 线高低点
+/// - 尖峰（Spike）：快速急涨急跌
+/// - 跟进（Follow Through）：趋势延续确认
+/// - 趋势计数（H1-H9/L1-L9）：识别回调入场点
+/// - 信号棒（Signal Bar）：高概率入场信号
+/// </remarks>
 public class PatternRecognitionService
 {
     private readonly TechnicalIndicatorService _indicatorService;

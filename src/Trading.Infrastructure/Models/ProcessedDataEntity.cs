@@ -5,11 +5,18 @@ using System.Text.Json;
 namespace Trading.Infrastructure.Models;
 
 /// <summary>
-/// 预处理数据实体 - 存储 Al Brooks 形态识别结果
+/// Al Brooks 形态识别预处理数据实体
 /// </summary>
 /// <remarks>
-/// PartitionKey: Symbol_TimeFrame (如 "XAUUSD_M5")
-/// RowKey: DateTime (如 "20260209_1550")
+/// 存储每根 K 线的技术指标和形态标签，用于：
+/// 1. 减少 AI 分析时的计算负担
+/// 2. 提供 100% 准确的形态识别结果
+/// 3. 支持历史数据回测和分析
+/// 
+/// 存储结构：
+/// - PartitionKey: "{Symbol}_{TimeFrame}" (如 "XAUUSD_M5")
+/// - RowKey: "yyyyMMdd_HHmm" (如 "20260209_1550")
+/// - Tags: JSON 数组，包含所有识别到的形态标签
 /// </remarks>
 public class ProcessedDataEntity : ITableEntity
 {

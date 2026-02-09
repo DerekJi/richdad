@@ -241,6 +241,30 @@ public class CandleInitializationService
     }
 
     /// <summary>
+    /// 手动触发形态识别处理（供API调用）
+    /// </summary>
+    public async Task ProcessPatternsAsync(string symbol, string timeFrame)
+    {
+        _logger.LogInformation("开始处理形态识别: {Symbol} {TimeFrame}", symbol, timeFrame);
+
+        // 获取所有K线数据 - 取最近1年的数据
+        var endTime = DateTime.UtcNow;
+        var startTime = endTime.AddYears(-1);
+        var candles = await _repository.GetRangeAsync(symbol, timeFrame, startTime, endTime);
+
+        if (!candles.Any())
+        {
+            _logger.LogWarning("没有 {Symbol} {TimeFrame} 的K线数据", symbol, timeFrame);
+            return;
+        }
+
+        _logger.LogInformation("获取到 {Count} 根K线，开始形态识别", candles.Count);
+
+        // 执行形态识别
+        await ProcessAndSavePatternDataAsync(symbol, timeFrame, candles);
+    }
+
+    /// <summary>
     /// 批量增量更新（更新所有配置的品种和周期）
     /// </summary>
     public async Task IncrementalUpdateAllAsync()
@@ -380,6 +404,16 @@ public class CandleInitializationService
     /// <summary>
     /// 处理并保存形态识别数据
     /// </summary>
+    /// <remarks>
+    /// 对每根 K 线执行完整的技术分析：
+    /// 1. 计算 EMA20（需要至少 20 根历史数据）
+    /// 2. 计算技术指标（Body%、实体大小、影线等）
+    /// 3. 执行形态识别（Inside/Outside/Breakout/Spike 等）
+    /// 4. 批量保存到 ProcessedData 表
+    /// </remarks>
+    /// <param name="symbol">品种代码</param>
+    /// <param name="timeFrame">时间周期</param>
+    /// <param name="candles">K 线数据列表</param>
     private async Task ProcessAndSavePatternDataAsync(string symbol, string timeFrame, List<Candle> candles)
     {
         try

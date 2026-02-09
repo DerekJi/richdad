@@ -1,23 +1,34 @@
 using Microsoft.AspNetCore.Mvc;
 using Trading.Infrastructure.Repositories;
+using Trading.Services.Services;
 
 namespace Trading.Web.Controllers;
 
 /// <summary>
-/// 形态识别 API
+/// Al Brooks 形态识别 API 控制器
 /// </summary>
+/// <remarks>
+/// 提供预处理后的技术分析数据查询接口：
+/// - GET /api/pattern/processed - 查询形态识别数据
+/// - GET /api/pattern/stats - 获取统计信息
+/// - GET /api/pattern/markdown - 生成 Markdown 格式报告
+/// - POST /api/pattern/process - 手动触发形态识别处理
+/// </remarks>
 [ApiController]
 [Route("api/[controller]")]
 public class PatternController : ControllerBase
 {
     private readonly IProcessedDataRepository _repository;
+    private readonly CandleInitializationService _initService;
     private readonly ILogger<PatternController> _logger;
 
     public PatternController(
         IProcessedDataRepository repository,
+        CandleInitializationService initService,
         ILogger<PatternController> logger)
     {
         _repository = repository;
+        _initService = initService;
         _logger = logger;
     }
 
@@ -196,6 +207,44 @@ public class PatternController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "生成 Markdown 失败");
+            return StatusCode(500, new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// 手动触发形态识别处理
+    /// POST /api/pattern/process?symbol=XAUUSD&timeFrame=M5
+    /// </summary>
+    [HttpPost("process")]
+    public async Task<IActionResult> ProcessPatterns(
+        [FromQuery] string symbol,
+        [FromQuery] string timeFrame)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(symbol) || string.IsNullOrEmpty(timeFrame))
+            {
+                return BadRequest(new { error = "Symbol and TimeFrame are required" });
+            }
+
+            _logger.LogInformation("手动触发形态识别: {Symbol} {TimeFrame}", symbol, timeFrame);
+
+            // 调用 public 方法
+            await _initService.ProcessPatternsAsync(symbol, timeFrame);
+
+            var count = await _repository.GetCountAsync(symbol, timeFrame);
+
+            return Ok(new
+            {
+                message = "形态识别处理完成",
+                symbol,
+                timeFrame,
+                processedCount = count
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "形态识别处理失败");
             return StatusCode(500, new { error = ex.Message });
         }
     }

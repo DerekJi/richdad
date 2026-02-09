@@ -3,9 +3,15 @@ using Trading.Models;
 namespace Trading.Services.Services;
 
 /// <summary>
-/// 技术指标计算服务
-/// 实现 Al Brooks 价格行为学所需的核心指标
+/// Al Brooks 技术指标计算服务
 /// </summary>
+/// <remarks>
+/// 实现 Al Brooks 价格行为学理论所需的核心技术指标计算，包括：
+/// - Body%（收盘位置）：衡量 K 线强弱的关键指标
+/// - 实体大小百分比：识别 Doji、强弱棒
+/// - 上下影线百分比：识别反转信号
+/// - EMA 距离：判断趋势强度和回调机会
+/// </remarks>
 public class TechnicalIndicatorService
 {
     /// <summary>
