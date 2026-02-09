@@ -66,4 +66,9 @@ public class AzureTableStorageSettings
     /// K线指标表名（技术指标）
     /// </summary>
     public string CandleIndicatorTableName { get; set; } = "CandleIndicators";
+
+    /// <summary>
+    /// 预处理数据表名（形态识别结果）
+    /// </summary>
+    public string ProcessedDataTableName { get; set; } = "ProcessedData";
 }

@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Trading.Infrastructure.Configuration;
+using Trading.Infrastructure.Models;
 using Trading.Infrastructure.Repositories;
 using Trading.Infrastructure.Services;
+using Trading.Models;
 
 namespace Trading.Services.Services;
 
@@ -13,17 +15,26 @@ public class CandleInitializationService
 {
     private readonly IOandaService _oandaService;
     private readonly ICandleRepository _repository;
+    private readonly IProcessedDataRepository _processedDataRepository;
+    private readonly TechnicalIndicatorService _indicatorService;
+    private readonly PatternRecognitionService _patternService;
     private readonly ILogger<CandleInitializationService> _logger;
     private readonly CandleCacheSettings _settings;
 
     public CandleInitializationService(
         IOandaService oandaService,
         ICandleRepository repository,
+        IProcessedDataRepository processedDataRepository,
+        TechnicalIndicatorService indicatorService,
+        PatternRecognitionService patternService,
         ILogger<CandleInitializationService> logger,
         IOptions<CandleCacheSettings> settings)
     {
         _oandaService = oandaService;
         _repository = repository;
+        _processedDataRepository = processedDataRepository;
+        _indicatorService = indicatorService;
+        _patternService = patternService;
         _logger = logger;
         _settings = settings.Value;
     }
@@ -111,6 +122,9 @@ public class CandleInitializationService
                     "成功初始化 {Symbol} {TimeFrame}：{Count} 根 K 线，时间范围：{Start} - {End}",
                     symbol, timeFrame, candles.Count,
                     candles.First().DateTime, candles.Last().DateTime);
+
+                // 执行形态识别并保存预处理数据
+                await ProcessAndSavePatternDataAsync(symbol, timeFrame, candles);
             }
             else
             {
@@ -206,6 +220,9 @@ public class CandleInitializationService
                 _logger.LogInformation(
                     "增量更新完成：{Symbol} {TimeFrame}，保存 {Total} 根 K 线（完成: {Complete}, 未完成: {Incomplete}）",
                     symbol, timeFrame, newCandles.Count, completeCount, incompleteCount);
+
+                // 执行形态识别并保存预处理数据
+                await ProcessAndSavePatternDataAsync(symbol, timeFrame, newCandles);
             }
             else
             {
@@ -221,6 +238,30 @@ public class CandleInitializationService
                 symbol, timeFrame);
             throw;
         }
+    }
+
+    /// <summary>
+    /// 手动触发形态识别处理（供API调用）
+    /// </summary>
+    public async Task ProcessPatternsAsync(string symbol, string timeFrame)
+    {
+        _logger.LogInformation("开始处理形态识别: {Symbol} {TimeFrame}", symbol, timeFrame);
+
+        // 获取所有K线数据 - 取最近1年的数据
+        var endTime = DateTime.UtcNow;
+        var startTime = endTime.AddYears(-1);
+        var candles = await _repository.GetRangeAsync(symbol, timeFrame, startTime, endTime);
+
+        if (!candles.Any())
+        {
+            _logger.LogWarning("没有 {Symbol} {TimeFrame} 的K线数据", symbol, timeFrame);
+            return;
+        }
+
+        _logger.LogInformation("获取到 {Count} 根K线，开始形态识别", candles.Count);
+
+        // 执行形态识别
+        await ProcessAndSavePatternDataAsync(symbol, timeFrame, candles);
     }
 
     /// <summary>
@@ -358,5 +399,107 @@ public class CandleInitializationService
         var minutes = GetTimeFrameMinutes(timeFrame);
         var totalMinutes = (end - start).TotalMinutes;
         return (int)Math.Ceiling(totalMinutes / minutes);
+    }
+
+    /// <summary>
+    /// 处理并保存形态识别数据
+    /// </summary>
+    /// <remarks>
+    /// 对每根 K 线执行完整的技术分析：
+    /// 1. 计算 EMA20（需要至少 20 根历史数据）
+    /// 2. 计算技术指标（Body%、实体大小、影线等）
+    /// 3. 执行形态识别（Inside/Outside/Breakout/Spike 等）
+    /// 4. 批量保存到 ProcessedData 表
+    /// </remarks>
+    /// <param name="symbol">品种代码</param>
+    /// <param name="timeFrame">时间周期</param>
+    /// <param name="candles">K 线数据列表</param>
+    private async Task ProcessAndSavePatternDataAsync(string symbol, string timeFrame, List<Candle> candles)
+    {
+        try
+        {
+            if (!candles.Any())
+            {
+                return;
+            }
+
+            _logger.LogInformation(
+                "开始为 {Symbol} {TimeFrame} 处理 {Count} 根K线的形态识别...",
+                symbol, timeFrame, candles.Count);
+
+            var processedEntities = new List<ProcessedDataEntity>();
+
+            // 需要至少20根K线才能计算EMA20
+            if (candles.Count < 20)
+            {
+                _logger.LogWarning(
+                    "{Symbol} {TimeFrame} 数据不足（{Count} < 20），跳过形态识别",
+                    symbol, timeFrame, candles.Count);
+                return;
+            }
+
+            // 按时间排序
+            var sortedCandles = candles.OrderBy(c => c.DateTime).ToList();
+
+            // 从第20根开始处理（前19根用于计算EMA）
+            for (int i = 20; i < sortedCandles.Count; i++)
+            {
+                var currentCandle = sortedCandles[i];
+                var previousCandles = sortedCandles.Take(i + 1).ToList();
+
+                // 计算EMA20（必须先计算，因为后面要用）
+                var ema20 = _patternService.CalculateEMA(previousCandles, 20);
+
+                // 计算技术指标
+                var bodyPercent = _indicatorService.CalculateBodyPercent(currentCandle);
+                var range = _indicatorService.CalculateRange(currentCandle);
+                var bodySizePercent = _indicatorService.CalculateBodySizePercent(currentCandle);
+                var upperTailPercent = _indicatorService.CalculateUpperTailPercent(currentCandle);
+                var lowerTailPercent = _indicatorService.CalculateLowerTailPercent(currentCandle);
+                var distanceToEma = _indicatorService.CalculateDistanceToEMA(currentCandle.Close, ema20, symbol);
+
+                // 形态识别（传入索引和 EMA20）
+                var patterns = _patternService.RecognizePatterns(previousCandles, i, ema20, symbol);
+
+                // 创建实体
+                var entity = ProcessedDataEntity.Create(
+                    symbol: symbol,
+                    timeFrame: timeFrame,
+                    time: currentCandle.DateTime,
+                    bodyPercent: (double)bodyPercent,
+                    distanceToEMA: (double)distanceToEma,
+                    range: (double)range,
+                    bodySizePercent: (double)bodySizePercent,
+                    upperTailPercent: (double)upperTailPercent,
+                    lowerTailPercent: (double)lowerTailPercent,
+                    ema20: (double)ema20,
+                    tags: patterns,
+                    isSignalBar: patterns.Contains("Signal"),
+                    open: currentCandle.Open,
+                    high: currentCandle.High,
+                    low: currentCandle.Low,
+                    close: currentCandle.Close,
+                    volume: currentCandle.TickVolume
+                );
+
+                processedEntities.Add(entity);
+            }
+
+            if (processedEntities.Any())
+            {
+                await _processedDataRepository.SaveBatchAsync(processedEntities);
+
+                _logger.LogInformation(
+                    "成功保存 {Symbol} {TimeFrame} 的 {Count} 条预处理数据",
+                    symbol, timeFrame, processedEntities.Count);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "处理 {Symbol} {TimeFrame} 形态识别数据失败",
+                symbol, timeFrame);
+            // 不抛出异常，避免影响主流程
+        }
     }
 }
