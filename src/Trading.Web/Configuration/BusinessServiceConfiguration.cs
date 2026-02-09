@@ -20,6 +20,10 @@ public static class BusinessServiceConfiguration
         services.AddSingleton<IPriceCacheService, PriceCacheService>();
         services.AddSingleton<PinBarMonitoringService>();
 
+        // 技术指标和形态识别服务 - Issue #7
+        services.AddSingleton<TechnicalIndicatorService>();
+        services.AddScoped<PatternRecognitionService>();
+
         return services;
     }
 

@@ -20,6 +20,7 @@ public static class CandleCacheConfiguration
 
         // 注册 Repository
         services.AddSingleton<ICandleRepository, CandleRepository>();
+        services.AddSingleton<IProcessedDataRepository, ProcessedDataRepository>();
 
         // 注册缓存服务
         services.AddSingleton<CandleCacheService>();
