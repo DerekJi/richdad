@@ -56,4 +56,14 @@ public class AzureTableStorageSettings
     /// AI分析历史表名
     /// </summary>
     public string AIAnalysisHistoryTableName { get; set; } = "AIAnalysisHistory";
+
+    /// <summary>
+    /// K线数据表名（原始 OHLC 数据）
+    /// </summary>
+    public string CandleTableName { get; set; } = "Candles";
+
+    /// <summary>
+    /// K线指标表名（技术指标）
+    /// </summary>
+    public string CandleIndicatorTableName { get; set; } = "CandleIndicators";
 }

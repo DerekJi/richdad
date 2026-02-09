@@ -22,6 +22,9 @@ builder.Services.AddDataSourceServices(builder.Configuration);
 builder.Services.AddNotificationServices(builder.Configuration);
 builder.Services.AddAIServices(builder.Configuration);  // 添加AI服务（可选）
 
+// K线缓存服务 - Issue #6
+builder.Services.AddCandleCacheServices(builder.Configuration);
+
 // 订单执行服务 - 根据配置选择交易平台
 builder.Services.AddOrderExecutionService(builder.Configuration);
 
