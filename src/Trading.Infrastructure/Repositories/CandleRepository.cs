@@ -89,7 +89,7 @@ public class CandleRepository : ICandleRepository
             // 1. 同一批次最多 100 条
             // 2. 必须在同一个 PartitionKey 下
             var batches = candles
-                .Select(c => CandleEntity.FromCandle(symbol, timeFrame, c, true, source))
+                .Select(c => CandleEntity.FromCandle(symbol, timeFrame, c, source))
                 .Chunk(100);
 
             int totalSaved = 0;
@@ -128,9 +128,14 @@ public class CandleRepository : ICandleRepository
                 filter: filter,
                 maxPerPage: 1000))
             {
-                if (latestTime == null || entity.Time > latestTime)
+                // 确保时间是UTC格式
+                var entityTime = entity.Time.Kind == DateTimeKind.Utc
+                    ? entity.Time
+                    : DateTime.SpecifyKind(entity.Time, DateTimeKind.Utc);
+
+                if (latestTime == null || entityTime > latestTime)
                 {
-                    latestTime = entity.Time;
+                    latestTime = entityTime;
                 }
             }
 
@@ -154,9 +159,14 @@ public class CandleRepository : ICandleRepository
                 filter: filter,
                 maxPerPage: 1000))
             {
-                if (earliestTime == null || entity.Time < earliestTime)
+                // 确保时间是UTC格式
+                var entityTime = entity.Time.Kind == DateTimeKind.Utc
+                    ? entity.Time
+                    : DateTime.SpecifyKind(entity.Time, DateTimeKind.Utc);
+
+                if (earliestTime == null || entityTime < earliestTime)
                 {
-                    earliestTime = entity.Time;
+                    earliestTime = entityTime;
                 }
             }
 
@@ -166,6 +176,29 @@ public class CandleRepository : ICandleRepository
         {
             _logger.LogError(ex, "获取最早时间失败 ({Symbol} {TimeFrame})", symbol, timeFrame);
             return null;
+        }
+    }
+
+    public async Task<int> GetCountAsync(string symbol, string timeFrame)
+    {
+        try
+        {
+            var filter = $"PartitionKey eq '{symbol}' and RowKey ge '{timeFrame}_' and RowKey lt '{timeFrame}a'";
+
+            int count = 0;
+            await foreach (var entity in _tableClient.QueryAsync<CandleEntity>(
+                filter: filter,
+                maxPerPage: 1000))
+            {
+                count++;
+            }
+
+            return count;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "获取记录数失败 ({Symbol} {TimeFrame})", symbol, timeFrame);
+            return 0;
         }
     }
 

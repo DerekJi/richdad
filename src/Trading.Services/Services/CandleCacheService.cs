@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using Trading.Infrastructure.Configuration;
 using Trading.Infrastructure.Repositories;
 using Trading.Infrastructure.Services;
-using Trading.Services.Extensions;
 using Candle = Trading.Models.Candle; // 明确使用 Trading.Models.Candle
 
 namespace Trading.Services.Services;
@@ -49,7 +48,7 @@ public class CandleCacheService
             // 如果未启用缓存，直接从 OANDA 获取并转换
             _logger.LogDebug("缓存未启用，直接从 OANDA 获取数据");
             var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count);
-            return serviceCandles.ToModelCandles();
+            return serviceCandles;
         }
 
         endTime ??= DateTime.UtcNow;
@@ -85,7 +84,7 @@ public class CandleCacheService
                     if (freshData.Any())
                     {
                         // 转换为 Models.Candle
-                        var modelCandles = freshData.ToModelCandles();
+                        var modelCandles = freshData;
 
                         // 过滤出指定时间范围内的数据
                         var filteredData = modelCandles
@@ -116,7 +115,7 @@ public class CandleCacheService
 
             // 失败时回退到直接从 OANDA 获取并转换
             var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count);
-            return serviceCandles.ToModelCandles();
+            return serviceCandles;
         }
     }
 
@@ -136,7 +135,7 @@ public class CandleCacheService
         {
             var count = CalculateRequiredCount(startTime.Value, endTime.Value, timeFrame);
             var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count);
-            var candles = serviceCandles.ToModelCandles();
+            var candles = serviceCandles;
 
             if (candles.Any())
             {
@@ -187,7 +186,7 @@ public class CandleCacheService
                 // 没有数据，获取历史数据
                 var serviceCandles = await _oandaService.GetHistoricalDataAsync(
                     symbol, timeFrame, _settings.PreloadCandleCount);
-                var candles = serviceCandles.ToModelCandles();
+                var candles = serviceCandles;
 
                 if (candles.Any())
                 {

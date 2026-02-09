@@ -44,6 +44,14 @@ public interface ICandleRepository
     Task<DateTime?> GetEarliestTimeAsync(string symbol, string timeFrame);
 
     /// <summary>
+    /// 获取K线记录数量
+    /// </summary>
+    /// <param name="symbol">品种代码</param>
+    /// <param name="timeFrame">时间周期</param>
+    /// <returns>记录数量</returns>
+    Task<int> GetCountAsync(string symbol, string timeFrame);
+
+    /// <summary>
     /// 获取缓存统计信息
     /// </summary>
     /// <returns>统计信息字典</returns>

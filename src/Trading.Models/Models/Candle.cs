@@ -41,6 +41,12 @@ public class Candle
     public int Spread { get; set; }
 
     /// <summary>
+    /// 是否完整（已收盘的K线）
+    /// true=已完成, false=正在形成中
+    /// </summary>
+    public bool IsComplete { get; set; } = true;
+
+    /// <summary>
     /// EMA指标字典 (周期 => 值)
     /// </summary>
     public Dictionary<int, decimal> EMA { get; set; } = new();

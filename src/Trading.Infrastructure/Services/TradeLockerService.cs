@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Trading.Infrastructure.Configuration;
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -273,7 +274,7 @@ public class TradeLockerService : ITradeLockerService
         return results.Where(r => r != null).Cast<SymbolPrice>();
     }
 
-    public async Task<IEnumerable<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars)
+    public async Task<IEnumerable<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars)
     {
         try
         {
@@ -287,7 +288,7 @@ public class TradeLockerService : ITradeLockerService
             if (instrumentInfo == null)
             {
                 _logger.LogWarning("无法获取{Symbol}的交易品种信息", symbol);
-                return Array.Empty<Candle>();
+                return Array.Empty<Trading.Models.Candle>();
             }
 
             // 转换时间周期格式 (M5 -> 5, H1 -> 60, D1 -> 1440)
@@ -311,7 +312,7 @@ public class TradeLockerService : ITradeLockerService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("获取{Symbol}历史数据失败: {StatusCode}", symbol, response.StatusCode);
-                return Array.Empty<Candle>();
+                return Array.Empty<Trading.Models.Candle>();
             }
 
             var content = await response.Content.ReadAsStringAsync();
@@ -319,7 +320,7 @@ public class TradeLockerService : ITradeLockerService
 
             if (!result.TryGetProperty("s", out var status) || status.GetString() != "ok")
             {
-                return Array.Empty<Candle>();
+                return Array.Empty<Trading.Models.Candle>();
             }
 
             var data = result.GetProperty("d");
@@ -330,17 +331,18 @@ public class TradeLockerService : ITradeLockerService
             var closes = data.GetProperty("c").EnumerateArray().Select(c => c.GetDecimal()).ToList();
             var volumes = data.GetProperty("v").EnumerateArray().Select(v => v.GetDecimal()).ToList();
 
-            var candles = new List<Candle>();
+            var candles = new List<Trading.Models.Candle>();
             for (int i = 0; i < times.Count; i++)
             {
-                candles.Add(new Candle
+                candles.Add(new Trading.Models.Candle
                 {
-                    Time = DateTimeOffset.FromUnixTimeSeconds(times[i]).DateTime,
+                    DateTime = DateTimeOffset.FromUnixTimeSeconds(times[i]).DateTime,
                     Open = opens[i],
                     High = highs[i],
                     Low = lows[i],
                     Close = closes[i],
-                    Volume = volumes[i]
+                    TickVolume = (int)volumes[i],
+                    IsComplete = true  // TradeLocker返回的都是已完成的K线
                 });
             }
 
@@ -349,7 +351,7 @@ public class TradeLockerService : ITradeLockerService
         catch (Exception ex)
         {
             _logger.LogError(ex, "获取{Symbol}历史数据时发生错误", symbol);
-            return Array.Empty<Candle>();
+            return Array.Empty<Trading.Models.Candle>();
         }
     }
 

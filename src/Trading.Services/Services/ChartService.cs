@@ -3,6 +3,7 @@ using ScottPlot;
 using Skender.Stock.Indicators;
 using SkiaSharp;
 using Trading.Infrastructure.Services;
+using Trading.Models;
 
 namespace Trading.Services.Services;
 
@@ -157,12 +158,12 @@ public class ChartService : IChartService
         // 计算EMA
         var quotes = recentCandles.Select(c => new Quote
         {
-            Date = c.Time,
+            Date = c.DateTime,
             Open = c.Open,
             High = c.High,
             Low = c.Low,
             Close = c.Close,
-            Volume = c.Volume
+            Volume = c.TickVolume
         }).ToList();
 
         var emaResults = quotes.GetEma(emaPeriod).ToList();
@@ -198,14 +199,14 @@ public class ChartService : IChartService
         for (int i = 0; i < recentCandles.Count; i += step)
         {
             tickPositions.Add(i);
-            tickLabels.Add(recentCandles[i].Time.ToString("HH:mm"));
+            tickLabels.Add(recentCandles[i].DateTime.ToString("HH:mm"));
         }
 
         // 确保最后一根K线的时间也显示
         if (tickPositions.Count == 0 || tickPositions[^1] != recentCandles.Count - 1)
         {
             tickPositions.Add(recentCandles.Count - 1);
-            tickLabels.Add(recentCandles[^1].Time.ToString("HH:mm"));
+            tickLabels.Add(recentCandles[^1].DateTime.ToString("HH:mm"));
         }
 
         plot.Axes.Bottom.TickGenerator = new ScottPlot.TickGenerators.NumericManual(

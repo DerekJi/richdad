@@ -1,5 +1,7 @@
 using Trading.Infrastructure.Models;
 using Trading.Infrastructure.Services;
+using Trading.Models;
+using Trading.Models;
 
 namespace Trading.Web.Services;
 
@@ -60,7 +62,7 @@ public class DemoTradeLockerService : ITradeLockerService
         return results.Where(r => r != null).Cast<SymbolPrice>();
     }
 
-    public Task<IEnumerable<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars)
+    public Task<IEnumerable<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int bars)
     {
         _logger.LogDebug("[演示模式] 获取 {Symbol} 历史数据: {TimeFrame}, {Bars}根K线", symbol, timeFrame, bars);
 
@@ -72,7 +74,7 @@ public class DemoTradeLockerService : ITradeLockerService
             _ => 100.00m
         };
 
-        var candles = new List<Candle>();
+        var candles = new List<Trading.Models.Candle>();
         var currentTime = DateTime.UtcNow;
 
         // 生成模拟K线数据
@@ -83,14 +85,15 @@ public class DemoTradeLockerService : ITradeLockerService
             var high = Math.Max(open, close) + (decimal)(_random.NextDouble() * 1);
             var low = Math.Min(open, close) - (decimal)(_random.NextDouble() * 1);
 
-            candles.Add(new Candle
+            candles.Add(new Trading.Models.Candle
             {
-                Time = currentTime.AddMinutes(-i * 5), // 假设5分钟K线
+                DateTime = currentTime.AddMinutes(-i * 5), // 假设5分钟K线
                 Open = open,
                 High = high,
                 Low = low,
                 Close = close,
-                Volume = (decimal)(_random.Next(100, 1000))
+                TickVolume = _random.Next(100, 1000),
+                IsComplete = true  // 模拟数据都是已完成的
             });
         }
 

@@ -259,12 +259,12 @@ public class PriceMonitorService : IPriceMonitorService
 
             var quotes = candles.Select(c => new Quote
             {
-                Date = c.Time,
+                Date = c.DateTime,
                 Open = c.Open,
                 High = c.High,
                 Low = c.Low,
                 Close = c.Close,
-                Volume = c.Volume
+                Volume = c.TickVolume
             });
 
             var emaResults = quotes.GetEma(period).ToList();
@@ -287,12 +287,12 @@ public class PriceMonitorService : IPriceMonitorService
 
             var quotes = candles.Select(c => new Quote
             {
-                Date = c.Time,
+                Date = c.DateTime,
                 Open = c.Open,
                 High = c.High,
                 Low = c.Low,
                 Close = c.Close,
-                Volume = c.Volume
+                Volume = c.TickVolume
             });
 
             var smaResults = quotes.GetSma(period).ToList();

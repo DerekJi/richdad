@@ -27,7 +27,10 @@ public static class AzureTableStorageConfiguration
             return services;
         }
 
-        // 配置 Azure Table Storage 设置
+        // 配置 Azure Table Storage 设置（使用选项模式）
+        services.Configure<AzureTableStorageSettings>(tableConfig);
+
+        // 同时注册直接访问的实例（兼容旧代码）
         var tableSettings = new AzureTableStorageSettings
         {
             ConnectionString = connectionString,
@@ -39,7 +42,9 @@ public static class AzureTableStorageConfiguration
             EmailConfigTableName = tableConfig["EmailConfigTableName"] ?? "EmailConfig",
             PinBarMonitorTableName = tableConfig["PinBarMonitorTableName"] ?? "PinBarMonitor",
             PinBarSignalTableName = tableConfig["PinBarSignalTableName"] ?? "PinBarSignal",
-            AIAnalysisHistoryTableName = tableConfig["AIAnalysisHistoryTableName"] ?? "AIAnalysisHistory"
+            AIAnalysisHistoryTableName = tableConfig["AIAnalysisHistoryTableName"] ?? "AIAnalysisHistory",
+            CandleTableName = tableConfig["CandleTableName"] ?? "Candles",
+            CandleIndicatorTableName = tableConfig["CandleIndicatorTableName"] ?? "CandleIndicators"
         };
 
         services.AddSingleton(tableSettings);

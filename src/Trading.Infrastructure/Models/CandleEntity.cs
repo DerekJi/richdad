@@ -76,23 +76,28 @@ public class CandleEntity : ITableEntity
     /// <summary>
     /// 从 Candle 创建实体
     /// </summary>
-    public static CandleEntity FromCandle(string symbol, string timeFrame, Trading.Models.Candle candle, bool isComplete = true, string source = "OANDA")
+    public static CandleEntity FromCandle(string symbol, string timeFrame, Trading.Models.Candle candle, string source = "OANDA")
     {
+        // 确保DateTime是UTC格式，Azure Table Storage要求
+        var utcTime = candle.DateTime.Kind == DateTimeKind.Utc
+            ? candle.DateTime
+            : DateTime.SpecifyKind(candle.DateTime, DateTimeKind.Utc);
+
         return new CandleEntity
         {
             Symbol = symbol,
             TimeFrame = timeFrame,
-            Time = candle.DateTime,
+            Time = utcTime,
             Open = (double)candle.Open,
             High = (double)candle.High,
             Low = (double)candle.Low,
             Close = (double)candle.Close,
             Volume = candle.TickVolume,
             Spread = candle.Spread,
-            IsComplete = isComplete,
+            IsComplete = candle.IsComplete,
             Source = source,
             PartitionKey = symbol,
-            RowKey = $"{timeFrame}_{candle.DateTime:yyyyMMdd_HHmm}"
+            RowKey = $"{timeFrame}_{utcTime:yyyyMMdd_HHmm}"
         };
     }
 
@@ -101,15 +106,21 @@ public class CandleEntity : ITableEntity
     /// </summary>
     public Trading.Models.Candle ToCandle()
     {
+        // 确保时间是UTC格式
+        var utcTime = Time.Kind == DateTimeKind.Utc
+            ? Time
+            : DateTime.SpecifyKind(Time, DateTimeKind.Utc);
+
         return new Trading.Models.Candle
         {
-            DateTime = Time,
+            DateTime = utcTime,
             Open = (decimal)Open,
             High = (decimal)High,
             Low = (decimal)Low,
             Close = (decimal)Close,
             TickVolume = Volume,
-            Spread = Spread
+            Spread = Spread,
+            IsComplete = IsComplete
         };
     }
 }

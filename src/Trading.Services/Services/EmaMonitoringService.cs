@@ -113,14 +113,14 @@ public class EmaMonitoringService : IEmaMonitoringService
             return;
         }
 
-        var candleList = candles.OrderBy(c => c.Time).ToList();
+        var candleList = candles.OrderBy(c => c.DateTime).ToList();
         var latestCandle = candleList[^1];
 
         // 检查是否应该处理这根K线（避免重复处理同一根K线）
         if (_states.TryGetValue(stateId, out var existingState))
         {
             // 如果最新K线的时间与上次检查的时间相同，说明是同一根K线，跳过
-            if (existingState.LastCandleTime == latestCandle.Time)
+            if (existingState.LastCandleTime == latestCandle.DateTime)
             {
                 _logger.LogDebug("跳过 {Symbol} {TimeFrame} EMA{Period} 检查（K线未更新）",
                     symbol, timeFrame, emaPeriod);
@@ -139,12 +139,12 @@ public class EmaMonitoringService : IEmaMonitoringService
         // 计算EMA
         var quotes = candleList.Select(c => new Quote
         {
-            Date = c.Time,
+            Date = c.DateTime,
             Open = c.Open,
             High = c.High,
             Low = c.Low,
             Close = c.Close,
-            Volume = c.Volume
+            Volume = c.TickVolume
         }).ToList();
 
         var emaResults = quotes.GetEma(emaPeriod).ToList();
@@ -183,7 +183,7 @@ public class EmaMonitoringService : IEmaMonitoringService
                     CurrentClose = currentCandle.Close,
                     CurrentEmaValue = currEmaValue,
                     CrossType = currentPosition > 0 ? CrossType.CrossAbove : CrossType.CrossBelow,
-                    EventTime = currentCandle.Time
+                    EventTime = currentCandle.DateTime
                 };
 
                 _logger.LogInformation("检测到EMA穿越: {Message}", crossEvent.FormatMessage());
@@ -270,12 +270,12 @@ public class EmaMonitoringService : IEmaMonitoringService
         state.LastClose = currentCandle.Close;
         state.LastEmaValue = currEmaValue;
         state.LastPosition = currentPosition;
-        state.LastCandleTime = currentCandle.Time;
+        state.LastCandleTime = currentCandle.DateTime;
         state.LastCheckTime = DateTime.UtcNow;
 
         _logger.LogDebug("{Symbol} {TimeFrame} EMA{Period}: Close={Close:F4}, EMA={Ema:F4}, Position={Position}, CandleTime={CandleTime}",
             symbol, timeFrame, emaPeriod, currentCandle.Close, currEmaValue,
-            currentPosition > 0 ? "Above" : "Below", currentCandle.Time.ToString("yyyy-MM-dd HH:mm:ss"));
+            currentPosition > 0 ? "Above" : "Below", currentCandle.DateTime.ToString("yyyy-MM-dd HH:mm:ss"));
     }
 
     public Task<IEnumerable<EmaMonitoringState>> GetStatesAsync()

@@ -1,4 +1,5 @@
 using Trading.Infrastructure.Models;
+using Trading.Models;
 
 namespace Trading.Infrastructure.Services;
 
@@ -23,7 +24,7 @@ public interface IOandaService
     /// <param name="symbol">品种代码 (如 EUR_USD, XAU_USD)</param>
     /// <param name="timeFrame">时间周期 (M5, M15, H1, H4, D1)</param>
     /// <param name="count">获取的K线数量</param>
-    Task<List<Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count);
+    Task<List<Trading.Models.Candle>> GetHistoricalDataAsync(string symbol, string timeFrame, int count);
 
     /// <summary>
     /// 获取账户信息

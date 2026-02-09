@@ -159,19 +159,60 @@ public class CandleController : ControllerBase
     /// <summary>
     /// 获取缓存统计信息
     /// </summary>
+    /// <param name="symbol">品种代码（可选）</param>
+    /// <param name="timeFrame">时间周期（可选）</param>
     /// <returns>统计数据</returns>
     /// <remarks>
-    /// 示例: GET /api/marketdata/stats
+    /// 示例: GET /api/candle/stats 或 GET /api/candle/stats?symbol=XAUUSD&amp;timeFrame=M5
     /// </remarks>
     [HttpGet("stats")]
     [ProducesResponseType(200)]
     [ProducesResponseType(500)]
-    public async Task<ActionResult> GetStats()
+    public async Task<ActionResult> GetStats(string? symbol = null, string? timeFrame = null)
     {
         try
         {
-            var stats = await _repository.GetStatisticsAsync();
-            return Ok(stats);
+            if (!string.IsNullOrEmpty(symbol) && !string.IsNullOrEmpty(timeFrame))
+            {
+                // 获取特定品种和时间周期的详细统计
+                var count = await _repository.GetCountAsync(symbol, timeFrame);
+                var latestTime = await _repository.GetLatestTimeAsync(symbol, timeFrame);
+                var earliestTime = await _repository.GetEarliestTimeAsync(symbol, timeFrame);
+
+                // 获取最近的几条记录作为样本
+                var sampleData = await _repository.GetRangeAsync(
+                    symbol,
+                    timeFrame,
+                    latestTime?.AddHours(-1) ?? DateTime.UtcNow.AddHours(-1),
+                    latestTime ?? DateTime.UtcNow);
+
+                return Ok(new
+                {
+                    symbol,
+                    timeFrame,
+                    totalRecords = count,
+                    earliestTime,
+                    latestTime,
+                    dataSpan = latestTime.HasValue && earliestTime.HasValue
+                        ? (latestTime.Value - earliestTime.Value).TotalDays.ToString("F2") + " 天"
+                        : "无数据",
+                    sampleRecords = sampleData.Take(5).Select(c => new
+                    {
+                        time = c.DateTime,
+                        open = c.Open,
+                        high = c.High,
+                        low = c.Low,
+                        close = c.Close,
+                        volume = c.TickVolume
+                    })
+                });
+            }
+            else
+            {
+                // 获取所有数据的统计
+                var stats = await _repository.GetStatisticsAsync();
+                return Ok(stats);
+            }
         }
         catch (Exception ex)
         {
@@ -183,34 +224,84 @@ public class CandleController : ControllerBase
     /// <summary>
     /// 初始化历史数据
     /// </summary>
-    /// <param name="symbols">品种列表（可选，默认使用配置）</param>
-    /// <param name="timeFrames">时间周期列表（可选，默认使用配置）</param>
+    /// <param name="request">初始化请求（支持JSON body）</param>
+    /// <param name="symbols">品种列表，逗号分隔（URL参数）</param>
+    /// <param name="timeFrames">时间周期列表，逗号分隔（URL参数）</param>
     /// <returns>初始化结果</returns>
     /// <remarks>
-    /// 示例: POST /api/marketdata/initialize
-    /// 或带参数: POST /api/marketdata/initialize?symbols=XAUUSD,XAGUSD&amp;timeFrames=M5,H1
+    /// 方式A - URL参数: POST /api/candle/initialize?symbols=XAUUSD&amp;timeFrames=M5
+    /// 方式B - JSON body: POST /api/candle/initialize
+    /// Body: {"symbol":"XAUUSD","timeFrame":"M5","days":30}
+    /// 或批量: {"symbols":["XAUUSD","XAGUSD"],"timeFrames":["M5","H1"]}
     /// </remarks>
     [HttpPost("initialize")]
     [ProducesResponseType(200)]
     [ProducesResponseType(500)]
     public async Task<ActionResult> InitializeData(
+        [FromBody] InitializeDataRequest? request = null,
         [FromQuery] string? symbols = null,
         [FromQuery] string? timeFrames = null)
     {
         try
         {
-            var symbolList = symbols?.Split(',').ToList();
-            var timeFrameList = timeFrames?.Split(',').ToList();
+            List<string>? symbolList = null;
+            List<string>? timeFrameList = null;
 
-            _logger.LogInformation("开始初始化历史数据...");
+            // 优先使用 JSON body 参数
+            if (request != null)
+            {
+                // 支持单个品种/周期
+                if (!string.IsNullOrEmpty(request.Symbol))
+                {
+                    symbolList = new List<string> { request.Symbol };
+                }
+                if (!string.IsNullOrEmpty(request.TimeFrame))
+                {
+                    timeFrameList = new List<string> { request.TimeFrame };
+                }
 
-            await _initService.InitializeHistoricalDataAsync(symbolList, timeFrameList);
+                // 支持批量品种/周期（覆盖单个）
+                if (request.Symbols?.Any() == true)
+                {
+                    symbolList = request.Symbols;
+                }
+                if (request.TimeFrames?.Any() == true)
+                {
+                    timeFrameList = request.TimeFrames;
+                }
+            }
+            // 其次使用 URL 参数
+            else if (!string.IsNullOrEmpty(symbols) || !string.IsNullOrEmpty(timeFrames))
+            {
+                symbolList = symbols?.Split(',').ToList();
+                timeFrameList = timeFrames?.Split(',').ToList();
+            }
+
+            // 提取count参数（优先）或days参数
+            int? count = request?.Count;
+
+            // 如果指定了days但没有count，根据days计算count（仅用于D1）
+            if (count == null && request?.Days > 0)
+            {
+                // 对于D1，days直接等于count
+                // 对于其他周期，给出提示
+                count = request.Days;
+                _logger.LogInformation("使用days参数: {Days}，建议使用count参数更精确", request.Days);
+            }
+
+            _logger.LogInformation("开始初始化历史数据... Symbols: {Symbols}, TimeFrames: {TimeFrames}, Count: {Count}",
+                symbolList != null ? string.Join(",", symbolList) : "使用默认配置",
+                timeFrameList != null ? string.Join(",", timeFrameList) : "使用默认配置",
+                count?.ToString() ?? "使用默认值");
+
+            await _initService.InitializeHistoricalDataAsync(symbolList, timeFrameList, count);
 
             return Ok(new
             {
                 message = "历史数据初始化完成",
-                symbols = symbolList,
-                timeFrames = timeFrameList
+                symbols = symbolList ?? new List<string>(),
+                timeFrames = timeFrameList ?? new List<string>(),
+                count = count ?? 0
             });
         }
         catch (Exception ex)

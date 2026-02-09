@@ -3,7 +3,6 @@ using Microsoft.Extensions.Options;
 using Trading.Infrastructure.Configuration;
 using Trading.Infrastructure.Repositories;
 using Trading.Infrastructure.Services;
-using Trading.Services.Extensions;
 
 namespace Trading.Services.Services;
 
@@ -34,9 +33,11 @@ public class CandleInitializationService
     /// </summary>
     /// <param name="symbols">品种列表（如果为空则使用配置中的列表）</param>
     /// <param name="timeFrames">时间周期列表（如果为空则使用配置中的列表）</param>
+    /// <param name="count">K线数量（如果为null则使用默认值）</param>
     public async Task InitializeHistoricalDataAsync(
         List<string>? symbols = null,
-        List<string>? timeFrames = null)
+        List<string>? timeFrames = null,
+        int? count = null)
     {
         symbols ??= _settings.PreloadSymbols;
         timeFrames ??= _settings.PreloadTimeFrames;
@@ -54,7 +55,7 @@ public class CandleInitializationService
             {
                 try
                 {
-                    await InitializeSymbolTimeFrameAsync(symbol, timeFrame);
+                    await InitializeSymbolTimeFrameAsync(symbol, timeFrame, count);
                     completedTasks++;
 
                     _logger.LogInformation(
@@ -76,7 +77,7 @@ public class CandleInitializationService
     /// <summary>
     /// 初始化单个品种和时间周期的数据
     /// </summary>
-    private async Task InitializeSymbolTimeFrameAsync(string symbol, string timeFrame)
+    private async Task InitializeSymbolTimeFrameAsync(string symbol, string timeFrame, int? count = null)
     {
         // 检查是否已有数据
         var latestTime = await _repository.GetLatestTimeAsync(symbol, timeFrame);
@@ -90,16 +91,17 @@ public class CandleInitializationService
         }
 
         // 根据时间周期确定获取的 K 线数量
-        var count = GetInitialDataCount(timeFrame);
+        count ??= GetInitialDataCount(timeFrame);
+        var candleCount = count.Value; // 此时count肯定有值
 
         _logger.LogInformation(
             "正在初始化 {Symbol} {TimeFrame} 数据，共 {Count} 根...",
-            symbol, timeFrame, count);
+            symbol, timeFrame, candleCount);
 
         try
         {
-            var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, count);
-            var candles = serviceCandles.ToModelCandles();
+            var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, candleCount);
+            var candles = serviceCandles;
 
             if (candles.Any())
             {
@@ -145,7 +147,7 @@ public class CandleInitializationService
                 _logger.LogInformation(
                     "{Symbol} {TimeFrame} 没有历史数据，执行完整初始化",
                     symbol, timeFrame);
-                await InitializeSymbolTimeFrameAsync(symbol, timeFrame);
+                await InitializeSymbolTimeFrameAsync(symbol, timeFrame, count: null);
                 return;
             }
 
@@ -154,11 +156,16 @@ public class CandleInitializationService
 
             // 如果最新数据很新（在一个周期内），则不需要更新
             var periodMinutes = GetTimeFrameMinutes(timeFrame);
+
+            _logger.LogInformation(
+                "增量更新检查：{Symbol} {TimeFrame}，最新时间: {LatestTime}，当前时间: {Now}，时间差: {Diff}分钟",
+                symbol, timeFrame, latestTime.Value, now, timeDiff.TotalMinutes);
+
             if (timeDiff.TotalMinutes < periodMinutes)
             {
-                _logger.LogDebug(
-                    "{Symbol} {TimeFrame} 数据已是最新，无需更新",
-                    symbol, timeFrame);
+                _logger.LogInformation(
+                    "{Symbol} {TimeFrame} 数据已是最新（时间差{Diff}分钟 < 周期{Period}分钟），无需更新",
+                    symbol, timeFrame, timeDiff.TotalMinutes, periodMinutes);
                 return;
             }
 
@@ -166,24 +173,39 @@ public class CandleInitializationService
             var requiredCount = (int)Math.Ceiling(timeDiff.TotalMinutes / periodMinutes) + 5;
 
             _logger.LogInformation(
-                "增量更新 {Symbol} {TimeFrame}：从 {LatestTime} 到现在，预计 {Count} 根 K 线",
-                symbol, timeFrame, latestTime, requiredCount);
+                "增量更新 {Symbol} {TimeFrame}：从 {LatestTime} 到现在，时间差 {Diff}分钟，预计 {Count} 根 K 线",
+                symbol, timeFrame, latestTime, timeDiff.TotalMinutes, requiredCount);
 
             var serviceCandles = await _oandaService.GetHistoricalDataAsync(symbol, timeFrame, requiredCount);
-            var allCandles = serviceCandles.ToModelCandles();
+            var allCandles = serviceCandles;
 
-            // 只保存比最新时间更新的数据
+            _logger.LogInformation(
+                "从OANDA获取了 {Count} 根K线，时间范围: {From} 到 {To}",
+                allCandles.Count,
+                allCandles.FirstOrDefault()?.DateTime,
+                allCandles.LastOrDefault()?.DateTime);
+
+            // 保存 >= 最新时间的数据（包括未完成的K线，让UpsertReplace自动更新）
             var newCandles = allCandles
-                .Where(c => c.DateTime > latestTime.Value)
+                .Where(c => c.DateTime >= latestTime.Value)
                 .ToList();
+
+            _logger.LogInformation(
+                "过滤后需要保存 {Total} 根K线，时间范围: {From} 到 {To}",
+                newCandles.Count,
+                newCandles.FirstOrDefault()?.DateTime,
+                newCandles.LastOrDefault()?.DateTime);
 
             if (newCandles.Any())
             {
                 await _repository.SaveBatchAsync(symbol, timeFrame, newCandles);
 
+                var completeCount = newCandles.Count(c => c.IsComplete);
+                var incompleteCount = newCandles.Count(c => !c.IsComplete);
+
                 _logger.LogInformation(
-                    "增量更新完成：{Symbol} {TimeFrame}，新增 {Count} 根 K 线",
-                    symbol, timeFrame, newCandles.Count);
+                    "增量更新完成：{Symbol} {TimeFrame}，保存 {Total} 根 K 线（完成: {Complete}, 未完成: {Incomplete}）",
+                    symbol, timeFrame, newCandles.Count, completeCount, incompleteCount);
             }
             else
             {
