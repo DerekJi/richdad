@@ -1,0 +1,42 @@
+name: PR Build Check
+
+on:
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'src/**'
+      - '*.sln'
+      - '*.csproj'
+      - '.github/workflows/pr-build.yml'
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: 📦 Restore dependencies
+      run: dotnet restore TradingSystem.sln
+
+    - name: 🏗️ Build solution
+      run: dotnet build TradingSystem.sln --configuration Release --no-restore
+
+    - name: ✅ Build status
+      if: success()
+      run: echo "✅ Build succeeded! PR can be merged."
+
+    - name: ❌ Build failed
+      if: failure()
+      run: |
+        echo "❌ Build failed! Please fix the errors before merging."
+        exit 1
