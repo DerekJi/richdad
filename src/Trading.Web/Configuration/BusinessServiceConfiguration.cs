@@ -24,6 +24,10 @@ public static class BusinessServiceConfiguration
         services.AddSingleton<TechnicalIndicatorService>();
         services.AddScoped<PatternRecognitionService>();
 
+        // 市场数据处理服务 - Phase 1 (Issue #8)
+        services.AddSingleton<Trading.Services.Utilities.MarkdownTableGenerator>();
+        services.AddScoped<MarketDataProcessor>();
+
         return services;
     }
 
