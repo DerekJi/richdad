@@ -45,6 +45,16 @@ public class TradingContext
     public SignalDetection L3_Signal { get; set; } = new();
 
     /// <summary>
+    /// L4 - 最终决策结果（含思维链推理）
+    /// </summary>
+    /// <remarks>
+    /// 基于 L1/L2/L3 完整上下文做出的最终交易决策。
+    /// 包含 DeepSeek-R1 的 Chain of Thought 思维过程。
+    /// 仅在 L3 检测到信号时才会执行 L4。
+    /// </remarks>
+    public FinalDecision? L4_Decision { get; set; }
+
+    /// <summary>
     /// 市场数据（用于 AI Prompt）
     /// </summary>
     /// <remarks>
