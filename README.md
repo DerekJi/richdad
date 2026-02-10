@@ -349,6 +349,16 @@ stop
 - ✅ **智能信号过滤**：自动筛选高质量交易信号
 - ✅ **形态识别集成**：直接使用预处理的形态数据，提升分析准确性
 
+### 2.5. 四级 AI 决策编排系统 🆕
+- ✅ **L1 战略分析**：GPT-4o 分析 D1 日线，确定交易方向偏见（24h 缓存）
+- ✅ **L2 结构分析**：DeepSeek-V3 分析 H1 结构，判断市场周期和对齐状态（1h 缓存）
+- ✅ **L3 信号监控**：GPT-4o-mini 监控 M5 信号，实时识别交易设置（无缓存）
+- ✅ **L4 最终决策**：DeepSeek-R1 带思维链（CoT）的最终决策执行或拒绝
+- ✅ **早期终止机制**：任意级别验证失败即停止，节省成本
+- ✅ **完整 REST API**：6个端点（完整分析、单级测试、快速检查、缓存管理）
+- ✅ **成本优化**：**~$0.54/天**（含早期终止），相比单级 GPT-4o 节省 85%+
+- 📖 **使用指南**：[Phase 3 使用指南](docs/PHASE3_USAGE_GUIDE.md)、[快速启动](docs/QUICK_START_PHASE3.md)
+
 ### 3. 实时监控告警
 - ✅ **价格监控**：固定价格、EMA交叉、MA交叉监控
 - ✅ **Pin Bar形态监控**：自动检测Pin Bar交易信号
@@ -433,6 +443,8 @@ dotnet run
 - [告警系统快速入门](docs/ALERT_SYSTEM_QUICKSTART.md) - 价格监控和告警
 - [Pin Bar监控快速入门](docs/PINBAR_QUICKSTART.md) - Pin Bar形态监控
 - [双级AI快速入门](docs/DUAL_TIER_AI_QUICKSTART.md) - AI智能分析
+- [四级AI决策系统 - 快速启动](docs/QUICK_START_PHASE3.md) - 10分钟配置和运行 🆕
+- [四级AI决策系统 - 使用指南](docs/PHASE3_USAGE_GUIDE.md) - 完整的API端点和工作流 🆕
 - [仓位计算器](docs/guides/POSITION_CALCULATOR.md) - 智能仓位管理
 - [移动端部署](docs/guides/MOBILE_DEPLOYMENT.md) - 无数据库运行模式
 
@@ -465,11 +477,12 @@ dotnet run
 | 服务 | 月度成本 | 说明 |
 |------|---------|------|
 | Azure Table Storage | $1-3 | 推荐的低成本存储 |
-| DeepSeek AI | ~$20 | 双级AI架构主力模型 |
+| 四级AI决策系统 | ~$16/月 | L1-L4级联分析（$0.54/天 × 30天） 🆕 |
+| DeepSeek AI | ~$20 | 双级AI架构主力模型（传统Tier1/Tier2） |
 | Azure OpenAI | ~$10-15 | 仅用于高质量信号分析 |
 | Telegram Bot | 免费 | 推送通知 |
 | OANDA API | 免费 | 实时数据（demo账户） |
-| **总计** | **~$30-40/月** | vs. 纯GPT-4o: $150+/月 |
+| **总计** | **~$47-54/月** | vs. 纯GPT-4o: $150+/月，节省65%+ |
 
 ## 贡献指南
 
