@@ -1,3 +1,4 @@
+using Trading.Services.AI;
 using Trading.Services.Services;
 using Trading.Web.Services;
 
@@ -23,6 +24,17 @@ public static class BusinessServiceConfiguration
         // 技术指标和形态识别服务 - Issue #7
         services.AddSingleton<TechnicalIndicatorService>();
         services.AddScoped<PatternRecognitionService>();
+
+        // 市场数据处理服务 - Phase 1 (Issue #8)
+        services.AddSingleton<Trading.Services.Utilities.MarkdownTableGenerator>();
+        services.AddScoped<MarketDataProcessor>();
+
+        // 四级 AI 决策服务 - Phase 3 (Issue #8)
+        services.AddScoped<L1_DailyAnalysisService>();
+        services.AddScoped<L2_StructureAnalysisService>();
+        services.AddScoped<L3_SignalMonitoringService>();
+        services.AddScoped<L4_FinalDecisionService>();
+        services.AddScoped<TradingOrchestrationService>();
 
         return services;
     }
