@@ -122,7 +122,7 @@ public class L4_FinalDecisionService
             {
                 _logger.LogWarning(
                     "🎯 L4 决定执行 - {Symbol}: {Direction} @ {Entry}, SL: {SL}, TP: {TP}, Lots: {Lots}, 风险: ${Risk:F2}",
-                    symbol, decision.Direction, decision.EntryPrice, decision.StopLoss, 
+                    symbol, decision.Direction, decision.EntryPrice, decision.StopLoss,
                     decision.TakeProfit, decision.LotSize, decision.TotalRiskAmount);
             }
             else

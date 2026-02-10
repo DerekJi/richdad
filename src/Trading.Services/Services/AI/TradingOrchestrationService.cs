@@ -83,7 +83,7 @@ public class TradingOrchestrationService
             }
 
             _logger.LogInformation("✅ [L2] 通过 - {Cycle} ({Status}), 对齐: {Aligned}",
-                context.L2_Structure.MarketCycle, 
+                context.L2_Structure.MarketCycle,
                 context.L2_Structure.Status,
                 context.L2_Structure.AlignedWithD1);
 
@@ -102,16 +102,16 @@ public class TradingOrchestrationService
             }
 
             _logger.LogWarning("🎯 [L3] 检测到信号 - {Setup} ({Direction}), RR: {RR:F2}",
-                context.L3_Signal.SetupType, 
+                context.L3_Signal.SetupType,
                 context.L3_Signal.Direction,
                 context.L3_Signal.RiskRewardRatio);
 
             // ========== L4: 最终决策（含思维链） ==========
             _logger.LogInformation("🤔 [L4] 最终决策思考中...");
             context.L4_Decision = await _l4Service.MakeFinalDecisionAsync(
-                symbol, 
-                context.L1_DailyBias, 
-                context.L2_Structure, 
+                symbol,
+                context.L1_DailyBias,
+                context.L2_Structure,
                 context.L3_Signal,
                 cancellationToken);
 
@@ -143,7 +143,7 @@ public class TradingOrchestrationService
 
                 if (context.L4_Decision.RiskFactors.Count > 0)
                 {
-                    _logger.LogWarning("   ⚠️ 风险因素: {Factors}", 
+                    _logger.LogWarning("   ⚠️ 风险因素: {Factors}",
                         string.Join(", ", context.L4_Decision.RiskFactors));
                 }
             }

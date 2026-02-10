@@ -47,7 +47,7 @@ public class L1_DailyAnalysisService
             new Uri(_azureSettings.Endpoint),
             new AzureKeyCredential(_azureSettings.ApiKey));
 
-        _logger.LogInformation("L1 服务已初始化 - Model: {Model}, Cache: {Hours}h", 
+        _logger.LogInformation("L1 服务已初始化 - Model: {Model}, Cache: {Hours}h",
             ModelDeploymentName, CacheHours);
     }
 

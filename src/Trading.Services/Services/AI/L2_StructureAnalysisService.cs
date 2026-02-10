@@ -70,8 +70,8 @@ public class L2_StructureAnalysisService
 
             // 调用 DeepSeek-V3
             var response = await _deepSeekService.ChatCompletionAsync(
-                systemPrompt, 
-                userPrompt, 
+                systemPrompt,
+                userPrompt,
                 cancellationToken);
 
             // 解析 JSON 响应

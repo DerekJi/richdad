@@ -54,7 +54,7 @@ public class Phase3OrchestrationController : ControllerBase
                 {
                     createdAt = context.CreatedAt,
                     symbol = context.Symbol,
-                    
+
                     // L1 结果
                     l1_DailyBias = new
                     {
@@ -66,7 +66,7 @@ public class Phase3OrchestrationController : ControllerBase
                         reasoning = context.L1_DailyBias.Reasoning,
                         analyzedAt = context.L1_DailyBias.AnalyzedAt
                     },
-                    
+
                     // L2 结果
                     l2_Structure = new
                     {
@@ -77,7 +77,7 @@ public class Phase3OrchestrationController : ControllerBase
                         reasoning = context.L2_Structure.Reasoning,
                         analyzedAt = context.L2_Structure.AnalyzedAt
                     },
-                    
+
                     // L3 结果
                     l3_Signal = new
                     {
@@ -91,7 +91,7 @@ public class Phase3OrchestrationController : ControllerBase
                         reasoning = context.L3_Signal.Reasoning,
                         detectedAt = context.L3_Signal.DetectedAt
                     },
-                    
+
                     // L4 结果（如果有）
                     l4_Decision = context.L4_Decision != null ? new
                     {
@@ -109,7 +109,7 @@ public class Phase3OrchestrationController : ControllerBase
                         totalRewardAmount = context.L4_Decision.TotalRewardAmount,
                         decidedAt = context.L4_Decision.DecidedAt
                     } : null,
-                    
+
                     // 验证状态
                     validation = new
                     {
@@ -225,8 +225,8 @@ public class Phase3OrchestrationController : ControllerBase
                 success = true,
                 symbol,
                 shouldAnalyze,
-                message = shouldAnalyze 
-                    ? "✅ 满足分析条件，可以继续" 
+                message = shouldAnalyze
+                    ? "✅ 满足分析条件，可以继续"
                     : "⏭️ 不满足条件，跳过分析"
             });
         }

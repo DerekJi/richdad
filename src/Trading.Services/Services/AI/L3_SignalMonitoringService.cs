@@ -114,7 +114,7 @@ public class L3_SignalMonitoringService
             {
                 _logger.LogWarning(
                     "🎯 L3 检测到信号 - {Symbol}: {Setup} ({Direction}) @ {Entry}, SL: {SL}, TP: {TP}, RR: {RR:F2}",
-                    symbol, signal.SetupType, signal.Direction, signal.EntryPrice, 
+                    symbol, signal.SetupType, signal.Direction, signal.EntryPrice,
                     signal.StopLoss, signal.TakeProfit, signal.RiskRewardRatio);
             }
             else
@@ -169,9 +169,9 @@ Output JSON format:
     }
 
     private string BuildUserPrompt(
-        string symbol, 
-        DailyBias dailyBias, 
-        StructureAnalysis structure, 
+        string symbol,
+        DailyBias dailyBias,
+        StructureAnalysis structure,
         ProcessedMarketData data)
     {
         return $@"
