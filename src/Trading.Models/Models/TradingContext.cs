@@ -5,13 +5,13 @@ namespace Trading.Models;
 /// </summary>
 /// <remarks>
 /// 汇总四级 AI 决策编排系统的所有分析结果，提供完整的交易上下文。
-/// 
+///
 /// 决策流程：
 /// 1. L1 (D1) → 确定日内交易方向偏见
 /// 2. L2 (H1) → 判断市场周期和状态（Active/Idle）
 /// 3. L3 (M5) → 监控并识别交易设置
 /// 4. L4 (决策) → 基于完整上下文做出最终决策
-/// 
+///
 /// 每一级的结果都会传递给下一级，形成级联决策链。
 /// 任何一级判断不满足条件，都会提前终止，避免不必要的 AI 调用成本。
 /// </remarks>
@@ -66,22 +66,22 @@ public class TradingContext
     /// <summary>
     /// 判断 L1 是否通过验证（可以继续 L2）
     /// </summary>
-    public bool IsL1Valid => 
-        L1_DailyBias.Direction != "Neutral" && 
+    public bool IsL1Valid =>
+        L1_DailyBias.Direction != "Neutral" &&
         L1_DailyBias.Confidence >= 60;
 
     /// <summary>
     /// 判断 L2 是否通过验证（可以继续 L3）
     /// </summary>
-    public bool IsL2Valid => 
-        L2_Structure.Status == "Active" && 
+    public bool IsL2Valid =>
+        L2_Structure.Status == "Active" &&
         L2_Structure.AlignedWithD1;
 
     /// <summary>
     /// 判断 L3 是否通过验证（可以继续 L4）
     /// </summary>
-    public bool IsL3Valid => 
-        L3_Signal.Status == "Potential_Setup" && 
+    public bool IsL3Valid =>
+        L3_Signal.Status == "Potential_Setup" &&
         L3_Signal.HasSignal;
 
     /// <summary>

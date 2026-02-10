@@ -18,7 +18,7 @@ public class FinalDecision
     /// <remarks>
     /// - Execute: 执行交易（所有条件满足，高概率设置）
     /// - Reject: 拒绝交易（存在疑虑或条件不满足）
-    /// 
+    ///
     /// Al Brooks 理论强调：如果有任何疑虑，不要交易。
     /// 只交易最佳设置，保证 60%+ 胜率。
     /// </remarks>
@@ -109,7 +109,7 @@ public class FinalDecision
     /// <remarks>
     /// AI 识别出的潜在风险点。
     /// 例如：["Wide stop loss", "Unclear momentum", "Near key resistance"]
-    /// 
+    ///
     /// 即使决定 Execute，也应该列出风险因素，便于后续复盘。
     /// </remarks>
     [JsonPropertyName("RiskFactors")]

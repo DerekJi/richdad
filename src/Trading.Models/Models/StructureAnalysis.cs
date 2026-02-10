@@ -28,7 +28,7 @@ public class StructureAnalysis
     /// <remarks>
     /// - Active: 活跃状态，可以寻找交易机会
     /// - Idle: 空闲状态，暂时不适合交易（等待更清晰的信号）
-    /// 
+    ///
     /// 规则：
     /// - 如果 H1 与 D1 方向一致且处于趋势中 -> Active
     /// - 如果 H1 横盘震荡或方向不明 -> Idle
@@ -53,7 +53,7 @@ public class StructureAnalysis
     /// - Breakout: 突破阶段（价格突破关键价位）
     /// - Pullback: 回调阶段（趋势中的短期回撤）
     /// - Trading Range: 交易区间阶段（横盘震荡）
-    /// 
+    ///
     /// Al Brooks 理论中，Pullback 是最佳入场时机。
     /// </remarks>
     [JsonPropertyName("CurrentPhase")]
